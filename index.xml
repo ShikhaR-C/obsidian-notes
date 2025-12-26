@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+    <channel>
+      <title>My notes</title>
+      <link>https://https://github.com/ShikhaR-C/obsidian-notes.git</link>
+      <description>Last 10 notes on My notes</description>
+      <generator>Quartz -- quartz.jzhao.xyz</generator>
+      <item>
+    <title>My Knowledge Base</title>
+    <link>https://https://github.com/ShikhaR-C/obsidian-notes.git/</link>
+    <guid>https://https://github.com/ShikhaR-C/obsidian-notes.git/</guid>
+    <description><![CDATA[ Hi Welcome 👋 This is my public Obsidian vault. Topics mongodb react . ]]></description>
+    <pubDate>Fri, 26 Dec 2025 10:08:43 GMT</pubDate>
+  </item>
+    </channel>
+  </rss>
