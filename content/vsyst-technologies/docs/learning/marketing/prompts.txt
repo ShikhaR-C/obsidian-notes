@@ -1,0 +1,31 @@
+
+
+ in /try1 create a file or multiple files to create marketing stretegy for VSYST Technologies.     
+  study from @"VSYST Technologies Pvt. Ltd./". research about marketing. what are marketing         
+  stretagies? how to curate one? create a short custom tutorial on marketing. from the study we     
+  want to create marketing strategies for transporter which are customers for petrol pumps/retail   
+  outlet dealers. as a company who provide a SaaS platform for petrol pump dealers and their customers,  
+  how do we express our service to transport companies (customer of retail outlets/petrol pumps).   
+  how to explain them? lure them? attract them? also include our sales strategy, pricing stretagy   
+  and everything else required to start as a newbie and become a monopoly in the market. for        
+  doable tasks create phases and sub-phases. use agent teams to investigate, formulate and come up  
+  with best answer. 
+
+-----------
+
+For OMC,
+SAP is an ERP. it is very costly. current challenge would be to maintain and sustain the ERP.
+we as a vertical SaaS can provide a suitable solution for this problem. also we would be able to connect to wider market being a extended ERP.
+
+OMC provides facilities 
+- AC for driver
+- Dhaba (false dhaba. just formality now)
+  - virtual dhaba.
+
+should actually provide
+- kharcha from RO (easy cash manamgement for all)
+- RO should be mini-ATM
+
+
+-----------
+
