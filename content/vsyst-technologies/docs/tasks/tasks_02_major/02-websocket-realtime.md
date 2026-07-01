@@ -92,19 +92,27 @@ io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("UNAUTHORIZED"));
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, process.env.JWT_SECRET, {
+      clockTolerance: 30, // same verify options as the HTTP middleware
+    });
     if (payload.type && payload.type !== "access") {
       return next(new Error("INVALID_TOKEN_TYPE"));
     }
     socket.data.userId = payload.id;
     socket.data.companyId = payload.co_id;
     socket.data.role = payload.role;
+    socket.data.tokenExp = payload.exp; // read by the expiry sweep (§3.3)
     next();
   } catch (e) {
     next(new Error("UNAUTHORIZED"));
   }
 });
 ```
+
+Two notes:
+
+- This reads `payload.id` / `payload.co_id` — `01-token-refresh.md` §3.5 deliberately keeps those claim names in the new access token (`getUserFromToken` depends on them too). Extract one shared verify helper for HTTP and socket paths so the options (secret, `clockTolerance`, type check) can't drift.
+- Verifying the signature alone trusts a login-time snapshot: a user deactivated after connect keeps a live socket until the expiry sweep catches it. Phase 2 closes that gap with a server-side `disconnectSockets()` on the mutation path (Step 2.7).
 
 ### 3.3 Interaction with the refresh token flow (from `01`)
 
@@ -119,6 +127,8 @@ This is the subtle part. With the old 30-day JWT, a socket could stay open for 3
 3. **Server-side token expiry check per-event** — expensive: verify token on every event. Reject if expired. Client catches and triggers HTTP refresh. Overkill.
 
 **Choice:** strategy 2 (rolling re-auth). The client's `tokenStorage.setTokens()` triggers a `socket.emit('auth:refresh', {token})`. If the server says the new token is invalid, the client disconnects cleanly.
+
+The server-side `auth:refresh` handler must (a) verify the JWT with exactly the same options as the connection middleware, (b) **reject any token whose `payload.id !== socket.data.userId`** — the socket's rooms were joined as the original user, so re-auth must never rebind a socket to a different user (ack an error and disconnect instead), and (c) update `socket.data.tokenExp` so the expiry sweep sees the new expiry.
 
 **What if the socket's access token silently expires and the client never notices?** The server has a periodic job (every 1 min) that checks `socket.data.tokenExp`. If expired, it disconnects the socket with reason `TOKEN_EXPIRED`. The client reconnects with a fresh token on the next HTTP refresh cycle.
 
@@ -139,7 +149,7 @@ Socket.io rooms are server-side named groups of sockets. Events emit to a room h
 
 - On connect: auto-join `user:<userId>` and `company:<companyId>`.
 - On screen mount (Order Detail): client emits `subscribe` with `{resource: 'order', id: '...'}`. Server joins `order:<id>`. On unmount, `unsubscribe`.
-- On company switch (for users with multiple companies): leave old `company:<oldId>`, join `company:<newId>`.
+- On company switch (for users with multiple companies): leave old `company:<oldId>`, join `company:<newId>` — after the server verifies from the DB that the user actually belongs to the target company. Never join a room from a client-asserted company id alone.
 
 ### 3.5 Event naming convention
 
@@ -325,6 +335,16 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 - When a user joins or leaves a company (e.g. accept invite, be removed), emit to `company:<companyId>` so admins of that company see the list update.
 
+#### Step 2.7 — Server-side enforcement (don't trust the client to log itself out)
+
+`user:removed` / `user:force_logout` are advisory — a tampered client just ignores them and keeps its socket and tokens. On the same mutation path (`inActivateUser`, `removeUser`, company blacklist), after emitting:
+
+1. `revokeAllRefreshTokens(userId)` (helper from `01-token-refresh.md` Phase 1) — stops the refresh flow from minting new access tokens.
+2. `invalidateUserCache(userId)` (Step 2.5) — the next HTTP request reloads the now-inactive user and gets rejected, instead of riding the 3-min cache.
+3. `io.in('user:<userId>').disconnectSockets(true)` — closes the sockets themselves; any reconnect attempt re-runs the auth middleware against the updated user state.
+
+Residual window: an already-issued access token still verifies cryptographically for up to 15 minutes — accepted in `01-token-refresh.md` §6; steps 1–3 make everything else immediate.
+
 **Definition of Done:**
 
 - API integration test: call `PUT /users/a/inactivate` with a test socket listening on `user:<id>` — assert the event is received.
@@ -386,8 +406,9 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 - New file: `src/services/socket.js`
 - Singleton instance. Exports `connectSocket(accessToken)`, `disconnectSocket()`, `getSocket()`, `reauthSocket(newAccessToken)`.
-- Uses `io(API_URL_V, {auth: {token}, transports: ['websocket'], autoConnect: false})`.
+- Uses `io(API_URL_V, {auth: (cb) => cb({token: latestAccessToken()}), transports: ['websocket'], autoConnect: false})`.
   - `transports: ['websocket']` skips long-polling fallback which is unnecessary on mobile.
+  - `auth` as a **callback**, not a static object: Socket.io re-invokes it on every reconnect attempt, so reconnects automatically carry the newest access token. A static `{auth: {token}}` freezes the login-time token — after 15 minutes it's expired and every automatic reconnect would be rejected. Keep the latest token mirrored in module memory (`tokenStorage.setTokens` already flows through here per Step 4.5).
 
 #### Step 4.3 — Wire to login/logout
 
@@ -456,6 +477,8 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 | `user:scope_changed` | refetch current user + invalidate `['relations', 'company_users']`              |
 | `user:force_logout`  | dispatch `logoutUser()` with toast: "You have been logged out"                  |
 
+Note: `logoutUser()` here calls `POST /auth/logout` with tokens the server has already revoked (Step 2.7) — the thunk must treat a 401 as success and still clear local state (`01-token-refresh.md` Step 5.6).
+
 #### Step 5.4 — Handle `company:*` events
 
 | Event                  | Handler                                                                     |
@@ -502,7 +525,10 @@ socket.on("order:status_changed", (payload) => {
 
 - File: `helpers/socket.js`
 - Add `socket.on('subscribe', ({resource, id}, ack) => {...})` and `socket.on('unsubscribe', ...)`.
-- Validate that the user has permission to subscribe (e.g. for `order:<id>`, check the user is either cust_user_id or dealer_user_id on that order).
+- **Allowlist `resource`** (`order` | `invoice` | `voucher` | `relation`) and build the room name server-side from that allowlist. Never `socket.join()` anything derived from a raw client string — otherwise `subscribe({resource: 'user', id: '<victimUserId>'})` joins another user's `user:` room and silently receives their events.
+- Validate the id (`ObjectId.isValid`) and validate that the user has permission to subscribe, **per resource type** — for `order:<id>`, the user is either cust_user_id or dealer_user_id on that order; equivalent ownership checks for invoice, voucher, relation. Ack an error otherwise.
+- Cap subscriptions per socket (e.g. 20 rooms) and rate-limit `subscribe` events so a buggy or hostile client can't join unbounded rooms.
+- Permissions are re-checked on every re-subscribe after reconnect — access may have been revoked mid-session.
 
 #### Step 6.2 — App-side hook
 
@@ -529,10 +555,10 @@ socket.on("order:status_changed", (payload) => {
 
 #### Step 7.1 — App-side OneSignal foreground handler
 
-- Configure `OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => event.preventDefault())`.
-- Simpler alternative: on the API side, when emitting a socket event, pass a hint `{skipPushIfInForeground: true}`. The push service still sends the push, but the app suppresses display if the event matches a recently-received socket event.
+- Option A — suppress all foreground banners: `OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => event.preventDefault())`. One listener, no coordination with the API.
+- Option B — selective: the API tags each push with the matching socket event id; the app shows the banner only if no matching socket event arrived in the last few seconds. More precise, but more moving parts.
 
-**Recommendation:** simpler alternative. Suppress all foreground pushes by default; let the socket handle it.
+**Recommendation:** Option A. Suppress all foreground pushes by default and let the socket handle the foreground. If a foreground push turns out to have no socket equivalent, that's a Phase 3 coverage gap — fix it there rather than building Option B's matching machinery.
 
 **Definition of Done:**
 
@@ -585,6 +611,7 @@ socket.on("order:status_changed", (payload) => {
 | PM2 cluster mode breaks socket state (from `tasks_01/RES-3`)    | Medium                | High   | Either defer RES-3 until socket Redis adapter is added, OR add adapter first                                         |
 | Load balancer drops WebSocket upgrade                           | Low                   | High   | ALB has native WS support. Verify `target group idle timeout > 60s`                                                  |
 | Event flood from a buggy loop                                   | Low                   | High   | Rate-limit emits per-user per-second at the emit helper layer                                                        |
+| Client subscribes to rooms it shouldn't (cross-user data leak)  | Medium                | High   | Resource allowlist + per-resource authz + subscription cap (Step 6.1)                                                |
 | Client-side memory leak from orphaned event listeners           | Medium                | Medium | Always add listeners in middleware (bounded lifetime), not in components                                             |
 | Race: socket event arrives before HTTP mutation response        | Medium                | Low    | RTK Query de-dupes concurrent fetches; worst case is one extra fetch                                                 |
 | Silent failure: socket disconnects but client thinks it's alive | Medium                | High   | Heartbeat: Socket.io has built-in ping/pong, but verify `pingInterval`/`pingTimeout` are sane (defaults are 25s/20s) |
@@ -603,8 +630,10 @@ socket.on("order:status_changed", (payload) => {
 
 ### 8.1 API tests
 
-- `test/api_v3/socket/auth.test.js`: connect without token → rejected. Connect with expired token → rejected. Connect with valid → joined `user:` and `company:` rooms.
+- `test/api_v3/socket/auth.test.js`: connect without token → rejected. Connect with expired token → rejected. Connect with valid → joined `user:` and `company:` rooms. `auth:refresh` with a token belonging to a **different user** → rejected + disconnected.
 - `test/api_v3/socket/emit.test.js`: for each resource mutation endpoint, assert a socket listener in the relevant room receives the expected event.
+- `test/api_v3/socket/subscribe.test.js`: non-allowlisted resource → rejected; order the user isn't a party to → rejected; subscription cap enforced.
+- `test/api_v3/socket/enforce.test.js`: `inActivateUser` → target's sockets are disconnected and refresh tokens revoked (Step 2.7).
 - Feature-flag test: `SOCKET_IO_ENABLED=false` → emit calls are no-ops, mutation still succeeds.
 
 ### 8.2 Manual QA checklist

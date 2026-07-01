@@ -81,13 +81,17 @@ The chosen pattern is what Auth0, Okta, Supabase, Firebase Auth, and basically e
 
 This is the [OAuth 2.0 refresh token rotation](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics) recommendation (RFC 6819 / BCP for native apps).
 
-**Storage choice:** store refresh tokens **hashed** (SHA-256 or bcrypt) in Mongo, not in plaintext — if the DB leaks, refresh tokens don't. Access tokens stay fully stateless (JWT signature is the only check).
+**Invalidated ≠ deleted.** Reuse detection only works if the server can still *recognize* a rotated token. If rotation simply removes the entry from `refreshTokens[]`, a replayed old token is indistinguishable from random garbage and the reuse path never fires. So rotation **marks** the old entry (`revokedAt`, `replacedByHash` — see §3.6) and keeps it until its natural 7-day expiry, after which it can be pruned (an expired token fails the expiry check anyway, so retention past that point buys nothing).
+
+**Benign-reuse grace window.** One honest failure mode must not nuke every session: the client calls `/auth/refresh`, the server rotates, and the response is lost (timeout, network drop). Any retry now presents the just-invalidated token. Two defenses, both required: (1) the client never auto-retries the refresh call (Phase 5), and (2) the server treats reuse of a token revoked **< 60 seconds ago** as a soft failure — 401 `TOKEN_EXPIRED`, log a warning, do **not** kill sessions; the client falls back to OTP login. Reuse of a token revoked ≥ 60s ago is treated as hostile: revoke everything, 401 `TOKEN_REUSE`.
+
+**Storage choice:** store refresh tokens hashed with **SHA-256** (not bcrypt) in Mongo, not in plaintext — if the DB leaks, refresh tokens don't. SHA-256 specifically because `/auth/refresh` has no user context and must find the owner via `findOne({'refreshTokens.tokenHash': hash})`; bcrypt's per-hash salt makes that indexed lookup impossible, and its slow-hash protection is pointless for a 384-bit random value (unguessable by construction). Access tokens stay fully stateless (JWT signature is the only check).
 
 ### 3.3 Client-side concurrency: async-mutex
 
 **The race:** the app has ~5 RTK Query hooks that fire on mount. The access token expires. All 5 get a 401 at almost the same moment. Without synchronization, all 5 would try to refresh, creating 5 concurrent `/auth/refresh` calls. The first one rotates the refresh token; the other 4 present the now-invalidated refresh token → all 4 trigger the reuse-detection path → all 5 get logged out.
 
-**The fix:** wrap the refresh call in a mutex (`async-mutex` npm package, <3kB, zero native code). First 401 acquires the lock and actually refreshes. The other 4 await the lock; by the time they acquire it, the access token has already been rotated, and they retry their original requests.
+**The fix:** wrap the refresh call in a mutex (`async-mutex` npm package, <3kB, zero native code). First 401 acquires the lock and actually refreshes. The other 4 await the lock; by the time they acquire it, the access token has already been rotated, and they retry their original requests. (Server-side, the 60-second soft-fail window from §3.2 keeps this race from killing sessions — but the four losing requests would still fail without the mutex; the mutex is what makes them succeed.)
 
 ```
 Request A (401) ────┐
@@ -118,7 +122,7 @@ If `react-native-keychain` pod install or TurboModules compatibility becomes a b
 
 ```json
 {
-  "sub": "<user_id>",
+  "id": "<user_id>",
   "co_id": "<company_id>",
   "role": "dealer|customer|superadmin",
   "scope": "CAdmin|CPrimary|...",
@@ -127,6 +131,8 @@ If `react-native-keychain` pod install or TurboModules compatibility becomes a b
   "exp": 1712346578
 }
 ```
+
+Keep the existing claim names (`id`, `co_id`, `role`) — `getUserFromToken` in `helpers/auth.js` does `User.findOne({_id: jwtData.id})`, and the socket auth middleware (`02-websocket-realtime.md` §3.2) reads `payload.id` / `payload.co_id`. Renaming to the standard `sub` would silently break every consumer; add `sub` as a duplicate claim later if standards-compliance matters.
 
 **Refresh token (opaque random, 7 days):**
 
@@ -148,13 +154,15 @@ refreshTokens: [
     deviceName: String, // e.g. "iPhone 14 Pro"
     createdAt: Date,
     lastUsedAt: Date,
+    revokedAt: Date, // set on rotation/logout; kept (not deleted) for reuse detection — §3.2
+    replacedByHash: String, // successor token's hash — rotation audit trail
     userAgent: String,
     ip: String,
   },
 ];
 ```
 
-Max 5 refresh tokens per user (oldest evicted). This also seeds the device-tracking feature needed by `02-websocket-realtime.md` — both initiatives share the same `devices` concept.
+Max 5 **active** (`revokedAt == null`) refresh tokens per user — evicting the oldest means marking it revoked, not deleting it. Entries older than the 7-day refresh lifetime are pruned on write. This also seeds the device-tracking feature needed by `02-websocket-realtime.md` — both initiatives share the same `devices` concept.
 
 ---
 
@@ -211,10 +219,13 @@ Attacker                                          API
  │                                                │
  ├── POST /auth/refresh ─────────────────────────►│
  │      {refreshToken: <already-rotated>}         │
- │                                                │  hash lookup: token hash is present in user.revokedRefreshTokens
+ │                                                │  hash lookup: entry found in user.refreshTokens[]
+ │                                                │  with revokedAt set (was rotated earlier)
  │                                                │  ⚠️  REUSE DETECTED
- │                                                │  clear users.refreshTokens[]  ← logs all devices out
- │                                                │  log incident
+ │                                                │  revoked < 60s ago → 401 TOKEN_EXPIRED only
+ │                                                │    (benign lost-response retry — no kill)
+ │                                                │  revoked ≥ 60s ago → clear users.refreshTokens[]
+ │                                                │    ← logs all devices out; log incident
  │◄──────────── 401 TOKEN_REUSE ──────────────────┤
 ```
 
@@ -236,8 +247,8 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 #### Step 1.1 — Add `refreshTokens[]` to User schema
 
 - File: `models/users.js`
-- Add subschema and field. Default `[]`.
-- Add Mongoose index on `refreshTokens.tokenHash` (sparse, unique per user).
+- Add subschema and field (including `revokedAt` and `replacedByHash` — see §3.6). Default `[]`.
+- Add Mongoose index on `refreshTokens.tokenHash` (sparse, **non-unique**). A unique multikey index enforces uniqueness across the whole collection, not "per user" — and neither is needed: 48 random bytes make collisions a non-issue. The index exists purely to make `findOne({'refreshTokens.tokenHash': hash})` fast.
 - Run migration locally: `db.users.updateMany({}, {$set: {refreshTokens: []}})` — safe because the field is optional.
 
 #### Step 1.2 — Add env vars
@@ -248,6 +259,7 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
   JWT_REFRESH_EXPIRE=7d
   REFRESH_TOKEN_BYTES=48
   MAX_REFRESH_TOKENS_PER_USER=5
+  REFRESH_REUSE_GRACE_SECONDS=60   # benign-reuse soft-fail window (§3.2)
   TOKEN_REFRESH_ENABLED=false   # feature flag
   ```
 - Keep the existing `JWT_EXPIRE=30d` for now — we'll gate on `TOKEN_REFRESH_ENABLED`.
@@ -258,15 +270,16 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - Functions:
   - `generateRefreshToken()` → opaque string
   - `hashRefreshToken(raw)` → sha256 hex
-  - `addRefreshToken(userId, rawToken, deviceMeta)` → updates `User.refreshTokens[]`, evicts oldest if > 5
-  - `verifyRefreshToken(userId, rawToken)` → returns the matching entry or throws
-  - `rotateRefreshToken(userId, oldRaw, newRaw, deviceMeta)` → atomic swap
-  - `revokeRefreshToken(userId, rawToken)` → removes one
-  - `revokeAllRefreshTokens(userId)` → clears array
+  - `findUserByRefreshToken(raw)` → indexed `findOne({'refreshTokens.tokenHash': hash})`. The refresh endpoint has no authenticated user context — this lookup is its entry point, so it must be an indexed query, never a collection scan.
+  - `addRefreshToken(userId, rawToken, deviceMeta)` → pushes to `User.refreshTokens[]`, marks oldest active entry revoked if > 5 active, prunes entries past the 7-day lifetime
+  - `verifyRefreshToken(user, rawToken)` → returns the matching entry plus its state: `active | revoked | expired | unknown`
+  - `rotateRefreshToken(userId, oldRaw, newRaw, deviceMeta)` → **atomic**: a single `findOneAndUpdate` that matches the old hash *with `revokedAt: null`*, sets `revokedAt` + `replacedByHash` on it, and pushes the new entry. Returns `null` if another request already rotated it — the caller treats that as the reuse path. This is the server-side answer to concurrent refreshes; no server mutex needed.
+  - `revokeRefreshToken(userId, rawToken)` → marks one entry revoked
+  - `revokeAllRefreshTokens(userId)` → marks every entry revoked
 
 **Definition of Done:**
 
-- Unit tests in `test/api_v3/helpers/refreshTokens.test.js` covering all 6 functions.
+- Unit tests in `test/api_v3/helpers/refreshTokens.test.js` covering every exported function.
 - No changes to any controller. API behavior identical to before.
 - `git diff` touches only `models/users.js`, `helpers/refreshTokens.js`, `.env.*`, test files.
 
@@ -286,13 +299,19 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 
 - File: `api_v3/controllers/auth/refresh.js`
 - Accepts `{refreshToken, deviceId}` in body.
+- The route is **public** — no `protect` middleware (the caller's access token is expired by definition). Verify the global logging middleware tolerates an absent/expired bearer on this path.
 - Steps:
-  1. Find user by hashed token lookup (scan `User.refreshTokens[]`).
-  2. If not found → check if token is in a "recently revoked" set → if yes, call `revokeAllRefreshTokens(userId)` and return 401 TOKEN_REUSE.
-  3. If expired → return 401 TOKEN_EXPIRED (client falls back to login).
-  4. Generate new access token and new refresh token.
-  5. `rotateRefreshToken(userId, old, new, deviceMeta)`.
-  6. Return `{accessToken, refreshToken}`.
+  1. `findUserByRefreshToken(raw)` — indexed hash lookup (Step 1.3), never a scan.
+  2. Not found → 401 UNKNOWN_TOKEN.
+  3. Found with `revokedAt` set → reuse:
+     - revoked **< 60s ago** → 401 TOKEN_EXPIRED, log a warning, sessions untouched (benign lost-response retry — see §3.2).
+     - revoked **≥ 60s ago** → `revokeAllRefreshTokens(userId)`, log incident, 401 TOKEN_REUSE.
+  4. Found but past the 7-day lifetime → 401 TOKEN_EXPIRED (client falls back to login).
+  5. **Account still usable?** User must be active/not removed and the company not blacklisted. If not: `revokeAllRefreshTokens(userId)` and 401. Without this check, a deactivated user keeps minting fresh access tokens for up to 7 days.
+  6. Generate new access token and new refresh token.
+  7. `rotateRefreshToken(userId, old, new, deviceMeta)` — a `null` return means another request won the race; treat exactly as step 3.
+  8. Return `{accessToken, refreshToken, accessExpiresIn: 900}`.
+- Rate limit: **not per-IP alone** — mobile carriers CGNAT thousands of users behind one IP, so `10/min per IP` locks out legitimate users. Key primarily on the presented token hash (e.g. 10/min per token), with a much higher per-IP ceiling as a backstop.
 
 #### Step 2.3 — Controller: `logoutAll`
 
@@ -300,6 +319,7 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - Requires access token (uses existing `protect` middleware).
 - Calls `revokeAllRefreshTokens(req.user._id)`.
 - Also **invalidates the getUserFromToken cache entry** (3-min cache in `helpers/auth.js`) — otherwise a revoked session could linger for up to 3 min.
+- The same two calls (`revokeAllRefreshTokens` + cache invalidation) must also fire from account-state mutations — `inActivateUser`, `removeUser`, company blacklist (`api_v3/services/users.js`). Otherwise a deactivated user's device keeps a working refresh token for up to 7 days. `02-websocket-realtime.md` Phase 2 touches the same functions; wire both there.
 
 #### Step 2.4 — Update `sendTokenResponse`
 
@@ -307,7 +327,10 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - When `process.env.TOKEN_REFRESH_ENABLED === 'true'`:
   - Generate access token (15 min) via new method `user.getSignedAccessToken()`
   - Generate refresh token, store hash, return both
-  - Response: `{success, accessToken, refreshToken, user, company, expiresIn: 900}`
+  - Response: `{success, token, expiresIn: 30*24*60*60, accessToken, refreshToken, accessExpiresIn: 900, user, company}`
+  - **The legacy `token` (30-day JWT) and the legacy `expiresIn` value stay in the flag-on response until Step 6.4.** Old app versions read `token` + `expiresIn`; if `expiresIn` suddenly became `900` they would compute a 15-minute `expiryDate` and `StartupScreen` would force re-login every 15 minutes. The new app reads `accessToken` + `accessExpiresIn` and ignores `token`.
+  - Mint and return the refresh pair only when the login request includes a `deviceId` (the new-app signal). Legacy logins without device fields must not fail validation, and there's no point storing refresh tokens a client will discard.
+  - Be explicit about the consequence: while the legacy field ships, a captured login response still yields a 30-day token — the blast-radius win only fully lands at Step 6.4 when `token` is dropped.
 - Otherwise: existing 30-day `token` behavior.
 
 This dual-mode response lets us ship the API change before the app change. The app won't know what to do with `accessToken`/`refreshToken` yet, so we leave the flag off.
@@ -317,9 +340,11 @@ This dual-mode response lets us ship the API change before the app change. The a
 - Integration tests in `test/api_v3/auth/refresh.test.js`:
   - happy path
   - expired refresh token → 401
-  - rotated (reused) refresh token → 401 + all tokens cleared
+  - reused refresh token, revoked ≥ 60s ago → 401 TOKEN_REUSE + all tokens cleared
+  - reused refresh token, revoked < 60s ago → 401 TOKEN_EXPIRED, tokens NOT cleared
+  - refresh for a deactivated user → 401 + all tokens cleared
   - wrong device id → 401 (optional, defense in depth)
-  - concurrent refresh with same token (async-mutex on server side? No — rely on optimistic DB update)
+  - concurrent refresh with same token → atomic `rotateRefreshToken` picks one winner; losers hit the soft-fail path
 - Flag stays `false` in production env. Staging gets `true` for the next phase.
 
 ---
@@ -341,8 +366,9 @@ This dual-mode response lets us ship the API change before the app change. The a
 #### Step 3.3 — Update `protect` middleware to reject non-access tokens
 
 - File: `helpers/auth.js`
-- When decoding JWT, check `payload.type === 'access'`. If it's a refresh token being used as a bearer, reject with 401.
-- (This matters because refresh tokens will also be JWTs if we chose JWT refresh — in our design they're opaque, so this check is a belt-and-suspenders guard only if we ever mistakenly sign a refresh as JWT.)
+- When decoding JWT, reject with 401 only when `payload.type` is **present and not `'access'`**. Legacy 30-day JWTs minted before the flip carry no `type` claim and must keep working until Step 6.4 removes them — a strict `payload.type === 'access'` check would 401 every existing session the moment this deploys.
+- Tighten to the strict check as part of Step 6.4, once no legacy tokens can still be in circulation.
+- (In our design refresh tokens are opaque, so this is a belt-and-suspenders guard in case a refresh token is ever mistakenly signed as a JWT.)
 
 #### Step 3.4 — Smoke test on staging
 
@@ -354,11 +380,12 @@ This dual-mode response lets us ship the API change before the app change. The a
   4. Call protected endpoint — 401.
   5. Call `/auth/refresh` — 200 with new tokens.
   6. Call protected endpoint with new access token — 200.
-  7. Call `/auth/refresh` again with the **old** refresh token — expect 401 TOKEN_REUSE and all sessions cleared.
+  7. Call `/auth/refresh` again with the **old** refresh token immediately — expect a soft 401 (TOKEN_EXPIRED, sessions intact: you're inside the 60s benign-retry window).
+  8. Wait > 60 seconds, call `/auth/refresh` with the old token again — expect 401 TOKEN_REUSE and all sessions cleared.
 
 **Definition of Done:**
 
-- Staging flag on, Postman collection exercised, all 7 steps pass.
+- Staging flag on, Postman collection exercised, all 8 steps pass.
 - Production flag still off — existing app keeps working because the dual-mode response still includes the old `token` field when the flag is off.
 
 ---
@@ -430,7 +457,10 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
     if (!mutex.isLocked()) {
       const release = await mutex.acquire();
       try {
-        const refreshResult = await baseQueryWithSmartRetry(
+        // plain rawBaseQuery, NOT baseQueryWithSmartRetry: if the server
+        // rotates the token but the response is lost, an automatic retry
+        // would present the just-invalidated token and trip reuse detection
+        const refreshResult = await rawBaseQuery(
           {
             url: "/auth/refresh",
             method: "POST",
@@ -447,10 +477,13 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
           await setTokens(refreshResult.data);
           // retry the original request
           result = await baseQueryWithSmartRetry(args, api, extraOptions);
-        } else {
-          // refresh failed → hard logout
+        } else if ([401, 403].includes(refreshResult.error?.status)) {
+          // definitive rejection → hard logout
           api.dispatch(logoutUser());
         }
+        // any other failure (5xx, network): keep tokens, surface the original
+        // error — the next 401 retries the refresh. Logging out here would
+        // recreate the 401-cascade problem this project exists to fix (§2.5)
       } finally {
         release();
       }
@@ -466,6 +499,9 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 ```
 
 - Swap `createApi({baseQuery: baseQueryWithSmartRetry, ...})` → `baseQuery: baseQueryWithReauth`.
+- **Never auto-retry the `/auth/refresh` POST** (hence `rawBaseQuery` above — the un-wrapped `fetchBaseQuery` instance). The server's 60-second soft-fail window (§3.2) is the backstop for a lost response, not the primary defense.
+- Hard-logout only on a definitive 401/403 from `/auth/refresh` — never on 5xx or network errors (see §7 risk table: backend downtime must not log users out).
+- Watch the circular import: `createApi.js` dispatching `logoutUser` from `slices/auth.js` while the slice's consumers import the api. The RTK docs pattern dispatches a plain action type instead; do that (e.g. `api.dispatch({type: 'auth/forceLogout'})`) or lazy-import.
 
 #### Step 5.4 — Update axios interceptor to use the same flow
 
@@ -476,13 +512,19 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 #### Step 5.5 — Update `loginUser` thunk to store both tokens
 
 - File: `src/store/slices/auth.js:17-44`
-- Accept `accessToken` and `refreshToken` in the login response.
-- Backward compatible: if the response has the old `token` field (flag off in prod), treat it as the access token with long expiry and skip refresh token storage. Refresh flow won't fire because the access token lasts 30 days.
+- Accept `accessToken` and `refreshToken` in the login response, and read `accessExpiresIn` (not the legacy `expiresIn`, which stays at the 30-day value for old clients — Step 2.4).
+- Backward compatible: if the response has **only** the old `token` field (flag off in prod), treat it as the access token with long expiry and skip refresh token storage. Refresh flow won't fire because the access token lasts 30 days. When both are present, prefer `accessToken`.
 
 #### Step 5.6 — Update `logoutUser` thunk
 
 - Add a call to `POST /auth/logout` with `{refreshToken}` body so the server can revoke it.
-- Clear both tokens locally.
+- Best-effort: if the call fails (offline, or the user was already removed server-side → 401), still clear both tokens locally.
+
+#### Step 5.7 — Update the startup expiry check
+
+- File: `src/screens/StartupScreen.js:18-64`
+- Today it logs out whenever the stored `expiryDate` has passed. With a 15-minute access token that fires on nearly every cold start — the user would be re-prompted for OTP constantly, defeating the whole design.
+- New logic: access token expired **but a refresh token exists** → proceed into the app and let the first API call refresh via the Step 5.3 flow (or refresh eagerly on startup). Log out only when the refresh is definitively rejected (401/403). Offline: keep the session.
 
 **Definition of Done:**
 
@@ -491,6 +533,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   - Force-expire the access token (Debug menu: "Invalidate access token" → writes a known-bad token to storage).
   - Next API call silently refreshes — no user-visible error, no re-login.
   - Fire 5 parallel queries (e.g. open Accounts screen which fires 3-4 concurrent calls). Inspect network tab: exactly **one** `/auth/refresh` call, followed by retries of the originals.
+  - Cold start after > 15 min idle: app stays logged in (Step 5.7 path), no OTP re-prompt.
 - Automated test: Jest test for the reauth wrapper using `msw` or a mocked fetch.
 
 ---
@@ -510,7 +553,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 - Bump versionCode 100 → 101, versionName "1.76" → "1.77".
 - Release via Play Store / TestFlight.
 - The new app version will receive `accessToken` + `refreshToken` on its next OTP login.
-- Older app versions on `TOKEN_REFRESH_ENABLED=true` need the old `token` field — **verify `sendTokenResponse` still returns the legacy `token` field alongside the new ones** for back-compat during the rollout window.
+- Older app versions on `TOKEN_REFRESH_ENABLED=true` need the old fields — **verify `sendTokenResponse` still returns the legacy `token` (30-day JWT) and the legacy 30-day `expiresIn` value alongside the new ones** (Step 2.4). If `expiresIn` shrinks to 900, old apps force re-login every 15 minutes.
 
 #### Step 6.3 — Monitor
 
@@ -561,7 +604,7 @@ cd ios && pod install && cd ..
 
 **Definition of Done:**
 
-- On iOS, `xcrun security find-generic-password -s dzzlo_oms` shows the refresh token.
+- On iOS, verify the value round-trips through `Keychain.getGenericPassword` (debug-menu action) and that the AsyncStorage copy is deleted after migration. (macOS `security find-generic-password` can't inspect an iOS device/simulator keychain, so verify in-app.)
 - On Android, refresh token is no longer readable via `adb shell run-as in.vsyst.dzzlooms cat /data/data/.../AsyncStorage`.
 
 ---
@@ -581,6 +624,8 @@ cd ios && pod install && cd ..
 | Cost at 1000 DAU × 8 active hrs / 15 min              | —                                | ~32k refresh calls/day — trivial at Mongo Atlas M10+ |
 | Foundation for "sessions" UI (list/revoke per device) | N/A                              | Ready (just needs a screen)                          |
 
+Revocation caveat: revoking refresh tokens does **not** invalidate already-issued access tokens — a killed session can keep calling the API for up to 15 minutes (access TTL) plus up to 3 minutes of `getUserFromToken` cache unless the cache entry is invalidated (Step 2.3). Both windows are part of the accepted design; anything needing instant cutoff is what the force-disconnect in `02-websocket-realtime.md` is for.
+
 ---
 
 ## 7. Risks & Rollback
@@ -588,11 +633,12 @@ cd ios && pod install && cd ..
 | Risk                                                             | Likelihood | Impact | Mitigation                                                                 |
 | ---------------------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------------------- |
 | Refresh flow has a race → all users logged out                   | Low        | High   | `async-mutex` on client; DB-level atomic rotation on server; staging soak  |
+| Lost refresh response → honest retry looks like token reuse      | Low        | High   | Client never auto-retries `/auth/refresh`; server 60s soft-fail window     |
 | Clock skew between device and server → access token rejected     | Medium     | Medium | 30-second leeway in JWT verify (`jsonwebtoken` `clockTolerance` option)    |
 | Old app (pre-refresh) breaks when flag flips                     | Low        | High   | Dual-mode `sendTokenResponse` keeps the old `token` field for ~30 days     |
 | Mongo `refreshTokens[]` array grows unbounded                    | Low        | Medium | Eviction at `MAX_REFRESH_TOKENS_PER_USER`                                  |
 | Attacker steals refresh token from AsyncStorage on rooted device | Medium     | High   | Phase 7 moves it to Keychain                                               |
-| Refresh endpoint becomes a DDOS vector                           | Low        | Medium | Add rate limit: 10 req/min per IP on `/auth/refresh`                       |
+| Refresh endpoint becomes a DDOS vector                           | Low        | Medium | Rate limit keyed on presented token (10/min) + high per-IP ceiling (CGNAT) |
 | Backend downtime during refresh → app logs user out              | Low        | High   | `baseQueryWithSmartRetry` already retries 5xx; don't trigger logout on 5xx |
 
 ### Rollback plan
@@ -616,10 +662,12 @@ cd ios && pod install && cd ..
 - `test/api_v3/auth/refresh.test.js`:
   - happy path: issue → refresh → receive new pair
   - expired refresh → 401
-  - rotated (reused) refresh → 401 + `refreshTokens[]` cleared
+  - reused refresh, revoked ≥ 60s ago → 401 TOKEN_REUSE + `refreshTokens[]` cleared
+  - reused refresh, revoked < 60s ago → 401 TOKEN_EXPIRED, sessions intact
+  - refresh for deactivated user / blacklisted company → 401 + all revoked
   - unknown refresh → 401
   - missing device id → 400
-  - concurrent refresh with same raw token (simulate with 5 parallel requests) → only one succeeds, others get 401 TOKEN_REUSE (expected behavior)
+  - concurrent refresh with same raw token (simulate with 5 parallel requests) → exactly one succeeds (atomic rotation); the rest hit the < 60s soft-fail path, sessions intact
 
 ### 8.2 App unit tests
 
@@ -652,7 +700,7 @@ cd ios && pod install && cd ..
 ## 10. Open Questions (resolve before Phase 3)
 
 1. **Refresh token in body or cookie?** Body is simpler for mobile. If a future web client needs it, cookies (httpOnly, SameSite=strict) are stronger. Decision: body for now.
-2. **Should `/auth/refresh` itself be rate-limited?** Yes — 10/min per IP. Implement via existing `express-rate-limit` (rate limit is re-enabled per `tasks_01/SEC-2`).
-3. **Do we invalidate the `getUserFromToken` 3-min cache when a token refreshes?** Yes — add `invalidateUserCache(userId)` call in the refresh controller.
+2. **Should `/auth/refresh` itself be rate-limited?** Yes — keyed on the presented token hash (10/min per token) with a high per-IP ceiling on top; per-IP alone breaks under carrier CGNAT. Implement via existing `express-rate-limit` with a custom `keyGenerator` (rate limit is re-enabled per `tasks_01/SEC-2`).
+3. **Do we invalidate the `getUserFromToken` 3-min cache when a token refreshes?** No — a refresh doesn't change the user document, and the cache is keyed by user id, not by token. Invalidation is required where the *user's state* changes: `logoutAll`, deactivate/remove, scope change (Step 2.3 here and `02-websocket-realtime.md` Step 2.5).
 4. **Do we want sliding expiry (refresh extends absolute lifetime) or absolute expiry (7 days hard cap)?** Recommendation: absolute. Sliding lets a stolen refresh token be used forever. Absolute forces re-login every 7 days even on active devices.
 5. **Keychain in Phase 6 or Phase 7?** Phase 7 (optional) — keeps Phase 6 rollout focused on the auth flow, not native module debugging.
