@@ -9,7 +9,7 @@
 
 Today: every list endpoint uses `skip` + `limit`. `skip` drifts when items are inserted or deleted between page loads (duplicates and missed rows), and `skip(n)` becomes O(n) on Mongo — every subsequent page is slower. Worse, the default limit is **0**, which means a missing `limit` query param returns the entire collection. This is a latent bug.
 
-The app has a pagination helper (`src/store/apis/paginationHelpers.js`) with `serializeQueryArgs` and `merge` already written for infinite scroll, but **no screen actually wires `onEndReached`** — so every list is a single-page fetch today and FlashList's virtualization is underutilized.
+The app has a pagination helper (`src/store/apis/paginationHelpers.js`) with `serializeQueryArgs` and `merge` already written for infinite scroll, and a handful of surfaces **already wire `onEndReached`** with page-based paging (Common/Vehicles, Customer/Vehicles, the NewOrder SelectVehicle sheet, DailyReport, the shared `RNSelectList`) — but every other list is a single-page fetch, and the wired ones inherit offset drift.
 
 Target: (1) API exposes `cursor` + `limit` on all list endpoints, with a sane `limit=25` default and `limit ≤ 100` cap. (2) App wires `onEndReached` on every FlashList, using the existing `paginationHelpers` + new cursor support, for smooth infinite scroll. (3) Old `page/limit` still works (dual-mode) for back-compat.
 
@@ -23,12 +23,12 @@ Net effect: (a) drift bug goes away, (b) deep-page latency drops from hundreds o
 
 | Concern                     | File                                     | Notes                                                            |
 | --------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
-| Pagination helper           | `helpers/advancedResults.js:46-58`       | `const limit = parseInt(reqlimit, 10) \|\| 0` — **zero default** |
+| Pagination helper           | `helpers/advancedResults.js:46-59` (`calcPagination`) | Line 49: `const limit = parseInt(reqlimit, 10) \|\| 0` — **zero default**. NB: the legacy `advancedResults` middleware in the same file (lines 153-234) already defaults to 25; the bug is in the `calcPagination`/`getResults` path the service layer uses |
 | Default page                | `helpers/advancedResults.js:48`          | `const page = parseInt(reqpage, 10) \|\| 1`                      |
-| Paginated endpoints (major) | `api_v3/services/users.js:173-176`       | Users list, uses advancedResults                                 |
+| Paginated endpoints (major) | `api_v3/services/users.js:177` (`getMultiple`) | Users list, uses `getResults`/`calcPagination`             |
 |                             | `api_v3/services/dealer_custs.js`        | Dealer customer relations                                        |
 |                             | `api_v3/services/order_msts.js`          | `getPSOrdersPagination`, `getPSOrdersFilter`                     |
-|                             | `api_v3/services/cust_msts.js:143-160`   | `getMultipleWithPSFilters`                                       |
+|                             | `api_v3/services/cust_msts.js:148-168`   | `getCustomerPagination` (no `getMultipleWithPSFilters` exists)   |
 |                             | `api_v3/services/dealer_msts.js:173-212` | Dealer masters list                                              |
 |                             | `api_v3/services/dvr_msts.js:154-209`    | Driver masters list                                              |
 |                             | `api_v3/services/invs.js`, `voc_msts.js` | Invoices + vouchers lists (all POST-filter variants)             |
@@ -40,17 +40,18 @@ Net effect: (a) drift bug goes away, (b) deep-page latency drops from hundreds o
 | Concern                 | File                                                         | Notes                                                                               |
 | ----------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
 | Pagination helper       | `src/store/apis/paginationHelpers.js`                        | `createPaginatedQueryConfig()`, `paginatedQueryConfig` — merge + serializeQueryArgs |
-| Merge strategy          | `paginationHelpers.js:28-45`                                 | Merges results, dedupes by `_id`, handles `refresh` flag                            |
-| Cache key serialization | `paginationHelpers.js:12-27`                                 | Omits `page` and `refresh` from cache key (so all pages share one cache)            |
+| Merge strategy          | `paginationHelpers.js:34-55`                                 | Merges results, dedupes by `_id`, handles `refresh` flag                            |
+| Cache key serialization | `paginationHelpers.js:18-33`                                 | Omits `page` and `refresh` from cache key (so all pages share one cache)            |
+| Cache size cap          | `paginationHelpers.js:11`                                    | `DEFAULT_MAX_CACHED_ITEMS = 500` — merged list is head-sliced past 500 items (see §7) |
 | POST-endpoint nesting   | `paginationHelpers.js`                                       | Supports `nestedPageIn: 'filterProps'` for POST bodies that nest page inside        |
-| Order list query config | `src/store/apis/dzzlooms/order_msts.js:40, 76-78`            | **Already uses** `paginatedQueryConfig` — ready for infinite scroll!                |
-| FlashList usage         | `src/screens/Dealer/Customers/index.js:10, 297` (and others) | FlashList present from `tasks_01/APP-8`                                             |
-| `onEndReached`          | **Not wired on any screen**                                  | This is the gap                                                                     |
-| Refetch on focus        | Manual `useIsFocused()` + `onRefresh` in screens             | No `refetchOnFocus` at the store level                                              |
+| Order list query config | `src/store/apis/dzzlooms/order_msts.js:40` (GET `fetch_order_msts_so`), `:76-78` (POST `fetch_order_so_POST`) | **Both already use** the pagination config — ready for infinite scroll!             |
+| FlashList usage         | `src/screens/Dealer/Customers/index.js:10, 273` (15 files across `src/screens`) | FlashList present from `tasks_01/APP-8`                                             |
+| `onEndReached`          | **Already wired (page-based)** on `Common/Vehicles/index.js:146,493`, `Customer/Vehicles/index.js:188,848`, `Customer/NewOrder/BSheets/SelectVehicle.js:137,547`, `Common/Reports/DailyReport/components.js:286`, `src/components/RNSelectList` | The gap is narrower than "none": most other lists are single-page, and the wired ones use offset paging |
+| Refetch on focus        | Manual `useIsFocused()` + `onRefresh` in screens             | No `refetchOnFocus` at store level; `setupListeners()` is never called, so the lone per-hook `refetchOnFocus: true` (`Dealer/Products/PsocProds.js:56`) is inert |
 
 ### 1.3 Key observation
 
-The **client-side infrastructure is ready**. The pagination helper was built (probably in a previous session) with infinite scroll in mind, but nobody has wired `onEndReached` to increment the page parameter. Half the work is done. This initiative is mostly API changes + hooking up `onEndReached`.
+The **client-side infrastructure is ready and partially proven**. The pagination helper was built with infinite scroll in mind, and the Vehicles screens, SelectVehicle sheet, and `RNSelectList` already wire `onEndReached` with page-based paging — treat them as the reference implementations. The remaining work: API cursor support, switching the helper from `page` to `cursor`, migrating the already-wired surfaces off offset mode, and wiring `onEndReached` on the rest of the lists.
 
 ---
 
@@ -78,9 +79,9 @@ Mongo must scan `skip` documents to reach the offset. On page 50 with `limit=20`
 
 `helpers/advancedResults.js:49` does `parseInt(reqlimit, 10) || 0`. If a caller forgets to pass `limit`, `limit = 0`, which in Mongoose means **no limit** — the entire collection is fetched. On a 50k-document collection this is a disaster. This is explicitly called out in the research as a latent bug.
 
-### 2.4 No infinite scroll
+### 2.4 Infinite scroll is the exception, not the rule
 
-Users see a fixed page of items and have no visible affordance to load more. The existing FlashLists are just rendering the first page and stopping. The `paginationHelpers` merge logic is waiting to be called.
+A few surfaces already do page-based infinite scroll (Vehicles screens, SelectVehicle sheet, `RNSelectList`) — and inherit the offset-drift problems of §2.1. Every other list renders a fixed first page with no affordance to load more. The `paginationHelpers` merge logic is waiting to be used everywhere else.
 
 ---
 
@@ -205,12 +206,12 @@ We don't want to break every existing caller atomically. The API supports both:
 
 ```
 POST /order_msts/a/poso
-Body (old):  {page: 1, limit: 20, ...filters}    → offset mode
-Body (new):  {cursor: "...", limit: 25, ...filters}  → cursor mode
-Body (new, first page): {limit: 25, ...filters}  → cursor mode, no cursor yet
+Body (old):  {page: 1, limit: 20, ...filters}                 → offset mode
+Body (new):  {cursor: "...", limit: 25, ...filters}           → cursor mode
+Body (new, first page): {cursor: null, limit: 25, ...filters} → cursor mode, first page
 ```
 
-The controller branches on the presence of `cursor`. If `cursor` is undefined but `page` is defined, it's old-mode. Otherwise it's new-mode.
+The controller branches **only** on the presence of the `cursor` key (`'cursor' in req.body`). New clients always include the key — `null` on the first page. Anything without it, including legacy callers that omit `page` and rely on defaults, stays on offset mode — no old app version ever sees the new response shape.
 
 This means the client can migrate screens one at a time without any coordinated big-bang release.
 
@@ -352,23 +353,24 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 - New file: `helpers/cursorPagination.js`
 - Exports:
   - `encodeCursor({createdAt, _id})` → base64url string (with version byte)
-  - `decodeCursor(str)` → `{createdAt, _id}` or throws
+  - `decodeCursor(str)` → `{createdAt, _id}` or throws. **Strict validation, not just parsing** (see §11): base64 + `JSON.parse` in try/catch, version byte checked, `_id` must pass `ObjectId.isValid`, `createdAt` must be a string parsing to a valid `Date`; anything else throws → controller returns a generic 400
   - `buildCursorFilter(cursor, direction)` → Mongoose filter
   - `buildCursorSort(direction)` → `{createdAt: -1, _id: -1}` or inverse
   - `extractNextCursor(items, limit)` → returns `{items, nextCursor, hasMore}` — consumes one extra fetched item
 
 #### Step 1.2 — Fix the `limit = 0` bug (proactively)
 
-- File: `helpers/advancedResults.js:49`
-- Change `parseInt(reqlimit, 10) || 0` → `Math.min(parseInt(reqlimit, 10) || 25, 100)`.
-- Default 25, max 100.
-- **Caveat:** some callers may intentionally pass `limit=0` to mean "all". Grep for `limit: 0` in both codebases before changing to confirm no callers rely on this. If any do, migrate them to explicit large limits first.
+- File: `helpers/advancedResults.js:49` — the `calcPagination` function (not the legacy `advancedResults` middleware at line 193, which already defaults to 25).
+- Change `parseInt(reqlimit, 10) || 0` → `Math.min(Math.max(parseInt(reqlimit, 10) || 25, 1), 100)`.
+- Default 25, max 100, floor 1 — the `Math.max` guard matters; without it a negative client-sent limit sails through `Math.min` into Mongoose.
+- **Caveat (code-verified):** no caller literally passes `limit: 0` in either repo — the only hits are two response stubs in `so_msts.js`. The risky callers **omit `limit` entirely** and rely on the 0-default to fetch a whole collection, so a grep for `limit: 0` cannot find them. Audit call sites of the paginated endpoints for a *missing* limit param (screens that expect complete lists — dealer lists, product rates, etc.) and give them explicit limits first, or the new default will silently truncate them to 25 rows.
 
 #### Step 1.3 — Add indexes
 
 - For each collection planned to get cursor pagination (orders, invoices, vouchers, customers, dealers, users, drivers, dealer_custs):
   - Add `Schema.index({createdAt: -1, _id: -1})`.
-  - If the queries filter by `co_id`, `dealer_id`, or similar, add compound indexes like `{co_id: 1, createdAt: -1, _id: -1}`.
+  - If the queries filter by `dealer_id`/`cust_id` or similar, add compound indexes like `{dealer_id: 1, createdAt: -1, _id: -1}`.
+- Existing coverage (code-verified): `order_msts` already has `{dealer_id, createdAt: -1}`-style compounds (model lines 59-73) and `veh_trns` has `{cust_id, createdAt: -1}` — extend these with `_id` for deterministic cursor order. **No index anywhere involves `co_id`** — if `co_id` turns out to be the tenancy field (see doc 03), index it or every scoped query is a collection scan.
 - Let Mongo build them in the background on Atlas. Monitor via Atlas UI.
 - Cross-check with `tasks_01/DB-1..DB-4` — don't duplicate existing indexes.
 
@@ -378,6 +380,7 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
   - `encode → decode` round-trip
   - Unknown cursor format → throws
   - Version mismatch → throws cleanly
+  - **Injection cases (see §11):** hand-crafted cursors where `createdAt`/`_id` are operator objects (`{"$ne": null}`), arrays, or numbers → throw; only (valid ObjectId string, valid date string) pass
   - `buildCursorFilter` produces the tuple-comparison filter correctly
 
 **Definition of Done:**
@@ -393,13 +396,16 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 #### Step 2.1 — Update the controller
 
 - File: `api_v3/controllers/collections/order_msts.js` (lines 66-74 area)
-- Branch logic:
+- Branch logic — discriminate **only** on explicit cursor presence:
+
   ```js
-  if (req.body.cursor !== undefined || req.body.page === undefined) {
-    return getOrdersCursor(req, res);
+  if (Object.prototype.hasOwnProperty.call(req.body, "cursor")) {
+    return getOrdersCursor(req, res); // cursor mode (cursor: null = first page)
   }
-  return getOrdersOffset(req, res); // existing
+  return getOrdersOffset(req, res); // existing offset mode
   ```
+
+  Do **not** treat "no `page` param" as cursor mode: legacy callers omitting both `page` and `cursor` get offset defaults today, and silently flipping them to the `{items, nextCursor}` shape breaks old app installs. New clients always send the `cursor` key (`null` on the first page — §4.2 already includes it).
 
 #### Step 2.2 — Implement `getOrdersCursor` in the service
 
@@ -408,18 +414,22 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 - Body:
 
   ```js
+  // clamp here too — Step 1.2 only fixes the offset path, and req.body.limit is
+  // client-controlled JSON ("999" + 1 === "9991" would sail into Mongoose)
+  const safeLimit = Math.min(Math.max(parseInt(limit, 10) || 25, 1), 100);
   const cursorFilter = cursor ? buildCursorFilter(decodeCursor(cursor)) : {};
   const query = { ...tenancyFilter, ...filters, ...cursorFilter };
 
   const items = await OrderMsts.find(query)
     .sort({ createdAt: -1, _id: -1 })
-    .limit(limit + 1)
+    .limit(safeLimit + 1)
     .select(fieldProjection)
     .lean();
 
-  const result = extractNextCursor(items, limit);
+  const result = extractNextCursor(items, safeLimit);
 
   if (!cursor) {
+    // keeps tenancyFilter — an unscoped count would leak cross-tenant sizes
     result.totalCount = await OrderMsts.countDocuments(query);
   }
 
@@ -485,7 +495,7 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 #### Step 4.1 — Update the RTK Query endpoint
 
 - File: `src/store/apis/dzzlooms/order_msts.js`
-- For `fetch_order_so_POST`, replace `createPaginatedQueryConfig({nestedPageIn: 'filterProps'})` with `createCursorPaginatedQueryConfig({tagType: 'order_msts'})`.
+- For `fetch_order_so_POST`, replace `createPaginatedQueryConfig('data', 'pagination', {nestedPageIn: 'filterProps'})` (current call at `order_msts.js:76-78`) with `createCursorPaginatedQueryConfig({tagType: 'order_msts'})`.
 - The endpoint now takes `{cursor, limit, refresh, filterProps}`.
 
 #### Step 4.2 — Migrate the screen
@@ -567,7 +577,8 @@ Per-screen checklist (copy once, apply per screen):
 | Dealers     | `Customer/Dealers/index.js`             | P1                                                                                                                                             |
 | Users       | `Common/CompanyUsers/index.js`          | P2 — but this one gets a BFF in `03`, so cursor pagination for its users list becomes part of the BFF response. Coordinate ordering with `03`. |
 | Drivers     | `Customer/Drivers/index.js` (if exists) | P2                                                                                                                                             |
-| Vehicles    | `Common/Vehicles/index.js`              | P2                                                                                                                                             |
+| Vehicles    | `Common/Vehicles/index.js`, `Customer/Vehicles/index.js` | P1 — **already infinite-scrolling page-based** (`onEndReached` wired); migrate off offset mode to kill drift                  |
+| Pickers     | `Customer/NewOrder/BSheets/SelectVehicle.js`, `src/components/RNSelectList` (shared), `Common/Reports/DailyReport` | P2 — also already page-based; migrating `RNSelectList` upgrades every picker at once |
 | Sister cos. | `Common/SisterCompanies/index.js`       | P2 — same caveat (BFF)                                                                                                                         |
 
 Ship 2-3 screens per PR. Don't batch them all or QA becomes unmanageable.
@@ -615,7 +626,8 @@ When offset-mode calls drop below 1% of traffic **and** that 1% is from known ol
 | Some legacy caller relies on `limit=0` = all                              | Medium     | High   | Grep first; migrate those callers to explicit `limit=10000` before changing default |
 | Filter-change bug: cursor from old filter set used with new filters       | Medium     | Medium | `useCursorList` resets cursor whenever filters change (shallow compare)             |
 | FlashList `onEndReached` fires on mount (empty list)                      | High       | Low    | Guard with `items.length > 0`                                                       |
-| Infinite scroll goes infinite (server always says hasMore)                | Low        | High   | Server-side safety: cap at 1000 items per paginated session                         |
+| Infinite scroll goes infinite (server always says hasMore)                | Low        | High   | Stateless cursors have no server-side "session" to count — encode a running count in the cursor and refuse past 1000, and/or lean on the client cap that already exists (`DEFAULT_MAX_CACHED_ITEMS = 500`, `paginationHelpers.js:11`) |
+| Client cache cap (500) head-slices deep scrolls                           | Medium     | Medium | Past 500 merged items the helper drops the head → rows above the viewport vanish and the scroll position jumps. Raise `maxCachedItems` for cursor lists, or accept ~500 as max scroll depth and document it |
 | User-perceived lag because cursor loads are slower than simple cache hits | Low        | Low    | Show footer spinner. Pre-fetch at 50% threshold.                                    |
 
 ### Rollback plan
@@ -637,8 +649,9 @@ Per endpoint:
 - Concurrent delete: similar.
 - Tiebreaker: insert two records with identical `createdAt`, paginate with `limit=1`, verify both appear.
 - Filter change: fetch with filter A, then fetch with filter B — both should return their own full chains.
-- Limit cap: request `limit=500`, assert server returns `limit=100`.
-- Legacy: `{page: 2, limit: 20}` still works.
+- Limit cap: request `limit=500`, assert server caps at 100; also `limit: "999"` (string) and `limit: -5` → clamped, never more than 100 items returned.
+- Malformed/forged cursor: garbage base64, wrong version byte, operator-object fields → 400 (never 500, never a query executed with operators; see §11).
+- Legacy: `{page: 2, limit: 20}` still works, and a body with **neither** `cursor` nor `page` stays on offset mode (old response shape).
 
 ### 8.2 App tests
 
@@ -670,5 +683,18 @@ Per endpoint:
 1. **Should list endpoints support a `prevCursor` for backwards pagination?** Not for infinite scroll. Add only if/when a paginated table UI is built.
 2. **Sort orders other than `-createdAt`?** Most screens sort by date. If a specific screen needs `-totalAmount` or similar, the cursor must encode that field instead. Defer until a real use case appears. Keep the cursor helper extensible (`encodeCursor({keys})`).
 3. **Should totalCount be estimated (e.g. via `estimatedDocumentCount` for no-filter cases)?** Only if `countDocuments` becomes a hotspot. Not a launch concern.
-4. **What about very cold deep scrolls (user scrolls to page 100)?** Cursor pagination is constant-time, but the user will hit the ~1000-item session cap first. Design decision: cap is fine; if a user needs to search something far back, they should use search/filters instead of scrolling.
-5. **Interaction with offline cache:** if the user scrolls page 1-5 offline from cache, then scrolls to page 6 online, does it work? Yes — RTK Query serves the cached merged list and fetches the next cursor from the server. As long as the cache isn't garbage-collected between sessions (RTK Query's `keepUnusedDataFor` is 300s — long enough for normal use), this works.
+4. **What about very cold deep scrolls (user scrolls to page 100)?** Cursor pagination is constant-time, but the user hits the depth cap first (client `maxCachedItems` = 500 today; cursor-encoded server cap per §7). Design decision: cap is fine; if a user needs something far back, search/filters beat scrolling.
+5. **Interaction with offline cache:** if the user scrolls page 1-5 offline from cache, then scrolls to page 6 online, does it work? Yes — RTK Query serves the cached merged list and fetches the next cursor from the server. As long as the cache isn't garbage-collected between sessions (RTK Query's `keepUnusedDataFor` is set to 300s in `createApi.js:120` — long enough for normal use), this works.
+
+---
+
+## 11. Security
+
+Current posture, code-verified in `dzzlo_oms.js`: global `sanitizeMongo()` / mongo-sanitize (`:82`), helmet (`:85`), `express.json({ limit: "1mb" })` (`:59`). No input-validation library exists anywhere; the global rate limiter is commented out (`:88-95`); per-route `protect`/`authorize` are mostly commented out in collection routes.
+
+1. **The cursor is attacker-controlled input that bypasses the global sanitizer.** `sanitizeMongo` strips `$`-operator keys from the raw request body — *before* the cursor is base64-decoded. A crafted cursor decoding to `{"createdAt": {"$ne": null}, ...}` re-introduces Mongo operators into the `find()` filter *after* sanitization. `decodeCursor`'s strict type validation (Step 1.1: `ObjectId.isValid`, valid date string, known version byte, everything else throws) is the primary defense — the Step 1.4 injection tests are mandatory, not optional.
+2. **Invalid cursor → generic 400.** Never echo decoded cursor content back in the response; log it truncated/escaped only.
+3. **Clamp `limit` in every path.** Offset path in Step 1.2, cursor path via `safeLimit` in Step 2.2. `req.body.limit` is client-controlled JSON — unclamped, `"limit": "999"` string-concatenates with `+ 1` to `"9991"` and Mongoose casts it: cap bypass → resource exhaustion.
+4. **Tenancy filter in both the items query and `countDocuments`.** An unscoped count leaks cross-tenant collection sizes.
+5. **Rate limiting.** Cursor pages cost ~20ms — cheap to spam in a data-harvesting loop. Add a per-user `express-rate-limit` on the list endpoints (the dependency is installed; the global limiter is currently commented out).
+6. **Fix route auth as you touch each endpoint.** The dual-mode migration edits every list controller anyway — apply `protect` + `authorize(...)` on each route as it migrates (most collection routes have them commented out today).

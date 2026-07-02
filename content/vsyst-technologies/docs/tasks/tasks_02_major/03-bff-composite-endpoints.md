@@ -7,7 +7,7 @@
 
 ## TL;DR
 
-Today: the `Customer/NewOrder` screen fires 4-5 parallel HTTP requests on mount (vehicles, product rates, dealer list, relation balance, optional order detail). The `Common/Accounts` screen fires 3-4. The `Common/CompanyUsers` screen fires 4. Each request has its own round-trip, its own JWT verification, its own Mongoose hydration, and its own response parsing.
+Today: the `Customer/NewOrder` screen fires 4-5 parallel HTTP requests on mount (vehicles, product rates, dealer list, relation balance, optional order detail). The `Common/Accounts` screen fires 3-4. The `Common/CompanyUsers` screen fires 2 (its sister-company hooks are commented out — see §3.1). Each request has its own round-trip, its own JWT verification, its own Mongoose hydration, and its own response parsing.
 
 Target: every heavy screen has a **dedicated composite endpoint** like `POST /api/v3/screens/new-order` that returns all the data that screen needs in a single JSON payload, shaped exactly for that screen. The generic list endpoints (`GET /veh_trns_other`, `POST /prod_rates`, etc.) keep working unchanged — BFF is purely additive.
 
@@ -79,15 +79,15 @@ The full mapping is in the agent research; here's the high-value subset:
 
 | Rank | Screen                      | File                                                 | Current requests                                                                           | Top BFF payoff |
 | ---- | --------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------ | -------------- |
-| 1    | `Customer/NewOrder`         | `src/screens/Customer/NewOrder/index.js`             | `veh_trns_other`, `prod_msts_rate`, `dealer list`, `rel_bal`, (optional `one_order_by_so`) | ★★★★★          |
+| 1    | `Customer/NewOrder`         | `src/screens/Customer/NewOrder/index.js`             | `veh_trns_paginated`, `prod_msts_rate`, `customer_dealers`, `rel_bal`, (optional `one_order_by_so`) | ★★★★★          |
 | 2    | `Common/Accounts` (ledger)  | `src/screens/Common/Accounts/index.js`               | `one_dealer_customer`, `year_month_acc`, `year_ob`, (lazy `month_acc`)                     | ★★★★★          |
-| 3    | `Common/CompanyUsers`       | `src/screens/Common/CompanyUsers/index.js`           | `company_users`, `invites`, `sister_cust_msts`, `sister_dealer_msts`                       | ★★★★           |
-| 4    | `Common/SisterCompanies`    | `src/screens/Common/SisterCompanies/index.js`        | `sister_cust_msts`, `sister_dealer_msts`, `invites`                                        | ★★★★           |
+| 3    | `Common/CompanyUsers`       | `src/screens/Common/CompanyUsers/index.js`           | `company_users`, `invites` — **only 2 fire**; the sister hooks are commented out (lines 37-38) | ★★             |
+| 4    | `Common/SisterCompanies`    | `src/screens/Common/SisterCompanies/index.js`        | `invites` + one of `sister_cust_msts`/`sister_dealer_msts` (picked by `user.role`, lines 124-139) — **2 fire, not 3** | ★★             |
 | 5    | `Customer/NewPayment`       | `src/screens/Customer/NewPayment/index.js`           | `invs_POST`, `one_dealer_customer`, `rel_bal`                                              | ★★★            |
 | 6    | `Common/_Invoice_` (detail) | `src/screens/Common/_Invoice_/index.js`              | `one_invs`, `order_msts_by_so`, `one_dealer_customer_Q`                                    | ★★★            |
-| 7    | `Common/Vehicles`           | `src/screens/Common/Vehicles/index.js`               | `veh_trns_other`, `dvr_msts_by_custid`                                                     | ★★             |
+| 7    | `Common/Vehicles`           | `src/screens/Common/Vehicles/index.js`               | `veh_trns_paginated`, `veh_trns_reqCount`, `dvr_msts_by_custid`                            | ★★             |
 | 8    | `Dealer/NewInvoice`         | `src/screens/Dealer/NewInvoice/index.js`             | `dealer_custs_psocs`, `order_msts_so`                                                      | ★★             |
-| 9    | `Home / Dashboard` (if any) | TBD — likely shows metrics from multiple collections | TBD                                                                                        | ★★★★           |
+| 9    | `Home / Dashboard`          | **Does not exist** — only `Demo/Dashboard` in the guest flow (`src/navigation/Guest/Main.js:10`) | N/A — see Phase 8                                                                          | N/A            |
 
 ### 3.2 Composite endpoints that already exist (partial wins available)
 
@@ -95,7 +95,7 @@ The full mapping is in the agent research; here's the high-value subset:
 - `fetch_order_so_POST` — batch order fetch with filters
 - `fetch_voc_inv_POST` — batch voucher fetch
 - `fetch_dealer_customersList` — customer list with relation data (already partial BFF)
-- `fetch_prods_rate_mstsquery` — batch product rates (already batches)
+- `fetch_prods_rate_msts` (in `prod_msts.js`) — batch product rates (already batches)
 - `fetch_dealer_custs_psocs` — customer list with PSOC data (already partial BFF)
 
 These are good signs: the API codebase is already comfortable with POST-body filter endpoints. Adding BFF endpoints on top is idiomatic.
@@ -125,7 +125,7 @@ Several of these are solved _as a side effect_ of the BFF design. E.g., the NewO
 4. **Project fields aggressively.** Use `.lean()` (already enabled via `tasks_01/QW-1`) and `.select('field1 field2')` per query (part of `tasks_01/DB-7`). BFF responses should be ~50% smaller than the sum of the generic endpoints they replace.
 5. **Minimal business logic.** A BFF is a **data fetcher and shaper**. It should not contain domain logic. If it needs to compute something (e.g. credit available = limit - balance), that logic should exist in a shared helper used by both the BFF and the generic endpoints.
 6. **Graceful partial failure.** Use `Promise.allSettled` for non-critical sub-queries so one slow/failing collection doesn't tank the whole screen. Return `{vehicles: [...], productRates: null, productRatesError: 'timeout'}` and let the screen decide.
-7. **Share auth / tenancy filters.** Every sub-query must respect the same user/company scope. Build a helper `buildTenancyFilter(req)` and pass it to every sub-query.
+7. **Share auth / tenancy filters.** Every sub-query must respect the same user/company scope. Build a helper `buildTenancyFilter(req)` and pass it to every sub-query. Derive the scope from `req.user`, never from the request body. Note (code-verified): no index in `models/` involves `co_id` today — real query scoping in this codebase is by `cust_id`/`dealer_id`, so confirm the actual tenancy field and index it before the first BFF ships (see §11 Security).
 8. **Cacheable at the edge (optional).** Some BFF responses (dashboards) are safe to cache for 30 seconds. Use `Cache-Control` headers + the existing in-process cache from `tasks_01/CACHE-*`.
 
 ### 4.2 BFF vs GraphQL
@@ -166,7 +166,7 @@ const { vehicles, productRates, dealers, relationBalance, order } = data ?? {};
 **Cache tag strategy:** the BFF's `providesTags` lists every underlying resource:
 
 ```js
-providesTags: (result) => [
+providesTags: (result, error, arg) => [
   "screen_new_order",
   ...(result?.vehicles?.map((v) => ({ type: "veh_trns", id: v._id })) ?? []),
   ...(result?.productRates?.map((p) => ({ type: "prod_msts", id: p._id })) ??
@@ -266,7 +266,7 @@ Order by impact (highest-payoff screens first).
 
 - New file: `api_v3/helpers/screensHelpers.js`
 - Exports:
-  - `buildTenancyFilter(req)` → `{co_id: req.user.co_id}` or similar based on role
+  - `buildTenancyFilter(req)` → the caller's scope filter derived from `req.user`, branched by role. Caution: `{co_id: ...}` is unverified — no index anywhere involves `co_id`, and the codebase scopes queries by `cust_id`/`dealer_id`. Pin the real field down here and index it
   - `runParallel(tasks)` → wraps `Promise.all`, logs per-sub-query timing, collects errors
   - `runParallelSettled(tasks)` → wraps `Promise.allSettled` with a uniform result shape
   - `project(fields)` → shorthand for `.select(fields.join(' '))`
@@ -279,8 +279,9 @@ Order by impact (highest-payoff screens first).
 
 #### Step 1.4 — BFF-specific middleware
 
-- `api_v3/middleware/bffTiming.js` — adds `X-BFF-Timing: vehicles=34ms,rates=28ms,dealers=15ms` header. Essential for debugging "which sub-query is slow".
-- Use the existing `protect` middleware for auth.
+- `api_v3/middleware/bffTiming.js` — adds `X-BFF-Timing: vehicles=34ms,rates=28ms,dealers=15ms` header. Essential for debugging "which sub-query is slow". **Emit it only outside production** (or gate to admin users) — per-sub-query timings leak internal architecture and create a timing side-channel.
+- Auth: apply `protect` **and** `authorize(...)` on every screens route. Mechanics (code-verified): `protect` (`api_v3/auth.js:61`) does not verify the JWT itself — the global `logging()` middleware does that via `getUserFromToken` (`helpers/middlewares.js:233`) and sets `req.loggedInUser`; `protect` just 401s when it's absent. Existing collection routes import `protect`/`authorize` but mostly leave them commented out — BFF routes must not copy that pattern.
+- Validation: the API currently has **no input-validation library**. Add one (Joi/celebrate or zod) in this phase and give every BFF a body schema — ObjectId format checks, unknown fields rejected (see §11).
 
 **Definition of Done:**
 
@@ -297,9 +298,9 @@ Order by impact (highest-payoff screens first).
 #### Step 2.1 — API controller
 
 - File: `api_v3/controllers/screens/newOrder.js`
-- Body schema: `{orderId?: string, dealerId: string, custId: string}`
+- Body schema: `{orderId?: string, dealerId: string, custId: string}` — validated (ObjectId formats, unknown fields rejected). IDOR guard: for customer-role callers derive `custId` from `req.user` instead of trusting the body, and verify the `{dealerId, custId}` relation belongs to the caller before firing sub-queries (see §11).
 - Sub-queries (parallel):
-  1. `vehTrnsService.listOther(filter)` — vehicles assigned to the customer's company
+  1. `vehTrnsService.listForCustomer(filter)` — vehicles for the customer (the screen consumes `fetch_veh_trns_paginated` today, not `veh_trns_other` — mirror that query)
   2. `prodMstsService.ratesBatchForDealer(dealerId, filter)` — active product rates for this dealer
   3. `dealerCustsService.listDealersForCustomer(custId, filter)` — dealers that serve this customer
   4. `sectionalAccService.getRelationBalance({dealerId, custId})` — current balance for the dealer-customer relation
@@ -319,7 +320,7 @@ Order by impact (highest-payoff screens first).
 
 #### Step 2.2 — Register route
 
-- `api_v3/routes/screens.js`: `router.post('/new-order', protect, newOrderCtrl)`.
+- `api_v3/routes/screens.js`: `router.post('/new-order', protect, authorize('customer'), validate(newOrderSchema), newOrderCtrl)`.
 
 #### Step 2.3 — RTK Query endpoint
 
@@ -393,33 +394,32 @@ Order by impact (highest-payoff screens first).
 
 #### Step 4.1 — API controller
 
+> **Corrected scope (code-verified):** the screen fires only **2** requests today — `company_users` and `invites`; the sister-company hooks in `CompanyUsers/index.js` are commented out (lines 37-38). Sister-company data belongs to the `SisterCompanies` screen (Phase 5). This BFF is a 2 → 1 merge with a correspondingly smaller payoff — consider shipping it in the same PR as Phase 5.
+
 - File: `api_v3/controllers/screens/companyUsers.js`
-- Body: `{}` — scoped by `req.user.co_id`
+- Body: `{}` — scoped entirely from `req.user`, nothing client-supplied
 - Sub-queries:
   1. `usersService.getCompanyUsers(coId)` — users list
   2. `invitesService.getPendingInvites(coId)` — pending invites
-  3. `custMstsService.getSisterCompanies(coId)` — if the current company is a customer
-  4. `dealerMstsService.getSisterCompanies(coId)` — if the current company is a dealer
-- Note: sub-queries 3 and 4 are mutually exclusive based on `onModel`. The controller checks `req.user.onModel` and only fires the relevant one.
 
 #### Step 4.2 — Migrate `Common/CompanyUsers/index.js`
 
-- One query hook replaces 4.
+- One query hook replaces 2.
 - When invites are accepted/declined, invalidate the `'screen_company_users'` tag (and also the individual `'invites'` tag so other places that use invites also refresh).
 
 ---
 
 ### Phase 5 — BFF #4: `POST /screens/sister-companies`
 
-**Goal:** the Sister Companies screen currently duplicates part of CompanyUsers.
+**Goal:** merge the Sister Companies screen's two mount requests into one. (Code-verified: sister-company data lives only on this screen — the copies in CompanyUsers are commented out.)
 
 #### Step 5.1 — API controller
 
 - File: `api_v3/controllers/screens/sisterCompanies.js`
 - Body: `{}`
-- Sub-queries: same 2-3 as CompanyUsers minus the users list.
+- Sub-queries: `invites` + **one** sister-company list. The screen picks the sister query by `user.role` (`SisterCompanies/index.js:124-139` — `customer` → `sister_cust_msts`, `dealer` → `sister_dealer_msts`; the other trigger is a no-op). The controller branches on `req.user.role` the same way.
 
-**Definition of Done:** screen loads from 3 requests → 1.
+**Definition of Done:** screen loads from 2 requests → 1.
 
 ---
 
@@ -443,10 +443,10 @@ Order by impact (highest-payoff screens first).
 
 - File: `api_v3/controllers/screens/invoiceDetail.js`
 - Body: `{invoiceId}`
-- Sub-queries:
-  1. `invsService.getOne(invoiceId)` — invoice detail
+- Sub-queries — **two-stage, not fully parallel**: 2 and 3 need values from the fetched invoice (`order_ids`, `dealer_id`, `cust_id`), so fetch the invoice first, then `Promise.allSettled` the rest.
+  1. `invsService.getOne(invoiceId)` — invoice detail. Must be **tenancy-scoped in the query itself** — a bare `findById` here is an IDOR letting any authenticated user read any invoice (see §11).
   2. `orderMstsService.getBySoIds(invoice.order_ids)` — related orders
-  3. `dealerCustsService.getOneRelation({dealerId, custId})` — relation info for ledger link
+  3. `dealerCustsService.getOneRelation({dealerId, custId})` — relation info for ledger link (IDs from the fetched invoice, never the request body)
 
 - Critical: invoice. Optional: related orders, relation.
 
@@ -454,7 +454,7 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 8 — BFF #7: `POST /screens/home` (Dashboard)
 
-**Goal:** if there's a home/dashboard screen (TBD from screen audit), give it a dedicated BFF. Dashboards are the canonical BFF use case because they combine unrelated data sources.
+**Goal (code-verified: currently moot):** no Home/Dashboard screen exists for real users — the only dashboard is `src/screens/Demo/Dashboard`, used exclusively by the guest flow (`src/navigation/Guest/Main.js:10`); Customer/Dealer navigation opens straight into the transaction tabs. **Skip this phase** unless a real dashboard gets built; the steps below are the blueprint for that day, because dashboards are the canonical BFF use case (they combine unrelated data sources).
 
 #### Step 8.1 — Audit the home screen
 
@@ -504,7 +504,7 @@ Collect this for 1 week before Phase 2 ships, then again after. Target: 30-50% r
 
 #### Step 9.3 — Keep old endpoints alive
 
-Do not retire the generic endpoints (`fetch_veh_trns_other`, etc.) as part of this initiative. They're still needed by:
+Do not retire the generic endpoints (`fetch_veh_trns_paginated`, `fetch_veh_trns_other`, etc.) as part of this initiative. They're still needed by:
 
 - Other non-BFF screens
 - Admin tooling
@@ -546,7 +546,7 @@ Across the 5-7 heaviest screens, this is a meaningful perceived-performance win.
 
 **Level 1:** if a specific BFF misbehaves, set a feature flag `BFF_NEW_ORDER_ENABLED=false`. The client falls back to a special branch that uses the old hooks. Ship as a client-side setting loadable at startup.
 
-**Level 2:** remove the BFF route from `routes/screens.js`, redeploy API. Client gets 404; its RTK Query endpoint retries; eventually falls back to old behavior if the app has graceful degradation logic.
+**Level 2:** remove the BFF route from `routes/screens.js`, redeploy API. **Caution — this alone breaks migrated clients:** RTK Query does not retry 404s by default and no graceful-degradation branch exists in the app. Only safe after the Level 1 flag/fallback has shipped in the client; treat this as post-rollback server cleanup, not a rollback mechanism.
 
 **Level 3:** revert the client migration. Old hooks are still in the codebase (we never deleted them); the screen just stops calling the BFF.
 
@@ -563,6 +563,7 @@ For each BFF:
 - Happy-path integration test: seed DB, call endpoint, assert response shape + content.
 - Partial-failure test: mock one sub-query to throw, assert `allSettled` behavior returns the rest.
 - Tenancy test: call as user A, assert you can't see user B's company data.
+- IDOR test, per body parameter: call as customer A passing customer B's `custId` / another relation's `dealerId` / another company's `invoiceId`/`orderId` — assert 403/404 and zero foreign data in the payload. Every ID the body accepts gets one of these.
 - Performance test: assert p95 under 300ms with seeded dataset.
 - Shape test: JSON schema validation of response.
 
@@ -592,17 +593,34 @@ For each migrated screen:
 
 ---
 
+## 11. Security Requirements
+
+Current posture, code-verified in `dzzlo_oms.js`: helmet (`:85`), global `sanitizeMongo()` / mongo-sanitize (`:82`), `express.json({ limit: "1mb" })` (`:59`), JWT verified in the global `logging()` middleware via `getUserFromToken`, `authLimiter` on auth routes. Gaps this initiative must not inherit: **no input-validation library anywhere**, per-route `protect`/`authorize` mostly commented out, global rate limiter commented out (`dzzlo_oms.js:88-95`), `cors()` fully open (relevant because `dip-web` is a browser client).
+
+Every BFF endpoint must satisfy all of:
+
+1. **AuthN + AuthZ on the route.** `router.post('/x', protect, authorize(<roles>), validate(schema), ctrl)` — no exceptions, no commented-out middleware.
+2. **IDOR guards.** Any ID accepted in the body (`custId`, `dealerId`, `orderId`, `invoiceId`) is either derived from `req.user` instead, or verified to belong to the caller **before** sub-queries run — the unique `{dealer_id, cust_id}` index on `dealer_custs` (model lines 121-123) makes relation membership a cheap existence check. Fetch-by-id sub-queries include the tenancy filter in the query itself — never a bare `findById`.
+3. **Input validation.** Schema-validate every body: ObjectId formats, types, unknown fields rejected. `sanitizeMongo` strips `$`-operators but not non-`$` garbage (`custId: {a: 1}` → CastError 500s without validation).
+4. **Rate limiting.** One BFF request fans out to ~5 DB queries — add a per-user `express-rate-limit` on `/api/v3/screens/*` (the dependency is already installed).
+5. **Error hygiene.** Partial-failure fields (`productRatesError`) are enum codes (`'timeout' | 'unavailable'`), never raw `err.message`/Mongo errors.
+6. **Field-level authorization.** Financial fields (`relationBalance.credit_limit`, `available`) go only to roles entitled to them; enforce in the shared service helper so the BFF and generic endpoints agree.
+7. **`X-BFF-Timing` disabled in production** (or admin-gated).
+8. **Caching (if Phase 8 ever ships):** in-process cache keyed by `userId` + role/company; `Cache-Control: private, max-age=30`; never cacheable by shared proxies.
+
+---
+
 ## Appendix A — Screen-to-BFF mapping quick reference
 
 | Screen                            | BFF Endpoint                     | Replaces (# old hooks) |
 | --------------------------------- | -------------------------------- | ---------------------- |
 | `Customer/NewOrder/index.js`      | `POST /screens/new-order`        | 4-5                    |
 | `Common/Accounts/index.js`        | `POST /screens/accounts`         | 3-4                    |
-| `Common/CompanyUsers/index.js`    | `POST /screens/company-users`    | 4                      |
-| `Common/SisterCompanies/index.js` | `POST /screens/sister-companies` | 3                      |
+| `Common/CompanyUsers/index.js`    | `POST /screens/company-users`    | 2                      |
+| `Common/SisterCompanies/index.js` | `POST /screens/sister-companies` | 2                      |
 | `Customer/NewPayment/index.js`    | `POST /screens/new-payment`      | 3                      |
 | `Common/_Invoice_/index.js`       | `POST /screens/invoice-detail`   | 3                      |
-| `Home/index.js` (TBD)             | `POST /screens/home`             | N (dashboard)          |
+| `Home/index.js` (does not exist)  | `POST /screens/home`             | skip — no such screen  |
 
 ## Appendix B — Naming convention
 
