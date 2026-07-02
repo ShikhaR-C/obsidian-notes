@@ -61,8 +61,10 @@ export const EVENTS = Object.freeze({
   INVOICE_CREATED: 'invoice_created', // add_invs
   INVOICE_UPDATED: 'invoice_updated', // update_invs
   INVOICE_EMAILED: 'invoice_emailed', // email_inv
-  INVOICE_PDF_GENERATED: 'invoice_pdf_generated', // components/Download (client-side)
-  INVOICE_DOWNLOADED: 'invoice_downloaded',
+  // Correction: invoice_pdf_generated / invoice_downloaded dropped — there is
+  // no live client-side PDF/download path (components/Download is dead code,
+  // zero importers). Invoices render as HTML in a WebView:
+  INVOICE_RENDERED: 'invoice_rendered', // _Invoice_/Render.js {format: 'Normal'|'Detailed'|'Excel'|'GST'}
 
   // ── Payments / vouchers ──
   NEW_PAYMENT_VIEWED: 'new_payment_viewed',
@@ -98,12 +100,14 @@ export const EVENTS = Object.freeze({
   VEHICLE_REQUEST_CREATED: 'vehicle_request_created', // add_veh_req {request_type: 'hire'|'rent'}
   VEHICLE_REQUEST_ACCEPTED: 'vehicle_request_accepted', // accept_hire_veh_req / accept_own_veh_req
 
-  // ── Reports / exports ──
+  // ── Reports / renders ──
+  // Correction: excel_exported / pdf_exported dropped — no file export exists.
+  // "Excel" is an HTML render format shown in a WebView (Accounts/Render/
+  // index.js → xlsxYearAcc; xlsxInvSummary for invoices). Pass `format` on the
+  // *_viewed events; re-add export events only if a save/share feature ships.
   REPORT_VIEWED: 'report_viewed',
-  EXCEL_EXPORTED: 'excel_exported',
-  PDF_EXPORTED: 'pdf_exported',
   DAILY_SUMMARY_VIEWED: 'daily_summary_viewed',
-  ACCOUNT_STATEMENT_VIEWED: 'account_statement_viewed',
+  ACCOUNT_STATEMENT_VIEWED: 'account_statement_viewed', // {range_days, format}
   ACCOUNT_STATEMENT_EMAILED: 'account_statement_emailed', // email_acc
 
   // ── Company / users ──
@@ -129,7 +133,9 @@ export const EVENTS = Object.freeze({
   SETTINGS_VIEWED: 'settings_viewed',
   DELETE_ACCOUNT_INITIATED: 'delete_account_initiated',
   DELETE_ACCOUNT_CONFIRMED: 'delete_account_confirmed',
-  CODEPUSH_CHECKED: 'codepush_checked',
+  // Correction: CODEPUSH_CHECKED dropped — react-native-code-push is NOT in
+  // package.json; Settings/Codepush.js is unreferenced dead code (its import
+  // would fail to resolve if mounted). Re-add if CodePush actually ships.
 
   // ── Activation milestones (see EVENT_TRIGGERS) ──
   FIRST_ORDER_CREATED: 'first_order_created',
@@ -138,15 +144,20 @@ export const EVENTS = Object.freeze({
 
   // ── Error-adjacent ──
   ERROR_BOUNDARY_TRIGGERED: 'error_boundary_triggered',
+  API_ERROR: 'api_error', // rtkQueryErrorLogger (Phase 3.3) — 5xx/network only
   NETWORK_LOST: 'network_lost',
   NETWORK_RESTORED: 'network_restored',
 });
 
 // Canonical screen identifiers (the reference app's `screenSources`), passed
 // as a `source` param so the same event from different origins is
-// distinguishable. VALUES mirror the ACTUAL React Navigation route names (from
-// src/navigation/{Auth,Customer,Dealer,Common}) so they line up with the
-// auto-tracked screen_view events — keep them in sync if routes are renamed.
+// distinguishable. VALUES mirror the ACTUAL **leaf** React Navigation route
+// names (from src/navigation/{Auth,Customer,Dealer,Common,Guest}) so they line
+// up with the auto-tracked screen_view events — the tracker logs
+// `getCurrentRoute()?.name`, i.e. the DEEPEST focused route, so drawer
+// *container* routes (lowercase 'settings'/'help'/'details'/'validateUser',
+// 'customerTab', 'dealerProd', …) never appear in screen_view. Use the leaf
+// names below; keep them in sync if routes are renamed.
 //
 // Grouping convention (per request):
 //   AUTH_*   — auth stack         (src/navigation/Auth)
@@ -161,9 +172,12 @@ export const SCREENS = Object.freeze({
   AUTH_FORGOT_PASSWORD: 'ForgotPassword',
   AUTH_CUSTOMER_SIGNUP: 'Customer', // beta-user customer registration
   AUTH_DEALER_SIGNUP: 'Dealer', // beta-user dealer registration
-  AUTH_VALIDATE_USER: 'validateUser',
 
   // ── Common (both role trees) ──
+  // Correction: moved from AUTH_ — 'validateUser' is a conditional Drawer.Screen
+  // in BOTH role trees (Customer/Drawer.js:84, Dealer/Drawer.js:83), not part
+  // of the auth stack; its leaf screen (what screen_view logs) is capitalised:
+  COMMON_VALIDATE_USER: 'ValidateUser',
   COMMON_ORDERS: 'Orders',
   COMMON_INVOICES: 'Invoices',
   COMMON_INVOICES_TAB: 'InvoicesTab',
@@ -185,11 +199,12 @@ export const SCREENS = Object.freeze({
   COMMON_ADD_EDIT_COMPANY: 'AddEditCompany',
   COMMON_COMPANY_PROFILE: 'CompanyProfile',
   COMMON_PROFILE: 'Profile',
-  COMMON_SETTINGS: 'settings',
+  COMMON_SETTINGS: 'Settings', // leaf screen (Guest/Main.js); drawer container route is lowercase 'settings'
   COMMON_DELETE_ACCOUNT: 'DeleteAccount',
-  COMMON_HELP: 'help',
+  COMMON_HELP: 'Help', // leaf screen (Guest/Main.js); drawer container route is lowercase 'help'
   COMMON_CONTACT_US: 'ContactUs',
-  COMMON_INVOICE_DETAILS_NAV: 'details',
+  // Correction: 'details' entry dropped — it's a drawer container route whose
+  // leaf screen is 'Invoice', already covered by COMMON_INVOICE_DETAIL.
 
   // ── Customer-only ──
   CUST_NEW_ORDER: 'NewOrder',
@@ -242,13 +257,15 @@ export const EVENT_TRIGGERS = Object.freeze({
 });
 ```
 
+> **Corrections (2026-07-02 code audit, verified against `src/navigation/**`):** (1) `validateUser` moved AUTH_→COMMON_ and re-cased to its leaf screen `ValidateUser` — it's a conditional drawer screen in **both** role trees, not part of the auth stack. (2) `settings`/`help` re-cased to the leaf screens `Settings`/`Help` (`Guest/Main.js`) — the lowercase names are drawer *container* routes that the auto screen-view tracker never logs. (3) `details` dropped (leaf is `Invoice`, already covered). (4) Events removed/added per the inline comments above (`invoice_rendered`, `api_error` in; PDF/export/CodePush events out). All other route values and their role-tree groupings were verified correct.
+
 > **Naming review gate:** before merging, eyeball every value against the GA4 limits (≤40 chars, no reserved prefix). A quick test asserts this (see 1.4).
 
 ---
 
 ## 1.2 Extend `src/utils/firebase.js`
 
-Add three helpers; keep the existing exports byte-for-byte stable (they're already consumed by middleware + `RestartContext`).
+Add four helpers and one backward-compatible extension; existing callers (middleware + `RestartContext`) are unaffected.
 
 ```js
 import deviceInfo from 'react-native-device-info'; // already a dependency (^15)
@@ -285,6 +302,43 @@ export const setUserContext = async ({ userId, role, companyId, accountVerified,
     ].filter(Boolean));
   } catch (e) {
     console.warn('[firebase] setUserContext failed', e);
+  }
+};
+
+// Stop attributing events after logout / account deletion: reset user ids,
+// null the default event params, blank the user properties. Crashlytics
+// attributes can't be deleted, so overwrite with ''. Fire the `logout` event
+// BEFORE calling this (Phase 2 wires it on auth reset — manual logout, 401
+// auto-logout, delete_account_confirmed).
+export const clearUserContext = async () => {
+  try {
+    await Promise.all([
+      analytics().setUserId(null),
+      crashlytics().setUserId(''),
+      analytics().setDefaultEventParameters({ role: null, company_id: null }),
+      analytics().setUserProperty('role', null),
+      analytics().setUserProperty('company_id', null),
+      analytics().setUserProperty('account_verified', null),
+      analytics().setUserProperty('scope', null),
+      crashlytics().setAttribute('role', ''),
+      crashlytics().setAttribute('company_id', ''),
+    ]);
+  } catch (e) {
+    console.warn('[firebase] clearUserContext failed', e);
+  }
+};
+
+// EXTEND the existing logError with an optional 2nd arg forwarded to
+// crashlytics().recordError(err, jsErrorName) — a stable name groups identical
+// failures into ONE Crashlytics issue (Phase 3 uses 'ReactRenderError',
+// 'UnhandledRejection'). Verified: the installed RNFB 24 recordError supports
+// the jsErrorName param. Existing single-arg callers behave exactly as before.
+export const logError = async (error, name) => {
+  try {
+    const err = error instanceof Error ? error : new Error(String(error));
+    await crashlytics().recordError(err, name);
+  } catch (e) {
+    console.warn('[firebase] logError failed', e);
   }
 };
 
@@ -386,7 +440,7 @@ describe('events catalog', () => {
 ## Phase 1 checklist
 
 - [ ] `src/config/events.js` created (`EVENTS`, `SCREENS`, `SOURCES`, `EVENT_TRIGGERS`).
-- [ ] `firebase.js` gains `setUserContext`, `logBreadcrumb`, `setScreenAttr` (existing exports untouched).
+- [ ] `firebase.js` gains `setUserContext`, `clearUserContext`, `logBreadcrumb`, `setScreenAttr`; `logError` extended with optional `name` arg (existing callers unaffected).
 - [ ] `src/utils/analytics.js` `track()` helper created with kill-switch.
 - [ ] `initRemoteConfig({ analytics_enabled: true })` default added.
 - [ ] `__tests__/events.test.js` passes (`yarn test`).

@@ -17,7 +17,7 @@ Goal: open a Crashlytics issue and immediately know **what** broke, **where** (f
 
 Current state to build on (already configured — verify, don't redo):
 - `firebase.json` → `crashlytics_is_error_generation_on_js_crash_enabled: true` + `crashlytics_javascript_exception_handler_chaining_enabled: true` → **RN Firebase already installs a global JS error handler** that turns unhandled JS errors into Crashlytics records and chains to the previous handler. (This changes 3.4 — see note there.)
-- Android: `firebase-crashlytics-gradle:3.0.6` plugin applied → auto-uploads native NDK + Proguard mappings.
+- Android: `firebase-crashlytics-gradle:3.0.6` plugin applied. **Correction:** no `firebaseCrashlytics {}` block exists in the gradle files, so plugin defaults apply — Proguard/R8 mapping upload is default-on (relevant only if minification is enabled), but **NDK symbol upload is NOT on** (needs explicit `nativeSymbolUploadEnabled true`, see 3.7).
 - iOS: Crashlytics run-script build phase present in `project.pbxproj` (verify it runs `upload-symbols`/`run` for dSYMs).
 - **Hermes is enabled** (`android/gradle.properties: hermesEnabled=true`) → JS source maps are the missing piece (3.7).
 
@@ -38,17 +38,17 @@ componentDidCatch(error, errorInfo) {
   // Record a NON-fatal to Crashlytics with the React component stack as a
   // breadcrumb so the dashboard shows where in the tree it blew up.
   try {
-    logBreadcrumb(`react_error_boundary: ${error?.message ?? error}`);
+    // Truncate the message: server/validation error messages can echo user
+    // data (emails, phones, amounts) — cap it like the componentStack below.
+    logBreadcrumb(`react_error_boundary: ${String(error?.message ?? error).slice(0, 200)}`);
     if (errorInfo?.componentStack) {
       logBreadcrumb(`componentStack: ${errorInfo.componentStack.slice(0, 800)}`);
     }
-    // NAME the record so all render crashes group under one Crashlytics issue
-    // (RN Firebase recordError accepts a 2nd `jsErrorName` arg). Extend the
-    // firebase.js `logError` wrapper to forward it: logError(error, name).
-    crashlytics().recordError(
-      error instanceof Error ? error : new Error(String(error)),
-      'ReactRenderError',
-    );
+    // NAME the record so all render crashes group under one Crashlytics issue.
+    // logError's optional 2nd arg (added in Phase 1) forwards to
+    // crashlytics().recordError(err, jsErrorName), which controls grouping.
+    logError(error, 'ReactRenderError');
+    // name only — never the message (PII risk in analytics params)
     track(EVENTS.ERROR_BOUNDARY_TRIGGERED, { name: error?.name });
   } catch {
     /* never let logging crash the boundary */
@@ -101,8 +101,10 @@ try {
 
 // Surface server (5xx) and network errors as an analytics signal too — these
 // are the ones that hurt UX. Skip 401/403 (handled as auth/company flow).
+// EVENTS.API_ERROR is in the Phase-1 catalog (no orphan events) and track()
+// keeps it behind the analytics_enabled kill-switch.
 if (status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || Number(status) >= 500) {
-  analytics().logEvent('api_error', { endpoint: endpoint ?? 'unknown', status: String(status) });
+  track(EVENTS.API_ERROR, { endpoint: endpoint ?? 'unknown', status: String(status) });
 }
 ```
 
@@ -116,22 +118,36 @@ if (status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || Number(status) >= 
 
 What's still worth adding is **context immediately before the crash is recorded** — but since RNFB's handler runs last, the better hook is a lightweight **breadcrumb on every dispatched RTK action type** (cheap) and the per-action breadcrumbs from 3.2, not a competing global handler.
 
-**Unhandled promise rejections** are the one genuine gap (Hermes surfaces some, not all). Add rejection tracking explicitly:
+**Unhandled promise rejections** are the one genuine gap.
+
+> **Correction (2026-07-02): the earlier draft's `promise/setimmediate/rejection-tracking` snippet captures NOTHING in this app.** The app runs **Hermes** (`android/gradle.properties:39`; iOS is RN 0.84 default-Hermes), and with Hermes RN uses the engine's **native** Promise — the `promise` npm polyfill is never installed (verified in `react-native/Libraries/Core/polyfillPromise.js`), and RN wires Hermes rejection tracking **only in `__DEV__`**. Enabling the polyfill's tracker would watch a Promise implementation the app doesn't use, silently capturing nothing in release. Use the Hermes API, with the polyfill path only as a non-Hermes fallback:
 
 ```js
-// once, at startup. RN bundles promise/setupRejectionTracking.
-import tracking from 'promise/setimmediate/rejection-tracking';
-tracking.enable({
-  allRejections: true,
-  onUnhandled: (id, error) => {
+// once, at startup
+const onUnhandled = (id, error) => {
+  try {
     crashlytics().log(`unhandled_rejection id=${id}`);
-    crashlytics().recordError(
-      error instanceof Error ? error : new Error(String(error)),
-      'UnhandledRejection', // named → groups
-    );
-  },
-  onHandled: () => {},
-});
+    logError(error, 'UnhandledRejection'); // named → groups (Phase-1 logError)
+  } catch {
+    /* never throw from the tracker */
+  }
+};
+
+if (global?.HermesInternal?.enablePromiseRejectionTracker) {
+  // Hermes — this app, release builds included (RN itself only enables this in __DEV__)
+  global.HermesInternal.enablePromiseRejectionTracker({
+    allRejections: true,
+    onUnhandled,
+    onHandled: () => {},
+  });
+} else {
+  // JSC / promise-polyfill fallback only
+  require('promise/setimmediate/rejection-tracking').enable({
+    allRejections: true,
+    onUnhandled,
+    onHandled: () => {},
+  });
+}
 ```
 
 ---
@@ -142,19 +158,24 @@ tracking.enable({
 
 There is no fully-automatic Crashlytics pipeline for RN-Hermes JS frames (unlike native), so do this:
 
-**1. Emit + retain the source map on every release build.** The RN release build already produces a Hermes bundle; add `--sourcemap-output` so the map is generated and archive it keyed by `app_build`:
+**1. Archive the source map gradle already generates.**
+
+> **Correction (2026-07-02):** do **NOT** run `npx react-native bundle` manually as the earlier draft said. `build-release-apk.sh` only runs `./gradlew clean && assembleRelease`; a separate bundle invocation produces a bundle/map pair that does **not** match the APK gradle packaged — symbolicating against the wrong map yields garbage. On RN 0.84 the gradle plugin **already emits the composed (bytecode→JS) Hermes map** on every release build: the default `hermesFlags` include `-output-source-map` and this app leaves `hermesFlags` at the default (`android/app/build.gradle:55` is commented out). Just archive gradle's output:
 
 ```sh
-# Android (add to build-release-apk.sh, before assembleRelease packages the bundle)
-npx react-native bundle \
-  --platform android --dev false \
-  --entry-file index.js \
-  --bundle-output android/app/build/generated/.../index.android.bundle \
-  --sourcemap-output build-artifacts/sourcemaps/index.android.bundle.$APP_BUILD.map
-# iOS: set SOURCEMAP_FILE in the Xcode "Bundle React Native code and images" phase.
+# Android — add to build-release-apk.sh AFTER ./gradlew assembleRelease
+MAP=android/app/build/generated/sourcemaps/react/release/index.android.bundle.map
+APP_BUILD=$(grep versionCode android/app/build.gradle | awk '{print $2}')
+mkdir -p build-artifacts/sourcemaps
+cp "$MAP" "build-artifacts/sourcemaps/index.android.bundle.$APP_BUILD.map"
+
+# iOS: set SOURCEMAP_FILE in the Xcode "Bundle React Native code and images"
+# phase (verified absent today — pbxproj:291, so iOS emits no JS map yet).
+# ⚠️ While editing that phase: it currently hardcodes `export APP_ENV=testing`
+# — fix it, or iOS prod builds keep shipping with proj_env=testing (see 4.1).
 ```
 
-Store `build-artifacts/sourcemaps/*.map` per build number (CI artifact / bucket). The Hermes composed source map (`*.hbc.map`) is the one that maps bytecode→JS.
+Store `build-artifacts/sourcemaps/*.map` per build number (CI artifact / bucket). The gradle-generated map above **is** the composed bytecode→JS map — no extra compose step needed.
 
 **2. Tag each crash with the build so you know which map to use.** Set a custom key at startup (3.8) `app_build` = `deviceInfo.getBuildNumber()`. Then a Crashlytics issue tells you the build → pull that map.
 
@@ -164,9 +185,9 @@ Store `build-artifacts/sourcemaps/*.map` per build number (CI artifact / bucket)
 npx metro-symbolicate build-artifacts/sourcemaps/index.android.bundle.<build>.map < raw-hermes-stack.txt
 ```
 
-**4. Native side (already mostly wired — verify):**
-- Android: `firebase-crashlytics-gradle` plugin auto-uploads the Proguard/R8 mapping + NDK symbols. Confirm `firebaseCrashlytics { mappingFileUploadEnabled true }` is **not disabled** for release.
-- iOS: confirm the Crashlytics build-phase run-script uploads dSYMs (`${PODS_ROOT}/FirebaseCrashlytics/run` + an `upload-symbols` input-files list, or enable `DEBUG_INFORMATION_FORMAT = dwarf-with-dsym`). Use `pod install` after changes.
+**4. Native side (partially wired — verify):**
+- Android: **no `firebaseCrashlytics {}` block exists** in the gradle files (verified), so plugin defaults apply — mapping upload is default-on but only matters if R8/Proguard minification is enabled. **NDK symbols are NOT auto-uploaded**: add `firebaseCrashlytics { nativeSymbolUploadEnabled true }` to the release buildType if native-crash symbolication is wanted.
+- iOS: the Crashlytics run-script phase **is** present (`"${PODS_ROOT}/FirebaseCrashlytics/run"`, pbxproj:349) — it handles dSYM upload. Confirm the Crashlytics console shows no "missing dSYM" warnings after a release build.
 
 > Minimum viable version if a full pipeline is too much now: keep `app_build` + source-map artifacts so any single crash can be symbolicated on demand in minutes. That alone removes the "where did it crash" guesswork.
 
@@ -196,7 +217,7 @@ Crashlytics custom keys are the second-highest lever: they make the issue list *
 
 ## 3.5 Network transitions as events
 
-`src/components/Network/index.js` already holds the `NetInfo.addEventListener` subscription (and `NoNetwork/Undraw.js` uses `useNetInfo`). Add the event inside that existing listener so we can correlate `api_error` spikes with connectivity — debounce to fire only on an actual connected→disconnected (or reverse) **transition**, not every NetInfo tick:
+`src/components/Network/index.js` already holds the `NetInfo.addEventListener` subscription at line 19 (and `NoNetwork/Undraw.js` uses `useNetInfo`). Add the event inside that existing listener so we can correlate `api_error` spikes with connectivity — note a `prevConnectedRef` must be **added** (none exists today; the component only stores current state) so we fire only on an actual connected→disconnected (or reverse) **transition**, not every NetInfo tick. **While here, fix a pre-existing leak:** the listener's unsubscribe function is never captured — cleanup only flips a local `isMounted` flag; capture the return of `addEventListener` and call it in the effect cleanup.
 
 ```js
 // src/components/Network/index.js — inside the existing NetInfo.addEventListener
@@ -237,10 +258,10 @@ if (next !== prevConnectedRef.current) {
 - [ ] `ErrorBoundary.componentDidCatch` records to Crashlytics **named `ReactRenderError`** + fires `error_boundary_triggered`.
 - [ ] Navigation breadcrumbs + `screen` attribute wired in `RestartContext`.
 - [ ] RTK error middleware: custom keys (`last_endpoint`) + deterministic error name + `api_error` event for 5xx/network.
-- [ ] **No** duplicate `ErrorUtils` handler added (RNFB already installs one); unhandled-rejection tracking added instead.
-- [ ] **Source maps (3.7):** release builds emit + archive Hermes source maps keyed by `app_build`; `metro-symbolicate` verified on a sample stack.
+- [ ] **No** duplicate `ErrorUtils` handler added (RNFB already installs one); unhandled-rejection tracking added via `HermesInternal.enablePromiseRejectionTracker` (NOT the `promise` polyfill — this is a Hermes app).
+- [ ] **Source maps (3.7):** `build-release-apk.sh` archives the **gradle-generated** composed map keyed by `app_build` (no manual re-bundle); iOS `SOURCEMAP_FILE` added and the hardcoded `APP_ENV=testing` in that build phase fixed; `metro-symbolicate` verified on a sample stack.
 - [ ] **Custom keys (3.8):** `setCrashKeys()` sets screen/role/company/app_build/js_engine/last_endpoint on every crash.
-- [ ] Native symbol upload verified (Android mapping upload enabled; iOS dSYM run-script present).
-- [ ] Network transition events.
+- [ ] Native symbol upload verified (Android mapping upload is plugin-default — add `nativeSymbolUploadEnabled true` if NDK symbolication wanted; iOS dSYM run-script present at pbxproj:349).
+- [ ] Network transition events (+ capture/call the NetInfo unsubscribe — fixes a pre-existing leak).
 - [ ] Confirm existing `IS_NON_PROD` crash-test buttons work for verification (already gated — no change).
 - [ ] Verified end-to-end: force a render crash → Crashlytics issue shows **readable file:line** (after symbolication), grouped under `ReactRenderError`, with role/company/screen/app_build keys.

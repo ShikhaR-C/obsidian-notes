@@ -31,10 +31,10 @@ We replicate this structure for the OMS domain in **`src/config/events.js`** (JS
 | --- | --- | --- |
 | Analytics/Crashlytics/Perf/RemoteConfig wrappers | `src/utils/firebase.js` | ✅ `logEvent`, `logScreenView`, `setUser`, `logError`, `startHttpMetric`, `startTrace`, `tagEnv`, `initRemoteConfig`, `getRemoteValue` |
 | Auto screen-view tracking | `src/components/Error/RestartContext.js` (`NavigationContainer.onReady` / `onStateChange` → `logScreenView`) | ✅ logs route name on every navigation |
-| Per-API perf trace + `api_call` event | `src/store/middleware/rtkQueryPerfLogger.js` | ✅ `rtkq_<endpoint>` trace + `api_call {endpoint, status}` |
+| Per-API perf trace + `api_call` event | `src/store/middleware/rtkQueryPerfLogger.js` | ✅ `rtkq_<endpoint>` trace + `api_call {endpoint, status}` — note `status` is the outcome `'ok'`/`'err'`, not an HTTP code |
 | API failures → Crashlytics | `src/store/middleware/rtkQueryErrorLogger.js` | ✅ records `RTKQ <endpoint> rejected: <status>` |
 | `setUser(userId)` on auth | `AppNavigatorContainer.js` | ✅ sets Crashlytics + Analytics user id |
-| Env tagging + Crashlytics collection enabled | `AppNavigatorContainer.js` + `firebase.js` | ✅ `proj_env` user property / attribute |
+| Env tagging + Crashlytics collection enabled | `AppNavigatorContainer.js` | ✅ `tagEnv()` (`firebase.js`) sets the `proj_env` user property / attribute; `setCrashlyticsCollectionEnabled(true)` is called directly in `AppNavigatorContainer.js:65` (not via `firebase.js`) |
 | Firebase deps installed | `package.json` (`@react-native-firebase/{app,analytics,crashlytics,perf,remote-config}@24.0.0`) | ✅ |
 
 ### Gaps this plan closes
@@ -51,8 +51,9 @@ We replicate this structure for the OMS domain in **`src/config/events.js`** (JS
 
 ```
 src/config/events.js          ← NEW. The single source of truth (catalog).
-src/utils/firebase.js         ← EXISTS. Add: setUserContext(), logBreadcrumb(),
-                                 setScreenAttr(). Keep existing API stable.
+src/utils/firebase.js         ← EXISTS. Add: setUserContext(), clearUserContext(),
+                                 logBreadcrumb(), setScreenAttr(); extend
+                                 logError(error, name). Existing callers unaffected.
 src/utils/analytics.js        ← NEW (optional thin layer). track(EVENT, params)
                                  that injects default params (role, company_id,
                                  app_version) so call-sites stay one-liners.
@@ -91,17 +92,19 @@ Cross-cutting dimensions (`role`, `company_id`, `app_version`) are injected **on
 | Onboarding / validation | `validate_user_viewed`, `beta_user_submitted`, `company_selected` |
 | Orders | `new_order_viewed`, `order_created`, `order_create_failed`, `order_status_changed`, `order_otp_verified`, `emergency_otp_used` |
 | Sales orders (dealer) | `new_sales_order_viewed`, `sales_order_created`, `sales_order_edited` |
-| Invoices | `new_invoice_viewed`, `invoice_created`, `invoice_emailed`, `invoice_pdf_generated`, `invoice_downloaded` |
+| Invoices | `new_invoice_viewed`, `invoice_created`, `invoice_emailed`, `invoice_rendered` |
 | Payments / vouchers | `new_payment_viewed`, `payment_recorded`, `payment_failed`, `paytm_initiated`, `voucher_created`, `invoices_attached_to_payment` |
 | Products / rates | `product_created`, `product_rate_set`, `product_dates_viewed` |
 | Relations / credit | `dealer_added`, `customer_added`, `discount_set`, `credit_limit_changed`, `tcs_tds_settings_saved` |
 | Vehicles | `vehicle_added`, `driver_added`, `driver_assigned`, `vehicle_request_created` (hire/rent via param) |
-| Reports / exports | `report_viewed`, `excel_exported`, `pdf_exported`, `daily_summary_viewed`, `account_statement_viewed` |
+| Reports / renders | `report_viewed`, `daily_summary_viewed`, `account_statement_viewed` (with `format` param for Excel-format renders) |
 | Company / users | `company_switched`, `sister_company_viewed`, `user_invited`, `invite_accepted`, `user_added` |
 | Engagement / UX | `search_performed`, `filter_applied`, `theme_changed`, `pull_to_refresh`, `tab_switched` |
-| Settings / account | `settings_viewed`, `delete_account_initiated`, `delete_account_confirmed`, `codepush_checked` |
+| Settings / account | `settings_viewed`, `delete_account_initiated`, `delete_account_confirmed` |
 | Activation milestones | `first_order_created`, `first_invoice_created`, `first_payment_recorded` (via `EVENT_TRIGGERS`) |
-| Error-adjacent | `error_boundary_triggered`, `network_lost`, `network_restored` |
+| Error-adjacent | `error_boundary_triggered`, `api_error`, `network_lost`, `network_restored` |
+
+> **Correction (2026-07-02 code audit):** the earlier draft also had `invoice_pdf_generated`, `invoice_downloaded`, `excel_exported`, `pdf_exported`, `codepush_checked`. All dropped: there is **no live client-side PDF/file-download/share path** in the app (`src/components/Download/` is dead code with zero importers; invoices/statements render as HTML in a WebView — see Phase 2 §2.3/§2.4), and `react-native-code-push` is **not** in `package.json` (`Settings/Codepush.js` is unreferenced). `invoice_rendered {format}` replaces the invoice PDF/download events; re-add export/CodePush events only if those features ship. `api_error` added so Phase 3's middleware event has a catalog entry.
 
 ---
 
@@ -127,7 +130,7 @@ Set via `analytics().setUserProperty` + `crashlytics().setAttribute` in `setUser
 | Phase | File | Outcome |
 | --- | --- | --- |
 | 1 | `01-phase-1-events-catalog-and-helpers.md` | `src/config/events.js` catalog + `track()` helper + extend `firebase.js` (`setUserContext`, `logBreadcrumb`). No screen edits yet — fully shippable. |
-| 2 | `02-phase-2-user-activity-instrumentation.md` | Wire events at auth, orders, invoices, payments, exports, company-switch, search/filter. Role-by-role rollout. |
+| 2 | `02-phase-2-user-activity-instrumentation.md` | Wire events at auth, orders, invoices, payments, reports/renders, company-switch, search/filter. Role-by-role rollout. |
 | 3 | `03-phase-3-error-tracing.md` | **Locate crashes efficiently:** fix `ErrorBoundary` → Crashlytics (named grouping), Hermes **source maps** for readable stacks, custom-key taxonomy, breadcrumbs, unhandled-rejection capture, richer error context. |
 | 4 | `04-phase-4-verification-rollout.md` | DebugView verification, kill-switch via Remote Config, QA checklist, dashboards handoff. |
 
@@ -140,5 +143,8 @@ Each phase is independently shippable; stop after any phase and still have value
 - **No PII in events/params.** No names, phone numbers, emails, addresses. Use ids only. (Firebase ToS + privacy.)
 - **Don't double-count screen views.** Auto tracking already fires `logScreenView` in `RestartContext.js`. Do **not** add manual `*_screen_viewed` events that duplicate it — prefer enriching the existing screen-view call (Phase 3) or only add `*_viewed` events for sub-views that aren't navigation routes (bottom sheets, modals).
 - **Event volume / cost.** GA4 free tier is generous but avoid high-frequency events (scroll, keystroke). Throttle `search_performed` to submit, not per-keystroke.
-- **Async fire-and-forget.** All wrappers already swallow errors; never `await` analytics on a hot path (`track()` returns a non-blocking promise).
-- **Remote Config kill-switch.** Gate `track()` behind an `analytics_enabled` Remote Config flag (default true) so we can disable instrumentation in prod without a release.
+- **Async fire-and-forget.** Most wrappers already swallow errors — but not all: `startHttpMetric`, `startTrace`, `getRemoteValue` have **no** try/catch (`track()` wraps its own `getRemoteValue` call, so it's safe). Never `await` analytics on a hot path (`track()` returns a non-blocking promise).
+- **Remote Config kill-switch.** Gate `track()` behind an `analytics_enabled` Remote Config flag (default true) so we can disable instrumentation in prod without a release. Note it **fails open** by design (flag unreadable → analytics on).
+- **Clear identity on logout / account deletion.** `setUserContext` fires on login + company switch, but default event params, user properties and the analytics/Crashlytics user id **persist after logout** — the next session on the device (or a deleted account) keeps being attributed to the old user/tenant. Phase 1 adds `clearUserContext()`; Phase 2 wires it on auth reset (manual logout, 401 auto-logout, `delete_account_confirmed`).
+- **iOS builds currently hardcode `APP_ENV=testing`** in the Xcode "Bundle React Native code and images" phase (`project.pbxproj`), so `proj_env` will misclassify iOS telemetry until that's fixed (Phase 3 §3.7 touches that build phase; Phase 4 §4.1 has the verification caveat).
+- **Store disclosures.** Setting an analytics user id + `role`/`company_id` properties means updating the Google Play Data Safety form and App Store privacy declarations (analytics + crash data linked to an identifier) — Phase 4 §4.6.

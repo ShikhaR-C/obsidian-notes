@@ -55,7 +55,9 @@ Files: `src/screens/Login/AuthNavigator/{Login,Welcome,ForgotPassword,BetaUser,C
 | Forgot-password submit | `forgot_password_submitted` | — |
 | Reset-password success | `password_reset_submitted` | — |
 | User verification done (ValidateUser) | `user_verification_completed` | `method` |
-| Logout (in Settings/Drawer) | `logout` | — |
+| Logout | `logout` | `trigger: 'manual' \| 'auto'` |
+
+> **Logout location (correction):** logout is **not** in Settings. Manual logout lives in the drawer (`src/navigation/{Customer,Dealer}/DrawerContent.js` ~L208–223 → `logout()` thunk); the same thunk also fires **automatically** on 401 (`rtkQueryErrorLogger.js`) and from `StartupScreen.js`. Instrument the **`logoutUser` thunk** (`src/store/slices/auth.js`) once, with a `trigger` param, so all paths are covered — and fire the event **before** `clearUserContext()` runs so it still carries the user context.
 
 > `auth_screen_viewed` is **optional** — the `Login`/`Welcome` routes already emit a `screen_view` via the auto-tracker in `RestartContext.js` (see `00-overview` gotcha on not double-counting). Add it only if you want an explicit funnel-entry marker distinct from the raw screen_view; otherwise rely on the auto screen_view and start the funnel at `login_attempted`.
 
@@ -74,6 +76,10 @@ useEffect(() => {
   if (userId) {
     setOneSignalExtId(userId);
     setUserContext({ userId, role: userRole, companyId, accountVerified, scope });
+  } else {
+    // logout / 401 auto-logout / account deletion — stop attributing events
+    // and crashes to the old user & tenant (see 00-overview risks).
+    clearUserContext();
   }
 }, [userId, userRole, companyId, accountVerified, scope]);
 ```
@@ -108,6 +114,9 @@ Files: `src/screens/Customer/NewOrder/index.js`, `src/screens/Dealer/NewSalesOrd
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { track } from '../utils/analytics';
 
+// The key MUST be account-scoped (userId + companyId): an unscoped key is
+// device-wide, so on a shared device or after a company switch the milestone
+// fires for the wrong account — and "first action" leaks across accounts.
 export const fireFirstTime = async (storageKey, event, params) => {
   const seen = await AsyncStorage.getItem(storageKey);
   if (!seen) {
@@ -115,15 +124,17 @@ export const fireFirstTime = async (storageKey, event, params) => {
     track(event, params);
   }
 };
-// usage after order_created:
-fireFirstTime('milestone_first_order', EVENTS.FIRST_ORDER_CREATED, { order_id });
+// usage after order_created (userId/companyId from the auth selectors):
+fireFirstTime(`milestone_first_order_${userId}_${companyId}`, EVENTS.FIRST_ORDER_CREATED, { order_id });
 ```
 
 ---
 
 ## 2.3 Slice C — Invoices, Payments, Vouchers
 
-Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPayment/index.js`, `src/screens/Dealer/NewVoucher/index.js`, `_Invoice_/EmailBS.js`, `_Voucher_/`, APIs `invs.js` / `voc_msts.js`. **PDF generation is centralised** in `src/components/Download/` (`RNhtmlpdf.js` calls `RNHTMLtoPDF.convert`, plus `Invoice.js` / `invoiceHTML/`) — instrument the PDF/download events **there**, once, so every caller is covered rather than per-screen.
+Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPayment/index.js`, `src/screens/Dealer/NewVoucher/index.js`, `_Invoice_/EmailBS.js`, `_Voucher_/`, APIs `invs.js` / `voc_msts.js`.
+
+> **Correction (2026-07-02 code audit):** the earlier draft said PDF generation is centralised in `src/components/Download/`. **That folder is dead code — zero external importers** (its `RNhtmlpdf.js`/`Invoice.js`/`invoiceHTML/` only import each other; the `Share`/`rn-fetch-blob` code inside is commented out or unused), and the one other `RNHTMLtoPDF` import in the app (`Reports/TcsTds/Render/index.js:5`) never calls `.convert()`. **There is no live client-side PDF / file-download / share path.** Invoices actually render as **HTML in a WebView**: `src/screens/Common/_Invoice_/Render.js` (templates from `src/helpers/Download/…`), used by the Invoice screen, `NewInvSummary`, `SummaryModal`, and `InvoiceDetailsBSM`. So instrument **`invoice_rendered {format}` once in `_Invoice_/Render.js`** (covers all callers) and treat `email_inv` as the export signal. Re-introduce PDF/download events only if a real download/share feature ships.
 
 | Trigger | Event | Params | Where |
 | --- | --- | --- | --- |
@@ -131,8 +142,7 @@ Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPaymen
 | Invoice created | `invoice_created` (+ `first_invoice_created`) | `invoice_id, line_count, amount` | `invs.js` `add_invs` |
 | Invoice updated | `invoice_updated` | `invoice_id` | `invs.js` `update_invs` |
 | Invoice email sent | `invoice_emailed` | `invoice_id` | `EmailBS.js` `email_inv` |
-| PDF generated | `invoice_pdf_generated` | `invoice_id` | `components/Download/` after `RNHTMLtoPDF.convert` resolves |
-| Invoice downloaded/shared | `invoice_downloaded` | `invoice_id` | `components/Download/` |
+| Invoice rendered (WebView) | `invoice_rendered` | `invoice_id, format: 'Normal'\|'Detailed'\|'Excel'\|'GST'` | `_Invoice_/Render.js` (single site, all callers) |
 | NewPayment mount | `new_payment_viewed` | `source` | screen |
 | Payment recorded | `payment_recorded` (+ `first_payment_recorded`) | `voucher_id, amount, method` | `voc_msts.js` `add_*_voc_msts` |
 | Payment failed | `payment_failed` | `reason` | mutation `.catch` |
@@ -144,20 +154,20 @@ Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPaymen
 
 ---
 
-## 2.4 Slice D — Reports & Exports
+## 2.4 Slice D — Reports & Renders
 
-Files: `src/screens/Common/Reports/...`, `Accounts/Render/xlsxYearAcc.js`, `DailySummary/`, `TcsTds/Render/`, vehicle reports.
+Files: `src/screens/Common/Reports/...`, `Accounts/Render/` (`index.js` + `xlsxYearAcc.js`), `DailySummary/`, `TcsTds/Render/`, vehicle reports.
+
+> **Correction (2026-07-02 code audit):** `excel_exported` / `pdf_exported` dropped — there is **no file export**. "Excel" is an HTML render format (`Accounts/Render/index.js` picks `xlsxYearAcc(...)` HTML when `invFormat === 'Excel'` and shows it in a WebView; same pattern as `xlsxInvSummary` for invoices), and no live `RNHTMLtoPDF.convert` call exists anywhere (see §2.3). Carry a `format` param on the `*_viewed` events instead; re-add export events if a save/share feature ships.
 
 | Trigger | Event | Params |
 | --- | --- | --- |
 | Report screen mount | `report_viewed` | `report_type` |
-| Excel exported | `excel_exported` | `report_type, row_count` |
-| PDF exported | `pdf_exported` | `doc_type` |
 | Daily summary viewed | `daily_summary_viewed` | — |
-| Account statement viewed | `account_statement_viewed` | `range_days` |
+| Account statement viewed/rendered | `account_statement_viewed` | `range_days, format: 'Normal'\|'Excel'` |
 | Account statement emailed | `account_statement_emailed` | `relation_id` |
 
-Exports are high-value activation signals — prioritise this slice for the usage dashboard. (`account_statement_emailed` → `dealer_custs.js` `email_acc`.)
+Statement/report renders are high-value activation signals — prioritise this slice for the usage dashboard. (`account_statement_emailed` → `dealer_custs.js` `email_acc`. The TCS/TDS report also has an email endpoint — `emailMonthCompanyTcsTds` in `store/apis/balance/SectionalAcc.js` — if a `tcs_tds_report_emailed` event is wanted later.)
 
 ---
 
@@ -229,15 +239,16 @@ Throttle/guard the noisy ones; ship them last and watch event volume in DebugVie
 
 ## 2.7 Slice G — Settings & Account
 
-Files: `src/screens/Common/Settings/index.js`, `Settings/DeleteAccount.js`, `Settings/Codepush.js`, `src/screens/Common/ContactUs/index.js`, API `others.js`.
+Files: `src/screens/Common/Settings/index.js`, `Settings/DeleteAccount.js`, `src/screens/Common/ContactUs/index.js`, API `others.js`.
 
 | Trigger | Event | Params | Endpoint / source |
 | --- | --- | --- | --- |
 | Settings opened | `settings_viewed` | — | screen (or rely on auto screen_view) |
 | Delete-account flow started | `delete_account_initiated` | — | DeleteAccount.js |
-| Delete-account confirmed | `delete_account_confirmed` | — | `others.js` `delete_account` |
-| CodePush update check | `codepush_checked` | `status` | Codepush.js |
+| Delete-account confirmed | `delete_account_confirmed` | — | `others.js` `delete_account` — fire the event, **then** `clearUserContext()` (stop attributing the deleted account) |
 | Contact-us submitted | `contact_us_submitted` | — | `others.js` `add_contact_us` |
+
+> **`codepush_checked` dropped (correction):** `react-native-code-push` is not in `package.json`, and `Settings/Codepush.js` is unreferenced dead code (its import would fail to resolve if mounted). Re-add the event if CodePush actually ships.
 
 > `theme_changed` (`others.js` `set_theme`) lives in Slice F. `delete_account_confirmed` is a churn signal — mark it a conversion in GA4 (Phase 4) alongside the activation events.
 
@@ -262,10 +273,11 @@ Each PR: verify in Firebase **DebugView** (Phase 4) before merge.
 
 ## Phase 2 checklist
 
-- [ ] `setUserContext` replaces bare `setUser` on login + company switch.
-- [ ] `helpers/milestones.js` `fireFirstTime` created and used for the 3 `first_*` events.
+- [ ] `setUserContext` replaces bare `setUser` on login + company switch; `clearUserContext()` fires on auth reset (manual logout, 401 auto-logout, account deletion).
+- [ ] `logout` event instrumented in the `logoutUser` thunk (`src/store/slices/auth.js`) with `trigger: 'manual' | 'auto'`, fired **before** `clearUserContext()`.
+- [ ] `helpers/milestones.js` `fireFirstTime` created with **account-scoped keys** (`…_${userId}_${companyId}`) and used for the 3 `first_*` events.
 - [ ] All slices wired per tables: A (auth) · B (orders) · C (invoices/payments) · D (exports) · E (relations/products/vehicles/company/users) · F (engagement) · G (settings/account) · 2.8 (lifecycle).
-- [ ] Every catalog event in `events.js` has a home: an instrumentation site in a slice above, in **Phase 3** (`error_boundary_triggered`, `network_lost`, `network_restored`), or intentionally left to `api_call` — no orphan catalog entries.
+- [ ] Every catalog event in `events.js` has a home: an instrumentation site in a slice above, in **Phase 3** (`error_boundary_triggered`, `api_error`, `network_lost`, `network_restored`), or intentionally left to `api_call` — no orphan catalog entries.
 - [ ] No PII in any param (review every `track()` call).
 - [ ] `search_performed` fires on submit, not keystroke.
 - [ ] Each slice verified in DebugView.
