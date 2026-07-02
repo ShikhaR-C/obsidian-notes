@@ -196,6 +196,14 @@ Final endpoints (after `api_v/api3.js` prefixes with `/api/v3`):
 - `GET /api/v3/order_msts/search?q=&status=&from=&to=&dealer_id=&cust_id=&limit=&page=`
 - `GET /api/v3/dealer_msts/search?q=&city=&state=&verified=&limit=&page=`
 
+> **SECURITY — authorization is mandatory on these routes.** Mount them behind
+> the same auth middleware chain the other `api_v3` routes use (API key + user
+> auth), and scope results server-side: `dealer_id` / `cust_id` must be
+> **derived from the authenticated user**, never trusted from the query string
+> alone. Otherwise an authenticated customer can search every order in the
+> database, or pass another customer's id (IDOR / cross-tenant data leak).
+> The service sketches in §5 take `user` for exactly this; see also §7.
+
 ### 3.4 Create `dzzlo_oms_api/helpers/searchRateLimit.js`
 
 ```js
@@ -228,7 +236,7 @@ const {
 // ... existing exports ...
 
 exports.SearchVehicles = asyncHandler(async (req, res) => {
-  const result = await searchVehicles({ query: req.query });
+  const result = await searchVehicles({ query: req.query, user: req.user });
   res.status(200).json({ success: true, ...result });
 });
 ```
@@ -239,7 +247,7 @@ exports.SearchVehicles = asyncHandler(async (req, res) => {
 const { searchOrders } = require("../../services/order_msts");
 
 exports.SearchOrders = asyncHandler(async (req, res) => {
-  const result = await searchOrders({ query: req.query });
+  const result = await searchOrders({ query: req.query, user: req.user });
   res.status(200).json({ success: true, ...result });
 });
 ```
@@ -250,7 +258,7 @@ exports.SearchOrders = asyncHandler(async (req, res) => {
 const { searchDealers } = require("../../services/dealer_msts");
 
 exports.SearchDealers = asyncHandler(async (req, res) => {
-  const result = await searchDealers({ query: req.query });
+  const result = await searchDealers({ query: req.query, user: req.user });
   res.status(200).json({ success: true, ...result });
 });
 ```
@@ -294,9 +302,25 @@ exports.parseDate = (v) => {
 };
 
 exports.parsePage = ({ page, limit }) => {
-  const p = Math.max(1, parseInt(page, 10) || 1);
+  // clamp page too — an unbounded page forces a huge $skip scan (cheap DoS)
+  const p = Math.min(1000, Math.max(1, parseInt(page, 10) || 1));
   const l = Math.min(50, Math.max(1, parseInt(limit, 10) || 20));
   return { page: p, limit: l, skip: (p - 1) * l };
+};
+
+// Escape user input before it reaches a RegExp / $regex — prevents ReDoS and
+// wildcard injection. Use for EVERY user-supplied string, not just `q`.
+exports.escapeRegex = (s) =>
+  String(s).replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+
+// $search rejects a compound with no usable clauses; drop empty clause arrays
+exports.pruneCompound = (compound) => {
+  for (const k of Object.keys(compound)) {
+    if (Array.isArray(compound[k]) && compound[k].length === 0) {
+      delete compound[k];
+    }
+  }
+  return compound;
 };
 
 exports.buildFacet = (skip, limit) => ({
@@ -329,11 +353,19 @@ const {
   parsePage,
   buildFacet,
   unwrapFacet,
+  escapeRegex,
+  pruneCompound,
 } = require("./_search/buildSearchStage");
 
-exports.searchVehicles = async ({ query }) => {
+exports.searchVehicles = async ({ query, user }) => {
   const q = sanitizeQ(query.q);
-  const cust_id = toObjectId(query.cust_id);
+  // SECURITY: customers may only search their own vehicles — derive the scope
+  // from the authenticated user (adapt role/field names to the project's auth
+  // shape); only privileged roles may pass cust_id via the query string.
+  const cust_id =
+    user?.role === "customer"
+      ? toObjectId(user.cust_id)
+      : toObjectId(query.cust_id);
   const from = parseDate(query.from);
   const to = parseDate(query.to);
   const { page, limit, skip } = parsePage(query);
@@ -363,7 +395,7 @@ exports.searchVehicles = async ({ query }) => {
     }
 
     const pipeline = [
-      { $search: { index: "veh_search", compound } },
+      { $search: { index: "veh_search", compound: pruneCompound(compound) } },
       { $addFields: { score: { $meta: "searchScore" } } },
       { $sort: { score: -1, createdAt: -1 } },
       buildFacet(skip, limit),
@@ -375,7 +407,7 @@ exports.searchVehicles = async ({ query }) => {
   // Fallback: regex + field filter
   const match = {};
   if (q) {
-    const safe = q.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const safe = escapeRegex(q);
     match.$or = [
       { veh_reg_no: { $regex: safe, $options: "i" } },
       { route: { $regex: safe, $options: "i" } },
@@ -416,14 +448,27 @@ const {
   parsePage,
   buildFacet,
   unwrapFacet,
+  escapeRegex,
+  pruneCompound,
 } = require("./_search/buildSearchStage");
 
-exports.searchOrders = async ({ query }) => {
+exports.searchOrders = async ({ query, user }) => {
   const q = sanitizeQ(query.q);
-  const dealer_id = toObjectId(query.dealer_id);
-  const cust_id = toObjectId(query.cust_id);
+  // SECURITY: force tenant scope from the authenticated user — never trust
+  // dealer_id / cust_id from the query string alone (IDOR). Adapt role/field
+  // names to the project's auth shape.
+  const dealer_id =
+    user?.role === "dealer"
+      ? toObjectId(user.co_id)
+      : toObjectId(query.dealer_id);
+  const cust_id =
+    user?.role === "customer"
+      ? toObjectId(user.cust_id)
+      : toObjectId(query.cust_id);
   const from = parseDate(query.from);
   const to = parseDate(query.to);
+  // DB stores statuses UPPERCASE (used by the fallback $in); the Atlas token
+  // index normalizes to lowercase, so the Atlas filter lowercases them below.
   const statuses = (query.status || "")
     .toString()
     .split(",")
@@ -434,13 +479,24 @@ exports.searchOrders = async ({ query }) => {
   if (atlasSearchEnabled() && (q || from || to || statuses.length)) {
     const compound = { must: [], should: [], filter: [] };
     if (q) {
-      compound.must.push({
+      const textClause = {
         text: {
           query: q,
           path: ["remarks", "products.prod_name"],
           fuzzy: { maxEdits: 1, prefixLength: 2 },
         },
-      });
+      };
+      const asNum = Number(q);
+      if (!Number.isNaN(asNum)) {
+        // numeric q: match order_no exactly OR free text — mirrors the
+        // fallback path (text alone can't match the number-typed order_no)
+        compound.should.push(textClause, {
+          equals: { path: "order_no", value: asNum },
+        });
+        compound.minimumShouldMatch = 1;
+      } else {
+        compound.must.push(textClause);
+      }
     }
     if (dealer_id) {
       compound.filter.push({ equals: { path: "dealer_id", value: dealer_id } });
@@ -450,7 +506,9 @@ exports.searchOrders = async ({ query }) => {
     }
     if (statuses.length) {
       compound.filter.push({
-        in: { path: "order_status", value: statuses },
+        // the token index normalizes to lowercase — query values must match
+        // the stored (normalized) form, or the filter returns zero results
+        in: { path: "order_status", value: statuses.map((s) => s.toLowerCase()) },
       });
     }
     if (from || to) {
@@ -460,13 +518,16 @@ exports.searchOrders = async ({ query }) => {
       compound.filter.push({ range });
     }
     const pipeline = [
-      { $search: { index: "order_search", compound } },
+      { $search: { index: "order_search", compound: pruneCompound(compound) } },
       { $addFields: { score: { $meta: "searchScore" } } },
       { $sort: { score: -1, createdAt: -1 } },
       buildFacet(skip, limit),
     ];
     const out = await OrderMaster.aggregate(pipeline);
     const res = unwrapFacet({ page, limit })(out);
+    // SECURITY: ensure the response shape excludes OTP / token fields on
+    // orders (models/order_msts.js carries OTP state — see getOTPToken).
+    // Add a $project allowlist to the pipeline or strip inside multipleOrderRes.
     const orders = await multipleOrderRes({ orderMst: res.data });
     return { ...res, data: orders };
   }
@@ -482,7 +543,7 @@ exports.searchOrders = async ({ query }) => {
     if (to) match.createdAt.$lte = to;
   }
   if (q) {
-    const safe = q.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const safe = escapeRegex(q);
     match.$or = [
       { remarks: { $regex: safe, $options: "i" } },
       { "products.prod_name": { $regex: safe, $options: "i" } },
@@ -516,9 +577,13 @@ const {
   parsePage,
   buildFacet,
   unwrapFacet,
+  escapeRegex,
+  pruneCompound,
 } = require("./_search/buildSearchStage");
 
-exports.searchDealers = async ({ query }) => {
+exports.searchDealers = async ({ query, user }) => {
+  // Dealer directory is visible to any authenticated user — no tenant scope
+  // needed, but the route must still sit behind auth (see §3 note).
   const q = sanitizeQ(query.q);
   const city = query.city ? String(query.city).toLowerCase() : null;
   const state = query.state ? String(query.state).toLowerCase() : null;
@@ -559,7 +624,7 @@ exports.searchDealers = async ({ query }) => {
     }
 
     const pipeline = [
-      { $search: { index: "dealer_search", compound } },
+      { $search: { index: "dealer_search", compound: pruneCompound(compound) } },
       { $addFields: { score: { $meta: "searchScore" } } },
       { $sort: { score: -1, dealer_name: 1 } },
       buildFacet(skip, limit),
@@ -570,11 +635,13 @@ exports.searchDealers = async ({ query }) => {
 
   // Fallback
   const match = {};
-  if (city) match.city = new RegExp(`^${city}$`, "i");
-  if (state) match.state = new RegExp(`^${state}$`, "i");
+  // SECURITY: city/state are user input too — unescaped they allow regex
+  // injection (".*" matches everything) and ReDoS patterns
+  if (city) match.city = new RegExp(`^${escapeRegex(city)}$`, "i");
+  if (state) match.state = new RegExp(`^${escapeRegex(state)}$`, "i");
   if (verified !== null) match.dealer_verified = verified;
   if (q) {
-    const safe = q.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const safe = escapeRegex(q);
     match.$or = [
       { dealer_name: { $regex: safe, $options: "i" } },
       { dealer_code: { $regex: safe, $options: "i" } },
@@ -599,52 +666,75 @@ exports.searchDealers = async ({ query }) => {
 
 ---
 
-## 6. Fallback compound indexes (when `ATLAS_SEARCH !== "true"`)
+## 6. Fallback indexes (when `ATLAS_SEARCH !== "true"`)
 
-Add to each model file (only if missing):
+The fallback path in §5 searches with **escaped `$regex`** (substring
+semantics), not `$text` — so do **not** create `$text` indexes for it: they
+would never be queried and would only add write/storage overhead. What the
+fallback actually needs are B-tree indexes matching its filters and sorts:
 
 `dzzlo_oms_api/models/veh_msts.js`:
 
 ```js
-veh_mst_Schema.index({ veh_reg_no: "text", route: "text" });
 // already has: { cust_id: 1 }, { veh_reg_no: 1 }
+veh_mst_Schema.index({ createdAt: -1 }); // fallback sort
 ```
 
 `dzzlo_oms_api/models/order_msts.js`:
 
 ```js
-order_mst_Schema.index({ remarks: "text", "products.prod_name": "text" });
-// existing compound { dealer_id, createdAt } already helps dealer+date filter.
+// existing compounds ({ dealer_id, createdAt }, { cust_id, ... }) already
+// cover the dealer/cust/status/date filters + sort. No new index required.
 ```
 
 `dzzlo_oms_api/models/dealer_msts.js`:
 
 ```js
-dealer_mst_Schema.index({
-  dealer_name: "text",
-  dealer_code: "text",
-  dealer_address: "text",
-  locality: "text",
-});
 dealer_mst_Schema.index({ city: 1 });
 dealer_mst_Schema.index({ state: 1 });
+// dealer_name already has a unique index (backs the fallback sort)
 ```
 
-Note: a collection can only host one `$text` index at a time — keep the one
-defined above and add/remove fields via `weights:` rather than creating more.
+Be aware the unanchored case-insensitive `$regex` `$or` is a **collection
+scan** — acceptable for the fallback's intended contexts (local dev,
+self-hosted, small datasets), but not a production search path. If a
+production deployment can't use Atlas Search, switch the fallback's `q`
+branch to `$text` and only then add the text index, e.g. for dealers:
+
+```js
+// ONLY if the fallback code is changed to query { $text: { $search: q } }:
+dealer_mst_Schema.index(
+  { dealer_name: "text", dealer_code: "text", dealer_address: "text", locality: "text" },
+  { weights: { dealer_name: 10, dealer_code: 8, dealer_address: 2, locality: 2 } },
+);
+// remember: max ONE $text index per collection — extend it via weights,
+// never by adding a second text index
+```
 
 ---
 
-## 7. Validation + sanitization
+## 7. Validation, sanitization + authorization
 
+- **Authorization (most important):** all three routes sit behind the existing
+  `api_v3` auth middleware, and the services force tenant scope from
+  `req.user` (dealer → own `dealer_id`, customer → own `cust_id`).
+  Query-string ids are honoured only for privileged roles. Without this,
+  search is a cross-tenant IDOR.
+- **Response shaping:** order results must exclude OTP / token / internal
+  fields (`models/order_msts.js` carries OTP state) — use a `$project`
+  allowlist or strip them in `multipleOrderRes`.
 - `sanitizeQ` in `_search/buildSearchStage.js` runs every `q` through
   `mongo-sanitize` (already in `package.json`) AND caps length at 128 chars.
+  The `String()` casts also neutralise object/array values that Express 5's
+  extended query parser can produce (e.g. `?q[$ne]=x`).
 - `toObjectId` returns `null` for malformed IDs (the filter is skipped, not
   injected).
 - `parseDate` rejects NaN dates.
-- `parsePage` clamps `limit` to `[1, 50]`.
-- Regex escape function used for the fallback path to prevent ReDoS and
-  accidental special-char matching.
+- `parsePage` clamps `limit` to `[1, 50]` and `page` to `[1, 1000]` (deep
+  `$skip` scans are a cheap DoS otherwise).
+- `escapeRegex` is applied to **every** user string that reaches a regex —
+  `q`, `city`, and `state` — to prevent ReDoS and accidental special-char
+  matching.
 
 ---
 
@@ -658,6 +748,12 @@ keying on user id:
 ```js
 keyGenerator: (req) => req.user?._id?.toString() || req.ip,
 ```
+
+If the API runs behind a load balancer / reverse proxy, per-IP keying only
+works when Express's `trust proxy` setting is configured correctly for that
+topology — otherwise every client shares the proxy's IP (or can spoof
+`X-Forwarded-For`). Verify `app.set("trust proxy", …)` matches the deployment
+before relying on the limiter.
 
 ---
 
@@ -681,7 +777,7 @@ keyGenerator: (req) => req.user?._id?.toString() || req.ip,
    ];
 
    (async () => {
-     await mongoose.connect(process.env.MONGO_URI);
+     await mongoose.connect(process.env.DATABASE_URI); // same env var the app uses (api_constants.js)
      for (const { coll, def } of indexes) {
        try {
          await mongoose.connection.db.collection(coll).createSearchIndex(def);
@@ -758,8 +854,9 @@ describe("GET /api/v3/veh_msts/search", () => {
 | Shared helpers (`_search/*`, `searchRateLimit`, docs) | —           | 0.5 d                                    | —      | —     | 0.5 d                  |
 | **Total**                                             |             |                                          |        |       | **~5.8 engineer-days** |
 
-Add ~1 day buffer for Atlas cluster tier verification (Search requires M10+),
-index backfill wait time, and staging smoke tests.
+Add ~1 day buffer for Atlas cluster tier verification (Atlas Search itself
+works from the free/Flex tiers with index-count limits; dedicated **Search
+Nodes** require M10+), index backfill wait time, and staging smoke tests.
 
 ---
 

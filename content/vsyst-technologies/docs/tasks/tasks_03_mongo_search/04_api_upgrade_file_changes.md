@@ -27,8 +27,8 @@ Files actually inspected for this plan:
 ## 2. Pre-upgrade Checklist
 
 - [ ] **Atlas backup** — From Atlas UI → Project → Backups, trigger an on-demand snapshot of the production cluster (source DB + `db_dip` DB). Confirm snapshot completes before starting.
-- [ ] **Download point-in-time snapshot locally** — `mongodump --uri "$DATABASE_URI"` and `mongodump --uri "$DIPDB"` on a secure workstation as a belt-and-braces offline copy. Store encrypted.
-- [ ] **Create a throwaway Atlas test cluster** on M0/M10 seeded from the latest snapshot. Run the upgrade rehearsal here first.
+- [ ] **Download point-in-time snapshot locally** — `mongodump --uri "$DATABASE_URI"` and `mongodump --uri "$DIPDB"` on a secure workstation as a belt-and-braces offline copy. Store encrypted. (Security note: prefer a `--config` file for the credentialed URI — even via an env var, the expanded argument is visible in `ps` output while the dump runs.)
+- [ ] **Create a throwaway Atlas test cluster** on **M10+** seeded from the latest snapshot. (Not M0/Flex: snapshots can't be restored into shared tiers, and shared tiers don't let you pin/choose the MongoDB major version, so an upgrade rehearsal isn't possible there.) Run the upgrade rehearsal here first.
 - [ ] **Pin Node.js** — project runs fine on Node 22/24 (Mongoose 9 floor is 20.19). Add a `.nvmrc` with `20.19.0` (minimum supported) or `22.x` (LTS at time of writing). Current dev machine reports `v24.14.1`.
 - [ ] **Confirm `yarn.lock` committed** — mandatory, Yarn is the package manager (`feedback_package_manager.md`).
 - [ ] **Capture baseline metrics** — response times for hot `api_v3` routes (list customers, orders by dealer), current `db.serverStatus()`, current `db.currentOp()` patterns. Needed for before/after comparison.
@@ -52,7 +52,7 @@ MongoDB Atlas supports in-place major version upgrades once the cluster reaches 
 
 ### 3.2 Production cluster
 
-Repeat the exact sequence on the production cluster during the maintenance window. Do **not** set FCV to `8.0` immediately — leave at `7.0` for 24–48 hours so a rollback is still possible, then promote once the app is stable. Setting FCV=8.0 is a one-way door.
+Repeat the exact sequence on the production cluster during the maintenance window. Do **not** set FCV to `8.0` immediately — leave at `7.0` for 24–48 hours, then promote once the app is stable. Setting FCV=8.0 is a one-way door. (Note: even with FCV held back, Atlas has no in-place downgrade — see §8.2 — but holding FCV keeps 8.0-only on-disk changes off and preserves the cleanest recovery options.)
 
 ### 3.3 db_dip cluster
 
@@ -235,9 +235,12 @@ Run the same `k6`/`ab`/curl-loop script used for baseline metrics. MongoDB 8 gen
 
 ### 8.2 If the app breaks after the Atlas upgrade but FCV is still 7.0
 
-1. Atlas UI → cluster → **Edit Configuration** → MongoDB Version → select `7.0` → confirm.
-2. Atlas performs a rolling downgrade (possible because FCV was left at 7.0). Connections re-establish automatically via the SRV string.
-3. No code changes needed — driver 7.1.1 and Mongoose 9.4.1 talk to MongoDB 7.0 just as well as to 8.0 (see compat matrix in `03_mongoose_driver_upgrade.md` §8).
+**Correction (2026-07 review):** Atlas does **not** support in-place major-version downgrades — Edit Configuration will not offer `7.0` once the cluster runs `8.0`, regardless of FCV. The realistic rollback is:
+
+1. Restore the `pre-8.0-upgrade` snapshot (or a point-in-time restore from just before the incident) into a **new 7.0 cluster** (Atlas → Backups → Restore).
+2. Flip `DATABASE_URI` / `DIPDB` in the production `.env` to the restored cluster's SRV string and restart the app.
+3. Accept the write-loss window between the restore point and cutover (continuous backup keeps this small). Open an Atlas support case in parallel — a support-assisted rollback may be possible while FCV is still 7.0.
+4. No code changes needed — driver 7.1.1 and Mongoose 9.4.1 talk to MongoDB 7.0 just as well as to 8.0 (see compat matrix in `03_mongoose_driver_upgrade.md` §8).
 
 ### 8.3 If the app breaks after FCV has been promoted to 8.0
 
@@ -313,7 +316,7 @@ Gates between stages:
 
 ## 12. Cross-References
 
-- Companion research: `docs/tasks/tasks_03/03_mongoose_driver_upgrade.md`
+- Companion research: `docs/tasks/tasks_03_mongo_search/03_mongoose_driver_upgrade.md`
 - Prior migration record: `dzzlo_oms_api/docs/strategy/mongoose_9_upgrade_plan_61daa006.strategy.md`
 - Project conventions: `dzzlo_oms_api/AI.md` (lines 65, 91 for Mongoose 9 specifics)
 - Memory: `~/.claude/projects/.../memory/feedback_package_manager.md` (yarn, not npm)

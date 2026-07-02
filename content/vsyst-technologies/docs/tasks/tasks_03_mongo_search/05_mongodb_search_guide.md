@@ -74,9 +74,12 @@ MongoDB can use a **regular B-tree index** on a field — but **only if the rege
 
 Rule of thumb: if you want a case-insensitive substring match, use a **case-insensitive collation** on the index, or move to `$text` or Atlas Search.
 
-### Case-insensitive prefix via collation
+### Case-insensitive prefix — the collation trap
+
+You might expect a case-insensitive collation index to solve this:
 
 ```js
+// ⚠️ DOES NOT WORK for $regex
 db.dealer_msts.createIndex(
   { dealer_name: 1 },
   { collation: { locale: "en", strength: 2 } },
@@ -87,7 +90,25 @@ db.dealer_msts
   .collation({ locale: "en", strength: 2 });
 ```
 
-`strength: 2` means "ignore case and diacritics" — think `smith` == `Smith` == `SMITH`.
+It doesn't. Per the MongoDB docs, the `$regex` implementation is **not
+collation-aware**: a case-insensitive collation index cannot back a regex
+query, and the collation doesn't change what the regex matches either
+(`^smith` still won't match `Smith` without `$options: "i"`). Collation
+indexes help *equality* and *sort*, not `$regex`.
+
+What actually works for an indexed, case-insensitive prefix search:
+
+```js
+// Store a normalized shadow field and search that instead
+// { dealer_name: "Smith Fuels", dealer_name_lc: "smith fuels" }
+db.dealer_msts.createIndex({ dealer_name_lc: 1 });
+
+const q = escapeRegex(req.query.q).toLowerCase();
+db.dealer_msts.find({ dealer_name_lc: { $regex: `^${q}` } }); // anchored + case-sensitive → index used
+```
+
+…or move to `$text` / Atlas Search (autocomplete), which are
+case-insensitive by design.
 
 ### Escaping user input
 
@@ -539,7 +560,10 @@ db.order_msts.aggregate([
     $searchMeta: {
       index: "order_default",
       facet: {
-        operator: { text: { query: "", path: "remarks" } },
+        // text.query must be NON-EMPTY — an empty string is invalid. For
+        // "facets over everything" use a range/exists operator instead
+        // (see orderFacets in 06_atlas_search_deep_dive.md).
+        operator: { text: { query: "urgent", path: "remarks" } },
         facets: {
           statusFacet: {
             type: "string",
@@ -603,7 +627,7 @@ For DZZLO OMS: **use Atlas Search**. You already pay for Atlas, the data sync is
 | Use case                                                       | Best method                 | Why                                                |
 | -------------------------------------------------------------- | --------------------------- | -------------------------------------------------- |
 | "Starts with" search on an indexed field (`veh_reg_no` prefix) | `$regex` `^`                | Uses existing B-tree index, zero setup             |
-| Case-insensitive substring on a small collection               | `$regex` + collation        | Simple, works without extra infra                  |
+| Case-insensitive substring on a small collection               | `$regex` + `$options: "i"`  | Collection scan — fine only while data stays small (collation does NOT help `$regex`) |
 | Search on one collection, one set of fields, basic ranking     | `$text`                     | Built in, no extra infra, one-line index creation  |
 | Production search UI with autocomplete, typos, ranking, facets | Atlas Search                | Only option that gives you all of these            |
 | Full-text search across many fields with different weights     | Atlas Search                | `$text` also does weights, but Atlas scales better |
@@ -836,6 +860,11 @@ db.order_msts.aggregate([
 
 ## DZZLO OMS worked examples
 
+> Field names below (`created_at`, `status`, `order_date`) are illustrative.
+> The real DZZLO schema uses `createdAt` (Mongoose timestamps), `order_status`,
+> and `on_dt` — see `07_search_implementation_api.md` for pipelines against
+> the actual field names.
+
 ### Vehicles list with search + filters
 
 Requirements:
@@ -853,7 +882,10 @@ exports.listVehicles = async (req, res) => {
 
   if (q) {
     const safe = q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    filter.veh_reg_no = { $regex: `^${safe}`, $options: "i" };
+    // reg numbers are stored uppercase — uppercase the query and keep the
+    // regex case-SENSITIVE so the B-tree index on veh_reg_no is used
+    // (adding $options: "i" would force a collection scan)
+    filter.veh_reg_no = { $regex: `^${safe.toUpperCase()}` };
   }
   if (status) filter.veh_status = status;
   if (from || to) {

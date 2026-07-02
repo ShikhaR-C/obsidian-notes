@@ -123,6 +123,9 @@ module.exports = { startOrderStream };
 - Scales to multiple API pods if you use a distributed resume-token store
   (Redis, a Mongo collection, or a leader-election lock).
 
+Security note: keep push payloads minimal (ids over names/amounts where the
+UX allows) — notification content transits Google/Apple infrastructure.
+
 **Effort:** Medium. Infra-level work (resume token persistence, reconnect
 logic, scaling across pods), but once the framework exists, adding new
 streams is trivial.
@@ -351,15 +354,16 @@ db.collection('veh_meter_readings').aggregate([
 ```
 
 **Benefits:**
-- Automatic bucketing — 100x less storage than raw inserts.
+- Automatic bucketing — typically 5-10x less storage than raw inserts.
 - Columnar-like compression for numeric fields.
 - Purpose-built indexes (metaField + time).
 - Works seamlessly with `$dateTrunc`, `$setWindowFields`, and Atlas
   Charts.
 
 **Effort:** Low. Creating the collection is one command. Harder part is
-deciding the granularity (seconds / minutes / hours) — get this right
-the first time, it's immutable.
+deciding the granularity (seconds / minutes / hours) — choose carefully:
+you can *increase* granularity later via `collMod`, but never decrease it,
+and `timeField` / `metaField` are fully immutable.
 
 ---
 
@@ -484,6 +488,13 @@ db.runCommand({
 
 **Effort:** Low. A few hours to translate Mongoose schemas to JSON Schema.
 Roll out with `validationAction: 'warn'` first to catch existing bad data.
+
+> ⚠️ The sketch above is illustrative and does **not** match the real
+> `order_msts` schema (`order_no` is a `Number` from the counters collection,
+> the status field is `order_status`, and line items live in `products`, not
+> `items`). Applying it verbatim with `validationAction: 'error'` would
+> reject every legitimate write. Derive the validator from the actual
+> Mongoose schema before running `collMod`.
 
 ---
 
@@ -676,14 +687,19 @@ await Order.updateOne(
   { $set: { embedding: await embed(summarize(order)) } },
 );
 
-// 3. Create a vector index in Atlas UI (or via Atlas CLI)
+// 3. Create a vector index in Atlas UI (or via Atlas CLI).
+//    NOTE: every field used in $vectorSearch's `filter` must be declared
+//    as a "filter" field in the index, alongside the vector:
 // {
-//   "fields": [{
-//     "type": "vector",
-//     "path": "embedding",
-//     "numDimensions": 1536,
-//     "similarity": "cosine"
-//   }]
+//   "fields": [
+//     {
+//       "type": "vector",
+//       "path": "embedding",
+//       "numDimensions": 1536,
+//       "similarity": "cosine"
+//     },
+//     { "type": "filter", "path": "dealer_id" }
+//   ]
 // }
 
 // 4. Query
@@ -700,7 +716,8 @@ async function similarOrders(order, k = 5) {
         filter: { dealer_id: order.dealer_id }, // pre-filter
       },
     },
-    { $project: { embedding: 0, score: { $meta: 'vectorSearchScore' } } },
+    { $addFields: { score: { $meta: 'vectorSearchScore' } } },
+    { $unset: 'embedding' }, // $project can't mix exclusions with computed fields
   ]);
 }
 ```
@@ -805,6 +822,10 @@ Written in Node.js, run in Atlas, no infrastructure. Two types:
 - **Database triggers** — fire on insert/update/delete of a collection.
 - **Scheduled triggers** — fire on a cron expression.
 
+> Status check: Triggers (and the Functions they invoke) **survived** the
+> 2024 App Services deprecation — they remain a supported standalone Atlas
+> service. The rest of App Services did not (see C3 / D1).
+
 **DZZLO use case:**
 
 1. **Payment due reminders** (scheduled, daily 9am IST):
@@ -857,27 +878,23 @@ integrations (SMS, email, Slack) are the work.
 
 ---
 
-### C3. Atlas App Services / Functions
+### C3. Atlas App Services / Functions — ⚠️ DEPRECATED, do not adopt
 
-**What it is:**
-A serverless backend platform built on top of Atlas. Gives you HTTPS
-endpoints, scheduled functions, third-party service integrations, and
-GraphQL (deprecated in 2024 — avoid). Essentially "AWS Lambda but
-bundled with your database."
+**Status:** MongoDB deprecated Atlas App Services in September 2024; HTTPS
+Endpoints, the Data API, GraphQL, and standalone hosting reached
+**end-of-life on September 30, 2025**. Only **Triggers** (and the functions
+they invoke) survive as a supported service — see C2.
 
-**DZZLO use case:**
-- **Webhook receivers** — receive payment gateway callbacks without
-  spinning up a new route in the Express API.
-- **Public quote generator** — `/quote?dealer=X&prod=Y&qty=Z` as a
-  serverless endpoint, no API server load.
-- **Lightweight admin tools** — small CRUD dashboards for ops team
-  without touching the main codebase.
+**What this means for DZZLO:**
+- **Webhook receivers** (payment gateway callbacks) — implement as regular
+  Express routes in `dzzlo_oms_api`, or as a small serverless function on
+  your cloud provider (Lambda / Cloud Functions) if isolation is wanted.
+- **Public quote generator** — same: an Express route or provider-native
+  serverless function.
+- **Lightweight admin tools** — use Atlas Charts (B3), Compass, or a small
+  internal Express-served page.
 
-**Caveat:** Don't rebuild your whole backend on App Services — it's
-best for glue code and webhooks, not primary business logic. Your
-Express API remains the source of truth.
-
-**Effort:** Low for glue code. Not recommended for heavy lifting.
+**Effort:** n/a — struck from the roadmap.
 
 ---
 
@@ -1022,13 +1039,17 @@ nation-wide.
 
 ## Section D — Mobile & offline features
 
-### D1. Atlas Device SDKs (formerly Realm)
+### D1. Offline-first sync — ⚠️ Atlas Device Sync / Realm is EOL
 
-**What it is:**
-Atlas Device SDKs are native mobile SDKs (React Native, iOS, Android,
-.NET, Kotlin, Swift, Flutter) that provide a local, object-oriented
-database on the device. Pairs with **Device Sync** for automatic
-bidirectional replication to Atlas.
+**Status:** Atlas Device Sync, the Atlas Device SDKs (Realm), and Edge
+Server were deprecated in September 2024 and reached **end-of-life on
+September 30, 2025**. The Realm SDKs are community/maintenance-only now. Do
+**not** build new functionality on them.
+
+**What it was:**
+Native mobile SDKs (React Native, iOS, Android, .NET, Kotlin, Swift,
+Flutter) providing a local, object-oriented database on the device, paired
+with **Device Sync** for automatic bidirectional replication to Atlas.
 
 **DZZLO use case:**
 The RN app currently hits the API for everything. If a delivery driver
@@ -1041,7 +1062,7 @@ is useless. Atlas Device Sync solves this:
 - Driver marks an order delivered → written locally, queued for sync.
 - Signal comes back → Realm automatically syncs the change to Atlas.
 
-**Implementation sketch:**
+**Implementation sketch (historical — Realm API, now EOL; kept to illustrate the shape):**
 
 ```js
 // App.tsx
@@ -1089,16 +1110,18 @@ const { RealmProvider, useQuery, useRealm } = createRealmContext({
 ```
 
 **Caveats:**
-- Significant architectural commitment. Schema must be kept in sync
-  between Mongoose and Realm.
-- Adds a second data model to maintain.
-- Conflict resolution rules must be designed carefully (what happens
-  if the driver marks an order delivered offline but a dispatcher
-  cancelled it meanwhile?).
-- Atlas Device Sync has its own pricing tier.
+- The MongoDB-native option no longer exists — if offline-first becomes a
+  requirement, evaluate the replacements the ecosystem converged on:
+  **PowerSync**, **Ditto**, **WatermelonDB / RxDB + a custom sync endpoint**,
+  or SQLite with a hand-rolled queue-and-replay against the existing API.
+- The hard problems are vendor-independent: schema kept in sync with
+  Mongoose, a second data model to maintain, and conflict-resolution rules
+  designed carefully (what happens if the driver marks an order delivered
+  offline but a dispatcher cancelled it meanwhile?).
 
 **Effort:** Very high. Only pursue if offline-first is a clear product
-requirement.
+requirement — and budget a vendor evaluation first, since Device Sync's EOL
+removed the default choice.
 
 ---
 
@@ -1142,8 +1165,9 @@ DZZLO's current state and likely 12-month roadmap.
 13. **CDC to warehouse** (C1) — When data team wants independent analytics.
 14. **Queryable Encryption** (C6) — When regulatory requirements demand.
 15. **Multi-region clusters** (C7) — When DZZLO goes truly pan-India.
-16. **Atlas Device Sync** (D1) — Only if offline-first becomes a product
-    requirement.
+16. **Offline-first sync** (D1) — Only if offline-first becomes a product
+    requirement. Note: Atlas Device Sync itself is EOL (Sept 2025) — this
+    now means a third-party stack (PowerSync / Ditto / WatermelonDB).
 
 ### The "only 3 things" answer
 
@@ -1179,12 +1203,12 @@ A quick mental model of what costs what:
 | Atlas Vector Search | Counts toward Search | Embedding API calls extra |
 | Atlas Charts | Free tier + paid | Viewer-based pricing |
 | Atlas Triggers | Free tier + paid | Per invocation |
-| Atlas App Services | Free tier + paid | |
+| Atlas App Services | — | Deprecated; EOL Sept 30, 2025 (Triggers survive) |
 | Data Federation | Paid | Per query / data transfer |
 | Online Archive | Paid | Much cheaper than live storage |
 | Queryable Encryption | Infra + KMS costs | |
 | Multi-region clusters | ~2-3x cluster cost | |
-| Device Sync | Per-user pricing | |
+| Device Sync | — | EOL Sept 30, 2025 — use a third-party sync stack instead |
 
 **Rule of thumb for DZZLO now (small/medium scale):** All the free,
 server-level features in Section A are pure wins. Pick them up first.

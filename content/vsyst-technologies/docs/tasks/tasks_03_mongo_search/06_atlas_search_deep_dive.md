@@ -370,7 +370,7 @@ Also works on numbers:
 
 ### Equals — exact match
 
-Use `equals` (not `text`) when you want a precise match on boolean / ObjectId / number / date.
+Use `equals` (not `text`) when you want a precise match on boolean / ObjectId / number / date / string.
 
 ```js
 {
@@ -380,6 +380,14 @@ Use `equals` (not `text`) when you want a precise match on boolean / ObjectId / 
   },
 }
 ```
+
+> ⚠️ For **string** fields, `equals` / `in` only work when the field is indexed
+> as the **`token`** type. An analyzed `string` mapping supports `text`/`phrase`
+> only, and `stringFacet` supports facets only. A field you both filter *and*
+> facet needs an array of mappings:
+> `[{ "type": "token" }, { "type": "stringFacet" }]`.
+> Also note the `token` `normalizer` (e.g. `lowercase`) is applied at index
+> time — normalize your query values in code to match the stored form.
 
 ### Autocomplete with edge n-grams
 
@@ -782,7 +790,7 @@ exports.vehicleAutocomplete = async (req, res) => {
     "fields": {
       "dealer_name": { "type": "string", "analyzer": "lucene.standard" },
       "dealer_code": { "type": "string", "analyzer": "lucene.keyword" },
-      "dealer_city": { "type": "string", "analyzer": "lucene.keyword" },
+      "dealer_city": { "type": "token", "normalizer": "lowercase" },
       "dealer_gst":  { "type": "string", "analyzer": "lucene.keyword" },
       "is_active":   { "type": "boolean" },
       "created_at":  { "type": "date" }
@@ -802,7 +810,12 @@ exports.searchDealers = async (req, res) => {
   const filter = [
     { equals: { path: "is_active", value: active === "true" } },
   ];
-  if (city) filter.push({ equals: { path: "dealer_city", value: city } });
+  // dealer_city is a token field with the lowercase normalizer — lowercase
+  // the query value to match the stored form (equals needs token for strings)
+  if (city)
+    filter.push({
+      equals: { path: "dealer_city", value: String(city).toLowerCase() },
+    });
 
   if (q && q.trim()) {
     must.push({
@@ -858,9 +871,9 @@ Note: when `q` is empty we still want the dealer list to work, so we only add th
       "order_no":      { "type": "string", "analyzer": "lucene.keyword" },
       "customer_name": { "type": "string", "analyzer": "lucene.standard" },
       "remarks":       { "type": "string", "analyzer": "lucene.english" },
-      "status":        { "type": "stringFacet" },
+      "status":        [{ "type": "token", "normalizer": "lowercase" }, { "type": "stringFacet" }],
       "dealer_id":     { "type": "objectId" },
-      "dealer_city":   { "type": "stringFacet" },
+      "dealer_city":   [{ "type": "token", "normalizer": "lowercase" }, { "type": "stringFacet" }],
       "order_date":    { "type": "date" },
       "order_total":   { "type": "number" }
     }
@@ -868,7 +881,7 @@ Note: when `q` is empty we still want the dealer list to work, so we only add th
 }
 ```
 
-`stringFacet` is a faceted variant of string — lets you use it inside `$searchMeta` facets.
+`stringFacet` is **facet-only** — it powers `$searchMeta` facets but cannot be queried with `equals`/`in`/`text`. That's why `status` and `dealer_city` are mapped twice: `token` for filtering, `stringFacet` for the facet counts.
 
 **List pipeline**:
 
@@ -886,7 +899,11 @@ exports.listOrders = async (req, res) => {
   } = req.query;
 
   const filter = [];
-  if (status) filter.push({ equals: { path: "status", value: status } });
+  // status token normalizer is lowercase — normalize the query value to match
+  if (status)
+    filter.push({
+      equals: { path: "status", value: String(status).toLowerCase() },
+    });
   if (dealer_id)
     filter.push({
       equals: { path: "dealer_id", value: new ObjectId(dealer_id) },
@@ -1011,9 +1028,13 @@ At the time of writing (Atlas 2025-2026):
 | Tier      | Atlas Search available? | Limits                                              |
 | --------- | ----------------------- | --------------------------------------------------- |
 | M0 (free) | **Yes**                 | 3 search indexes total per cluster, slower builds   |
-| M2 / M5   | Yes (shared)            | Small indexes only                                  |
+| Flex      | Yes                     | Shared resources, index-count limits                |
 | M10+      | Yes (dedicated)         | No index-count hard cap, better performance         |
-| Serverless| Yes                     | RPU-based pricing, scales to zero                   |
+
+> Note: the old **M2/M5 shared tiers and Serverless instances were retired in
+> favor of the Flex tier** (2025). Atlas Search was never available on
+> Serverless instances — older docs claiming otherwise are stale. Dedicated
+> **Search Nodes** (below) require M10+.
 
 Atlas Search on dedicated tiers (M10+) runs in a separate `mongot` process per node — you don't pay for a standalone service, but it does consume some of the node's CPU / RAM. For heavy search workloads Atlas offers **Search Nodes**, which are dedicated search-only VMs you can add to the cluster.
 
@@ -1103,7 +1124,7 @@ Treat them like migrations. Store them in `backend/atlas-search/*.json` and appl
 - Did you add the field to `mappings.fields`? (If `dynamic: false`, you must.)
 - Is the analyzer right? `lucene.keyword` treats the whole string as one token, so partial matches will fail.
 - Is the index still **Building**? Give it a minute and check the Atlas UI.
-- Is the case right? Autocomplete is case-sensitive unless you set `foldDiacritics: true` and / or use a lowercasing analyzer.
+- Is the case right? Case behaviour comes from the analyzer (the default `lucene.standard` chain lowercases; keyword-style analyzers don't). Note `foldDiacritics` only folds accents (`é` → `e`) — it has nothing to do with case.
 
 ### "Results are slow"
 
@@ -1123,7 +1144,7 @@ Treat them like migrations. Store them in `backend/atlas-search/*.json` and appl
 
 ### "I need to update an index definition"
 
-- Atlas Search indexes are **immutable** in the old API. You `dropSearchIndex` and create a new one. In Atlas 7+ you can call `updateSearchIndex` to change mappings in place.
+- Index definitions can be edited — via the Atlas UI / Admin API, or (MongoDB 7.0+) `db.collection.updateSearchIndex()` from mongosh/driver. Either way the index **rebuilds in the background** after the edit; queries keep running against the old definition until the rebuild finishes.
 
 ---
 

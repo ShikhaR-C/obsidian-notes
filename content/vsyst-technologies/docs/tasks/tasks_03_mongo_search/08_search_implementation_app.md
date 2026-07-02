@@ -630,6 +630,11 @@ const {
 const listSource = isSearchOpen && search ? searchHits : filteredDataSource;
 ```
 
+> Security note: passing `dealerId` / `custId` from the client is a UX
+> convenience only — the API must (and, per `07_search_implementation_api.md`
+> §7, does) enforce tenant scoping server-side from the auth token. Never
+> rely on the client to restrict another tenant's data.
+
 Wire the `<Search />` component into the existing search header (around line
 674 where the current `<TextInput />` lives) via `onDebouncedChange={setSearch}`
 so the input is debounced without removing the inline chip row.

@@ -181,4 +181,4 @@ For completeness, both currently installed packages are also fully compatible wi
 - `dzzlo_oms_api/dzzlo_oms.js` — entry point and graceful shutdown
 - `dzzlo_oms_api/docs/strategy/mongoose_9_upgrade_plan_61daa006.strategy.md` — prior 8 → 9 migration record
 - `dzzlo_oms_api/AI.md` — lines 65, 91 document the Mongoose 9 conventions
-- Companion doc: `docs/tasks/tasks_03/04_api_upgrade_file_changes.md` — file-by-file upgrade plan
+- Companion doc: `docs/tasks/tasks_03_mongo_search/04_api_upgrade_file_changes.md` — file-by-file upgrade plan

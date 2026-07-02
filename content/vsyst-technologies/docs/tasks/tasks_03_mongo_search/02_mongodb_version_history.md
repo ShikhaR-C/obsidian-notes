@@ -43,10 +43,10 @@ For an order management system that runs 24/7 against Atlas, the two reasons to 
 
 MongoDB ships in two tracks:
 
-- **Major releases** — one per year, supported for **30 months** from GA. These are the versions you run on-prem or pin in Atlas. Examples: 5.0, 6.0, 7.0, 8.0.
+- **Major releases** — one per year. MongoDB's stated policy is ~30 months of support from GA, but the published EOL dates have run closer to **36 months** (6.0: 36 mo, 7.0: 36 mo) — always confirm against the official lifecycle page. These are the versions you run on-prem or pin in Atlas. Examples: 5.0, 6.0, 7.0, 8.0.
 - **Rapid releases** — shipped every ~quarter in Atlas only, used as a preview/staging ground for features that will roll into the next major. Examples: 7.1, 7.2, 7.3, 8.1, 8.2. You do not run these on-prem, and you should not pin them long-term on Atlas.
 
-The "30 month" rule means: once a major hits GA, you have two and a half years before you are pushed to upgrade.
+In practice: once a major hits GA, you have roughly three years before you are pushed to upgrade — but check the exact published date per release rather than assuming.
 
 ---
 
@@ -59,13 +59,13 @@ The "30 month" rule means: once a major hits GA, you have two and a half years b
 | **4.4**         | July 2020          | February 2024                  | EOL                         | Hedged reads, refinable shard keys, union `$unionWith`, compound hashed shard keys                                                                   |
 | **5.0**         | July 13, 2021      | October 31, 2024               | EOL                         | Native time-series collections, window functions, resharding, versioned API, client-side field-level encryption (CSFLE) GA                           |
 | **6.0**         | July 19, 2022      | July 31, 2025                  | EOL                         | Queryable encryption (preview), change-stream pre/post-images, cluster-to-cluster sync, time-series secondary indexes, column store index (preview)  |
-| **7.0**         | August 15, 2023    | August 31, 2027                | **Supported**               | Queryable encryption GA, approximate percentiles, compound wildcard indexes, shard key resharding on live workloads, large initial sync improvements |
-| **8.0**         | October 2, 2024    | October 31, 2029               | **Supported, latest major** | Huge performance rewrite, range-queryable encryption, faster sharding, new `bulkWrite`, block processing for time-series, explain v2                 |
+| **7.0**         | August 15, 2023    | **August 31, 2026** (verify on lifecycle page) | **Supported — EOL near**    | Queryable encryption GA, approximate percentiles, compound wildcard indexes, shard key resharding on live workloads, large initial sync improvements |
+| **8.0**         | October 2, 2024    | ~October 2027 (est. 36 mo; verify) | **Supported, latest major** | Huge performance rewrite, range-queryable encryption, faster sharding, new `bulkWrite`, block processing for time-series, explain v2                 |
 | **8.2** (rapid) | September 17, 2025 | July 31, 2026                  | Atlas-only                  | Incremental improvements on top of 8.0                                                                                                               |
 
 > **Note on 4.x**: 4.0, 4.2 and 4.4 are _all_ EOL. If you ever see an older Mongo somewhere in the org, upgrade aggressively.
 > **Note on 5.0 and 6.0**: as of late 2024 / mid 2025 respectively, they no longer receive security patches. Anything still on 5.0/6.0 is living on borrowed time.
-> **Our cluster**: 7.0.31 — a patch release of 7.0, supported until **August 31, 2027**. So we are not in immediate danger, but 7.0 is no longer the _latest_.
+> **Our cluster**: 7.0.31 — a patch release of 7.0, supported until **August 31, 2026** per MongoDB's published lifecycle (verify before planning). That is much closer than it sounds — treat the 8.0 upgrade as near-term scheduled work, not a someday item.
 
 ### Atlas-only "rapid" versions
 
@@ -185,7 +185,7 @@ Our current order stream could plausibly be modelled as a time-series collection
 
 - **Explain v2** with richer per-stage statistics and a clearer winning-plan representation.
 - **Faster `$lookup`** for the common "left join then $unwind" pattern — the planner fuses the stages.
-- **`$rankFusion`** for hybrid search scoring (combine vector + text).
+- **`$rankFusion`** for hybrid search scoring (combine vector + text) — note: this shipped in the 8.1/8.2 **rapid** releases, not in 8.0 GA; a cluster pinned to the 8.0 major does not get it.
 - Extended expressions: richer `$dateDiff`, new `$median`/`$percentile` optimisations, improved `$setWindowFields` memory usage.
 
 ### 5.7 Operational quality of life
@@ -301,7 +301,7 @@ MongoDB supports the current driver minor against at least two previous server m
 | `mongodb` driver | 6.0 | 7.0 |            8.0             |
 | ---------------- | :-: | :-: | :------------------------: |
 | 5.x              | yes | yes | partial (pre-8.0 features) |
-| 6.x              | yes | yes |            yes             |
+| 6.x              | yes | yes |      yes (6.10+ only)      |
 | **7.x** (us)     | yes | yes |          **yes**           |
 
 In short: **we are already on a driver / ODM combination that officially supports MongoDB 8.0.** Upgrading the server does not require any `package.json` changes to light up the core 8.0 behaviour.
@@ -324,7 +324,7 @@ Longer answer broken down by risk area:
 ### 9.1 Atlas operational safety
 
 - Atlas upgrades dedicated clusters by **rolling each replica set member one at a time**: upgrade a secondary, wait for it to catch up, step down the primary, upgrade the old primary. Clients fail over in seconds.
-- Atlas automatically takes a **pre-upgrade snapshot**. If something looks wrong, you can roll back on continuous backup tiers.
+- Atlas automatically takes a **pre-upgrade snapshot**. If something looks wrong, rollback means **restoring that snapshot** (into a 7.0 cluster) — Atlas has no in-place major-version downgrade (see §10.3).
 - The process is available via the Atlas UI ("Edit Configuration" → MongoDB version → pick 8.0) and via the Atlas Admin API.
 - **Downtime**: practically zero. Expect a few seconds of elevated latency during the primary step-down.
 
@@ -393,7 +393,7 @@ After the upgrade, the cluster is on 8.0 binaries but **FCV is still 7.0** by de
 3. **Day 2+**: click "Update FCV to 8.0" in Atlas.
 4. **Stable period**: confirm 8.0-only features (e.g. encrypted range queries) light up.
 
-Leaving FCV at 7.0 for a few days gives you a safety net: reverting from 8.0 binaries back to 7.0 is supported _only if FCV never advanced past 7.0_. Once FCV = 8.0, the downgrade path closes and you must restore from backup to go back.
+Leaving FCV at 7.0 for a few days gives you a safety net — but understand its limits. The "downgrade binaries while FCV is held back" path applies to **self-managed** deployments; **Atlas does not offer in-place major-version downgrades at all**. On Atlas, going back means restoring the pre-upgrade snapshot into a 7.0 cluster (possibly support-assisted). Holding FCV at 7.0 still matters: it keeps 8.0-only on-disk format changes off and preserves the widest recovery options. Once FCV = 8.0, restore-from-backup is the only way back anywhere.
 
 ### 10.4 Rolling upgrade vs maintenance window
 
@@ -477,7 +477,7 @@ Run through this list **before** you click Apply in Atlas production. Check ever
 **Yes — upgrade Atlas from 7.0.31 to 8.0.** Conditions:
 
 1. Do it in **staging first** — clone production, upgrade the clone, run the API + mobile app against it for at least 24–48 hours.
-2. **Keep FCV at 7.0 for the first 1–2 days** in production so you preserve a binary downgrade path.
+2. **Keep FCV at 7.0 for the first 1–2 days** in production — it keeps 8.0-only on-disk changes off and preserves the widest recovery options (on Atlas, rollback is restore-from-snapshot either way; see §10.3).
 3. Do it in a **low-traffic window** even though the upgrade is rolling.
 4. Capture performance baselines **before and after** so you can actually quantify the 8.0 gains on our workload.
 5. **Monitor for the first 48 hours** — specifically p95 latency, CPU, connection churn, and any new error patterns.
@@ -492,13 +492,13 @@ Run through this list **before** you click Apply in Atlas production. Check ever
 
 ### Why "not immediately" (optional caution)
 
-If timing is inconvenient, the absolute deadline is well in the future: 7.0 is supported until **August 31, 2027**. There is no urgency from a security standpoint. Upgrading in Q3/Q4 2026 would still be well ahead of EOL.
+If timing is inconvenient, note the deadline carefully: 7.0's published EOL is **August 31, 2026** (verify on the MongoDB lifecycle page — an earlier draft of this doc said 2027, which was wrong). That leaves only a few months of security support, so there **is** urgency: the upgrade should be treated as near-term work, not deferred to late 2026.
 
 A reasonable compromise if you want to play it safe:
 
 1. **Now**: upgrade a staging clone, build confidence, measure gains.
 2. **Within 1–3 months**: upgrade production during a planned maintenance window.
-3. **Long term**: track the 9.0 release (expected around October 2025 for GA) and plan to upgrade from 8.0 → 9.0 once it matures.
+3. **Long term**: track the 9.0 release (not yet GA as of this research — check the MongoDB release notes page for the current status) and plan to upgrade from 8.0 → 9.0 once it matures.
 
 ---
 
@@ -525,4 +525,4 @@ A reasonable compromise if you want to play it safe:
 
 ---
 
-_File: `docs/tasks/tasks_03/02_mongodb_version_history.md`_
+_File: `docs/tasks/tasks_03_mongo_search/02_mongodb_version_history.md`_

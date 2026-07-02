@@ -188,6 +188,43 @@ After reading this package, the team should:
 
 ---
 
+## Errata — correctness & security review (2026-07-02)
+
+A review pass was applied across the package. The load-bearing fixes, in case
+you read an older copy elsewhere:
+
+- **02 — versions**: MongoDB 7.0's EOL corrected to **Aug 31, 2026** (an
+  earlier draft said 2027) — re-verify on the lifecycle page; the upgrade is
+  near-term work, not deferrable. `$rankFusion` is 8.1+ (rapid), not 8.0 GA.
+- **02/04 — rollback**: Atlas does **not** support in-place major-version
+  downgrades; the production rollback plan is restore-from-snapshot. The
+  upgrade-rehearsal cluster must be M10+ (shared tiers can't restore
+  snapshots or pin versions).
+- **05 — regex**: collation indexes do **not** make `$regex` case-insensitive
+  (`$regex` is not collation-aware) — that section was rewritten with a
+  working alternative (lowercased shadow field, or `$text`/Atlas Search).
+- **06 — Atlas Search types**: `equals`/`in` on strings requires the
+  **`token`** field type; `stringFacet` is facet-only (map filter+facet
+  fields with both types). Tier table updated — M2/M5/Serverless were
+  replaced by Flex, and Search was never available on Serverless.
+- **07 — security**: routes must sit behind auth with **server-side tenant
+  scoping** (dealer/customer ids derived from `req.user`, not the query
+  string — IDOR otherwise); `city`/`state` now regex-escaped; statuses
+  lowercased to match the token normalizer; numeric `order_no` handled on
+  the Atlas path; empty compound clauses pruned; `page` clamped; trust-proxy
+  note for the rate limiter; unused fallback `$text` indexes replaced with
+  the B-tree indexes the code actually uses; `DATABASE_URI` env-var fix;
+  order responses must exclude OTP/token fields.
+- **08 — app**: client-side `dealerId`/`custId` args are convenience only;
+  the API enforces scoping from the auth token.
+- **09 — dead products**: Atlas App Services (HTTPS endpoints / Data API)
+  and Atlas Device Sync / Realm reached **EOL Sept 30, 2025** — sections
+  C3/D1 rewritten (Triggers survive). `$jsonSchema` sketch flagged as not
+  matching the real schema; vector-search filter-field and `$project` fixes;
+  time-series storage/granularity claims corrected.
+
+---
+
 ## Conventions used in this package
 
 - **Collection names** follow the existing DZZLO schema:

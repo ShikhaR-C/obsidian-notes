@@ -758,6 +758,10 @@ Choosing a shard key is the single most important sharding decision — a bad ke
 | M30 / M40 | Mid-size production            | 3 nodes     | Continuous |
 | M50+      | Large production, sharding     | 3+ nodes    | Continuous |
 
+> Note: Atlas retired the M2/M5 shared tiers (and Serverless instances) in
+> favor of the **Flex** tier in 2025 — new small clusters are M0 or Flex. The
+> rows above are kept for recognizing existing/legacy clusters.
+
 DZZLO OMS runs on a dedicated tier so we get continuous (point-in-time) backups and private networking.
 
 ### 10.2 Cluster, server version, FCV
@@ -812,7 +816,7 @@ Both are TypeScript/JavaScript libraries for talking to MongoDB from Node. In th
 
 ```js
 const { MongoClient } = require("mongodb");
-const client = new MongoClient(process.env.MONGO_URI);
+const client = new MongoClient(process.env.DATABASE_URI); // this project's env var (api_constants.js)
 await client.connect();
 const db = client.db("dzzlo_oms");
 const orders = db.collection("order_msts");
@@ -828,7 +832,7 @@ const row = await orders.findOne({ order_no: 1042 });
 
 ```js
 const mongoose = require("mongoose");
-await mongoose.connect(process.env.MONGO_URI);
+await mongoose.connect(process.env.DATABASE_URI);
 const row = await Order.findOne({ order_no: 1042 }).populate("cust_id");
 ```
 
@@ -1009,4 +1013,4 @@ Once those six sentences feel obvious to you, you understand MongoDB well enough
 
 ---
 
-_File: `docs/tasks/tasks_03/01_mongodb_overview.md`_
+_File: `docs/tasks/tasks_03_mongo_search/01_mongodb_overview.md`_
