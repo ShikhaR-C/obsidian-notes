@@ -52,7 +52,7 @@ jest.mock('react-native-image-picker', () => ({ launchImageLibrary: jest.fn(), l
 jest.mock('react-native-permissions', () => ({ request: jest.fn(), check: jest.fn(), PERMISSIONS: {}, RESULTS: {} }), { virtual: true });
 ```
 
-The two `virtual: true` mocks unblock tests **now**; the durable fix (actually installing the packages, since production code imports them) is a pending decision recorded in the overview's open questions.
+The two `virtual: true` mocks are the confirmed approach (2026-07-05) — keep them stubbed for now rather than installing the real packages; revisit later.
 
 **Env note:** `yarn test` → `APP_ENV=testing` → `react-native-dotenv` inlines `.env.testing` (**remote staging URL**) into `@env` imports. That is acceptable *only because* every network path is intercepted: MSW's `onUnhandledRequest: 'error'` (§4.3) turns any real request attempt into a test failure — the local-only principle, enforced mechanically. If this ever chafes, add `.env.jest` + a `test:jest` script; not needed now.
 

@@ -3,7 +3,7 @@
 **Outcome:** web and app MSW fixtures are **generated from the API's seeded world**, not hand-written — so front-end mocks cannot drift from real API shapes, killing the classic "mocks pass, prod breaks" failure mode.
 **Effort:** 2–3 dev-days. Depends on Phases 2 (seed extensions) and 3 (web MSW in place); the app side additionally on Phase 4.
 
-> **TDD lens:** a mock is a *claim* about the API. Unverified claims rot. This phase makes every claim mechanically derived from the same seed world the API's own tests run against — one source of truth (⏳ PENDING Q7; the alternative, front-end suites booting a locally seeded API, is rejected by default: it couples three repos' test runs and is 10–100× slower; the locally seeded API is reserved for the optional e2e smoke in Phase 6).
+> **TDD lens:** a mock is a *claim* about the API. Unverified claims rot. This phase makes every claim mechanically derived from the same seed world the API's own tests run against — one source of truth (✅ Q7 confirmed 2026-07-05; the alternative, front-end suites booting a locally seeded API, is rejected: it couples three repos' test runs and is 10–100× slower; the locally seeded API is reserved for the optional e2e smoke in Phase 6).
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Source prompt:** `../../prompt-tdd-test-suite-3-projects.md`
 > **Repos under change:** `dzzlo_oms_api` (reference harness), `dzzlo_oms_app`, `dip-web` — plus this vault for the workflow guide.
-> **Status:** Plan drafted 2026-07-02. The Step-1 discussion questions are **PENDING** (see `## Open questions`). Every phase assumes the provisional default recorded there; when an answer changes a default, update this file **and** the affected phase file. This overview is the source of truth.
+> **Status:** Plan drafted 2026-07-02. Step-1 discussion questions **resolved 2026-07-05 — all defaults confirmed as-is** (see `## Open questions`), plus: keep `react-native-image-picker`/`react-native-permissions` virtually stubbed in the app (Phase 4), do not install them yet. This overview is the source of truth.
 
 ## Why — the release-confidence framing
 
@@ -23,7 +23,7 @@ The fix is a **regression contract**: a ranked list of business flows that must 
 2. **Green** — write the least code that makes it pass. Resist gold-plating.
 3. **Refactor** — clean up with the test as your safety net. Commit.
 
-### Test-first vs test-after — house policy (⏳ PENDING Q10)
+### Test-first vs test-after — house policy (✅ Q10 confirmed 2026-07-05)
 
 | Situation | Policy |
 | --- | --- |
@@ -41,7 +41,7 @@ Terminology varies across teams; this is what each term means **here**, per repo
 | **Unit** | One pure function/reducer/selector is correct. No I/O, no framework, no mocks (or trivial ones). | `helpers/` funcs (`getApplicableRate`, `dieselQtyLimit`, `versionGate`), service calculations | `src/utils/*` (Currency, Dates, validators, permissions, `inv_no` base33), `helpers/Credit`, selectors, slice reducers, `paginationHelpers` | `src/utils/permissions.js`, `errorRTK`, slice reducers, hooks via `renderHook` | ms |
 | **Integration** (a.k.a. **functional**) | One endpoint/screen behaves correctly through its **public interface** — real internals, faked edges only. | **The existing `test/api_v3` idiom**: supertest against the in-process Express app + `mongodb-memory-server` + seeded fixtures. This is our backbone. | One screen rendered with RNTL, store + navigation real, **network faked with MSW** | One page rendered with RTL, store/router/theme real, **network faked with MSW** | ~100ms–1s |
 | **Feature** | A multi-step **business flow** spanning several resources works end-to-end *within one system*. | `test/api_v3/features/` convention: e.g. order → SO → invoice → voucher → ledger balances | A user journey across screens (login → place order) with MSW | A journey (sign-in → create decant) with MSW | 1–10s |
-| **E2E** | Real processes wired together: UI ↔ real API ↔ real (local) DB. | n/a (API *is* the backend) | Maestro/Detox on emulator against a **locally seeded API** — ⏳ PENDING Q6 | Playwright against Vite build + locally seeded API — ⏳ PENDING Q6 | minutes |
+| **E2E** | Real processes wired together: UI ↔ real API ↔ real (local) DB. | n/a (API *is* the backend) | Maestro/Detox on emulator against a **locally seeded API** — no e2e yet (✅ Q6) | Playwright against Vite build + locally seeded API — no e2e yet (✅ Q6) | minutes |
 
 **How to plan across the four layers:** push every rule as far *down* the table as it can live. A credit-limit formula belongs in a unit test; "POST /order_msts rejects when over limit" belongs in an API integration test; "customer sees the blocked-credit message" belongs in one RNTL screen test; only "the whole stack boots and a login works" belongs in e2e. Never re-prove the same rule at two layers — the upper layer assumes the lower one.
 
@@ -50,7 +50,7 @@ Terminology varies across teams; this is what each term means **here**, per repo
 Because the API is the system of record and both clients are thin views over RTK Query, the biggest investment is the **API integration/feature layer** (fast, local, already idiomatic here), flanked by cheap unit tests everywhere, a modest set of RTL/RNTL screen tests, and a *tiny* optional e2e smoke. Roughly:
 
 ```
-        e2e smoke        (0–10 tests, release gate only — ⏳ Q6)
+        e2e smoke        (0–10 tests, release gate only — deferred, ✅ Q6)
    app/web screen tests  (dozens)
   ████ API integration ████  (hundreds — the backbone)
      unit tests           (hundreds, milliseconds, run on save)
@@ -64,7 +64,7 @@ Because the API is the system of record and both clients are thin views over RTK
 
 ---
 
-## Critical flows — the regression contract (provisional ranking — ⏳ PENDING Q1)
+## Critical flows — the regression contract (ranking confirmed 2026-07-05 — ✅ Q1)
 
 Coverage today: ✅ covered in `test/api_v3` · 🟡 partial · ❌ none. "Verify" = confirm depth during Phase 2.
 
@@ -86,7 +86,7 @@ Coverage today: ✅ covered in `test/api_v3` · 🟡 partial · ❌ none. "Verif
 | 14 | P2 | DIP flows: decants, meter reads, inspections (`/api/dip/v1`, separate `db_dip` connection) | `dip_api_v1`, dip-web pages | ❌ — **not even mountable in the test app today** (see Phase 2 §2.6) |
 | 15 | P2 | Partner API (tasks_11) | not yet implemented | n/a — add to contract when it lands |
 
-**Ask (Q1):** correct/rank this list; specifically (a) is DIP P0/P1/P2? (b) does frozen-live `/api/v2` (serving app versions 1.68–1.77) need regression coverage at all?
+**Q1 resolved (2026-07-05):** table confirmed as ranked; DIP stays P2; frozen `/api/v2` gets no new tests (suite stays frozen-ignored per Q4).
 
 ---
 
@@ -148,22 +148,20 @@ Each phase is independently landable — the gate gets stricter release by relea
 
 ---
 
-## Open questions — ⏳ PENDING (defaults in force until answered)
+## Open questions — ✅ RESOLVED 2026-07-05 (all defaults confirmed as-is)
 
-Answers may be given piecemeal; update this section + affected phase files as they land.
+1. **Critical flows** — table confirmed as ranked; DIP = P2; frozen `/api/v2` gets no new tests, suite stays frozen-ignored.
+2. **Test database** — keep `mongodb-memory-server`; pin the mongod binary version + document the offline binary cache. No Docker, no shared local mongod.
+3. **Seed evolution** — keep JSON-snapshot + factories (no factory-library rewrite). New factories needed: credit-capped/blocked relations, approved AdvDep (+drawdown pair), version_gate counters doc; partner tenant later.
+4. **Legacy suites** — verdicts in Phase 1 §1.4 approved (delete `202405_v2` + `api_v1_test` + `api_v1`; keep `api_v2` ignored-frozen until min supported app ≥1.78, then delete). Deletion itself still waits for a separate explicit go-ahead before any `git rm` is executed — not yet given.
+5. **Web runner** — Vitest confirmed (already the repo's own migration-plan decision). Upgrade `user-event` 13→14 and `jest-dom` 5→6 (RTL 13 stays for React 18); add `msw@2`, `vitest@3`, `jsdom`.
+6. **App depth** — no e2e yet; Phase 6 leaves a marked slot for Maestro (preferred over Detox) later.
+7. **Mocking strategy for web/app** — MSW with fixtures generated from the API seed (Phase 5) for all test suites; a locally seeded API is used only by the optional e2e smoke.
+8. **Release gate location & release mechanics** — local script first (in `dzzlo_oms_api/scripts/`, runs sibling repos); GitHub Actions per-repo test workflows as the follow-up (reconciling tasks_02's CI plan).
+9. **Coverage philosophy** — flows-covered checklist gates the release; % coverage is observability only (no numeric gate initially); revisit a ratchet after Phase 2.
+10. **Team workflow** — confirmed: every bugfix starts with a failing regression test (mandatory); endpoint work is test-first; UI is test-with (same PR). Local runtime budgets: API `test:full` ≤ 5 min, web ≤ 1 min, app ≤ 2 min.
 
-1. **Critical flows** — corrections/ranking to the table above? Is DIP P0? Does frozen `/api/v2` need coverage while 1.68–1.77 clients live? *Default: table as ranked; DIP = P2; v2 = no new tests, keep suite frozen-ignored.*
-2. **Test database** — keep `mongodb-memory-server` (already per-file isolated, crash-safe)? *Default: keep; pin the mongod binary version + document the offline binary cache. No Docker, no shared local mongod.*
-3. **Seed evolution** — keep JSON-snapshot + factories (no factory-library rewrite)? New factories needed: credit-capped/blocked relations, approved AdvDep (+drawdown pair), version_gate counters doc; partner tenant later. *Default: keep architecture, extend factories only.*
-4. **Legacy suites** — approve verdicts in Phase 1 §1.4 (delete `202405_v2` + `api_v1_test` + `api_v1`; keep `api_v2` ignored-frozen until min supported app ≥1.78, then delete)? May we `git rm` in a cleanup PR? *Default: verdicts as written; deletion waits for your explicit OK.*
-5. **Web runner** — Vitest confirmed by the repo's own migration plan. Also: upgrade `user-event` 13→14 and `jest-dom` 5→6 (RTL 13 stays for React 18)? *Default: yes, upgrade both minors-majors; add `msw@2`, `vitest@3`, `jsdom`.*
-6. **App depth** — Phase 4 covers pure logic + store + a handful of RNTL screens. Add e2e (Maestro recommended over Detox) later? What device/emulator constraints exist? *Default: no e2e yet; Phase 6 leaves a marked slot.*
-7. **Mocking strategy for web/app** — MSW with fixtures **generated from the API seed** (Phase 5) vs hitting a locally seeded API? *Default: MSW-from-seed for test suites; a locally seeded API is used only by the optional e2e smoke.*
-8. **Release gate location & release mechanics** — local script first (in `dzzlo_oms_api/scripts/`, runs sibling repos), CI = GitHub Actions later (reconciling tasks_02's CI plan)? And: how exactly are releases cut — what does copying `v1_77/` → `v1_78/` correspond to (app store release line? all repos tagged together)? *Default: local gate script now, GH Actions per-repo test workflows as the follow-up.*
-9. **Coverage philosophy** — flows-covered checklist gates the release; % coverage is observability only (no numeric gate initially). *Default: as stated; revisit a ratchet after Phase 2.*
-10. **Team workflow** — confirm: every bugfix starts with a failing regression test (mandatory); endpoint work is test-first; UI is test-with (same PR). Local runtime budgets: API `test:full` ≤ 5 min, web ≤ 1 min, app ≤ 2 min. Who reviews test quality in PRs? *Default: rules as stated.*
-
-Also pending from findings (needs a decision eventually): properly install `react-native-image-picker`/`react-native-permissions` in the app vs keep them stubbed (Phase 4 stubs them virtually to unblock).
+Also resolved from findings: keep `react-native-image-picker`/`react-native-permissions` **virtually stubbed** in Jest (Phase 4 §`jest.setup.js`) rather than installed for real — deferred to a later decision.
 
 ---
 

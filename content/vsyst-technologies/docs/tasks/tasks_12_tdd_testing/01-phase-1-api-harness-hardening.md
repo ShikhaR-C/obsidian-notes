@@ -73,19 +73,19 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
    "test:file": "NODE_ENV=development jest --runTestsByPath",
    "test:coverage": "NODE_ENV=development jest --coverage"
    ```
-   (Coverage is observability, not a gate — ⏳ Q9.)
+   (Coverage is observability, not a gate — ✅ Q9.)
 4. **Optional, only if a Phase-2 test needs it**: add a `counters` branch to `helper/beforeAll/index.js` — `counters.json` is written by seed but currently never re-hydrated (relevant for version-gate and numbering tests).
 
-## 1.4 Legacy suite triage — verdicts (⏳ PENDING Q4 for deletion approval)
+## 1.4 Legacy suite triage — verdicts (✅ Q4 verdicts approved 2026-07-05; `git rm` still needs a separate explicit go-ahead)
 
 | Suite | Facts | Verdict | Rationale / what (if anything) to port |
 | --- | --- | --- | --- |
 | `test/202405_v2/` (~29 test files, ~18.6k LOC total) | Direct predecessor of api_v3; every test file has a same-named api_v3 counterpart | **Retire & delete** | Strict subset — contributes zero unique coverage. Safe immediately. |
 | `test/api_v1_test/` (28 files, ~5.3k LOC) | Targets unmounted `/api/v1`; **connects to the real remote `DATABASE_URI`** and *writes* to it | **Retire & delete — priority** | Violates the local-only principle outright; endpoints dead. Nothing to port. |
 | `test/api_v1/` (16 test files + own 2021-era fixtures) | Memory-server based but targets unmounted `/api/v1`; covers order list/get-one and `rate_msts` list — endpoints that are commented-out/"NOT USED" in v3 | **Retire & delete** | Its unique flows test **dead API surface**. If order list/get-one ever returns to v3, write fresh tests then. |
-| `test/api_v2/` (18 test files) | Targets **live, frozen** `/api/v2` (still serving app versions 1.68–1.77); currently broken anyway — `db.dheader` sends `X_API_KEY_3` but v2 validates `X_API_KEY` → 401s | **Keep ignored & frozen** until the app's min supported version reaches ≥ 1.78, then delete | v2 is change-frozen policy-wise, so regression risk is low; reviving costs a header fix + fixture rework. Not worth it unless a v2 hotfix is ever needed (decision recorded here if so). ⏳ Q1/Q4 |
+| `test/api_v2/` (18 test files) | Targets **live, frozen** `/api/v2` (still serving app versions 1.68–1.77); currently broken anyway — `db.dheader` sends `X_API_KEY_3` but v2 validates `X_API_KEY` → 401s | **Keep ignored & frozen** until the app's min supported version reaches ≥ 1.78, then delete | v2 is change-frozen policy-wise, so regression risk is low; reviving costs a header fix + fixture rework. Not worth it unless a v2 hotfix is ever needed (decision recorded here if so). ✅ Q1/Q4 |
 
-Actions in this phase: add the verdict table to `docs/testing.md`; leave `testPathIgnorePatterns` as-is until deletion is approved (the ignore entries are load-bearing).
+Actions in this phase: add the verdict table to `docs/testing.md`; leave `testPathIgnorePatterns` as-is — deletion of `202405_v2`/`api_v1_test`/`api_v1` is approved in principle but the actual `git rm` still needs a separate explicit go-ahead before it's executed (the ignore entries are load-bearing until then).
 
 ## 1.5 Runbook — `dzzlo_oms_api/docs/testing.md` (new)
 
