@@ -126,3 +126,74 @@ HR & Payroll, Projects, Manufacturing, Website/e-commerce — don't touch until 
 2. **This week:** Run the setup wizard; add items + customers + users.
 3. **Next 4 weeks:** Adopt sales cycle → purchase cycle → inventory → accounting review, one at a time.
 4. **Rule of thumb:** enter real transactions from day one, never run a parallel spreadsheet, and don't touch HR/Manufacturing until the money-flow modules are habits.
+
+---
+
+## Add-on apps: Frappe HR, Helpdesk & Wiki (Docker)
+
+ERPNext covers CRM → accounting out of the box, but HR/payroll, a support desk, and a knowledge wiki are **separate Frappe apps**. All three install onto the *same site* as ERPNext — one URL, one login, shared users and data.
+
+| App | What it gives you | Repo · branch (for v16) | Needs ERPNext? | Where it lives after install |
+|---|---|---|---|---|
+| **Frappe HR** (`hrms`) | Employees, leave, attendance, expense claims, payroll | `frappe/hrms` · `version-16` | **Yes** — major versions must match | Desk modules + employee self-service PWA at `/hr` |
+| **Helpdesk** | Support tickets, agents, SLAs, customer portal | `frappe/helpdesk` · `main` | No | `/helpdesk` |
+| **Wiki** | Public/internal documentation pages | `frappe/wiki` · `master` (v3 still RC as of Jul 2026) | No | Published pages at `/wiki`, managed from the desk |
+
+### Why you can't just "install" them in Docker
+
+Frappe apps live **inside the Docker image**, not in your site's data volumes. The stock `frappe/erpnext` image contains only Frappe + ERPNext, and anything added to a running container is lost when it's recreated. So extra apps = build a custom image once, then install the apps into your site.
+
+All commands below run from inside the `frappe_docker` folder.
+
+### Step 1 — Create `apps.json` (the app list baked into your image)
+
+⚠️ ERPNext itself must be listed — the build starts from bare Frappe and includes exactly what's here.
+
+```json
+[
+  { "url": "https://github.com/frappe/erpnext",  "branch": "version-16" },
+  { "url": "https://github.com/frappe/hrms",     "branch": "version-16" },
+  { "url": "https://github.com/frappe/helpdesk", "branch": "main" },
+  { "url": "https://github.com/frappe/wiki",     "branch": "master" }
+]
+```
+
+### Step 2 — Build the custom image (~15–30 min)
+
+```bash
+docker build \
+  --build-arg=FRAPPE_PATH=https://github.com/frappe/frappe \
+  --build-arg=FRAPPE_BRANCH=version-16 \
+  --secret=id=apps_json,src=apps.json \
+  --tag=custom-erpnext:16 \
+  --file=images/layered/Containerfile .
+```
+
+Give Docker Desktop ≥ 6 GB RAM (Settings → Resources); 8 GB is comfortable with four apps.
+
+### Step 3 — Point `pwd.yml` at your image
+
+```bash
+sed -i '' 's|image: frappe/erpnext:.*|image: custom-erpnext:16|' pwd.yml
+```
+
+(Or manually replace every `image: frappe/erpnext:v16.x.x` line — several services use it.)
+
+### Step 4 — Recreate containers and install into the site
+
+Site data lives in Docker volumes, so this is non-destructive (the pwd.yml site is named `frontend`):
+
+```bash
+docker compose -f pwd.yml up -d
+docker compose -f pwd.yml exec backend bench --site frontend install-app hrms
+docker compose -f pwd.yml exec backend bench --site frontend install-app helpdesk
+docker compose -f pwd.yml exec backend bench --site frontend install-app wiki
+```
+
+**Starting fresh instead?** Edit the `create-site` command in `pwd.yml` to read `--install-app erpnext --install-app hrms --install-app helpdesk --install-app wiki`, then `docker compose -f pwd.yml down -v && docker compose -f pwd.yml up -d` (⚠️ `down -v` wipes all data).
+
+**Adding another app later:** append it to `apps.json`, re-run the Step 2 build (same tag), `docker compose -f pwd.yml up -d`, then `install-app` it as above.
+
+### Adoption tip
+
+Same rule as Phase 4: don't roll all three out at once. Helpdesk and Wiki are low-risk at any point; **hold payroll (Frappe HR) until accounting is stable** — payroll posts directly to your books.
