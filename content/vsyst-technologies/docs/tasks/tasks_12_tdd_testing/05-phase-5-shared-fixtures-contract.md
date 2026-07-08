@@ -37,7 +37,7 @@ const CAPTURES = [
 
 ## 5.3 The consumers — `yarn fixtures:pull` in web and app
 
-Repos are siblings inside the versioned workspace folder (`v1_78/`), so a relative copy is enough — no registry, no submodule:
+Repos are siblings inside the versioned workspace folder (currently `v1_79/`), so a relative copy is enough — no registry, no submodule:
 
 ```json
 // dip-web/package.json + dzzlo_oms_app/package.json

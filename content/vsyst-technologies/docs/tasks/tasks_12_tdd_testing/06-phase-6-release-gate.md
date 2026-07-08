@@ -9,7 +9,7 @@
 
 ## 6.1 The command — local gate first (⏳ Q8 for CI timing)
 
-Lives in the reference repo (all four checkouts are siblings in the versioned workspace folder, e.g. `v1_78/`):
+Lives in the reference repo (all four checkouts are siblings in the versioned workspace folder, e.g. `v1_79/`):
 
 `dzzlo_oms_api/scripts/release_gate.sh` (new):
 

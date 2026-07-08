@@ -7,6 +7,17 @@
 
 ---
 
+## 3.0 Triage the existing Vitest spike first (added 2026-07-09)
+
+Unmerged remote branch `origin/claude/transaction-tests-issue-10` (tip `1b16244`, "test: add Vitest suite for transaction list CRUD, pagination, filters") already contains +2,261 lines of test scaffolding: a `vite.config.js` test block, `src/setupTests.js` (154 lines), `src/test-utils/renderWithProviders.jsx`, a **hand-rolled** `src/test-utils/mockApi.js` (297 lines), store tests (`src/store/dipApis/{decants,insps,meter_reads}.test.js`), page tests (`InspsList`, `MeterReadList`) and a smoke test.
+
+Before writing anything in §3.1–3.4, spend ≤ half a day reconciling:
+
+- **Harvest**: the page/store test *cases* (they encode real expected behavior for the P2 DIP flows) and any jsdom stubs its `setupTests.js` proved necessary — rebase them onto this phase's structure.
+- **Replace**: `mockApi.js` with MSW (§3.2–3.3) — a hand-rolled fetch mock is exactly the drift-prone claim layer Phase 5 exists to kill; do not merge it as-is.
+- **Reconcile paths**: the spike uses `src/test-utils/`; this plan specifies `src/test/` — pick one (default: this plan's `src/test/`) and record the verdict here.
+- **Verdict per file** goes in the PR that lands §3.2–3.3; the branch is then closed with a pointer to it (no test deleted without a written verdict — Phase 7 §7.4 rule).
+
 ## 3.1 Dependencies & scripts
 
 `package.json` (devDependencies to add; ⏳ Q5 for the two upgrades):
@@ -136,6 +147,7 @@ Conventions: tests colocate next to the unit (`src/pages/auth/SignIn/signin.test
 
 ## Phase 3 checklist
 
+- [ ] §3.0 spike triage: `claude/transaction-tests-issue-10` harvested/replaced with written per-file verdicts
 - [ ] Deps added: vitest, jsdom, msw@2, jest-dom@6, user-event@14
 - [ ] `vite.config.js` `test` block per migration-plan Phase 5 (+ css:false, restoreMocks)
 - [ ] `src/setupTests.js` with jest-dom, MSW lifecycle, IO/matchMedia stubs, `onUnhandledRequest: "error"`

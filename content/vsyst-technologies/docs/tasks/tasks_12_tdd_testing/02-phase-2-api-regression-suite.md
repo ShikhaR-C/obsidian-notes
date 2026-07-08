@@ -55,8 +55,8 @@ Extend `features/multiple_companies/*` or add `features/company_status/index.tes
 The highest-value new suite. Cases (exact status codes/messages to be confirmed against `api_v3/services/order_msts.js` + `invs.js` + `voc_msts.js` while writing — plan intentionally does not guess):
 
 - **Capped**: relation with small `max_cr_lmt` → order that fits passes; order that exceeds is rejected; outstanding recomputed after an approved payment voucher unblocks the next order.
-- **Blocked vs unlimited**: today's semantics (`0`/null = unlimited, `0<x<1` sentinel = blocked) — pin *current* behavior now; when tasks_08 lands (null=unlimited, 0=blocked, >0=capped) these assertions are the tests that must flip red→green with the migration. Cross-reference `tasks_08_maxcrlmt` Phase 4.
-- **`legacy_credit_presenter`**: request with app-version header ≤ 1.77 sees `max_cr_lmt: 0.001` on the wire where storage says blocked-sentinel; ≥ 1.78 sees raw values. (Needs `check_user_version`/presenter in test app — Phase 1 §1.2; confirm the presenter is mounted in `api_v/api3.js` as it is in `api2.js`.)
+- **Blocked vs unlimited** *(amended 2026-07-09 — tasks_08 has landed, API `bf063d4`)*: pin the **landed** contract directly — `null`/unset = unlimited (check skipped), `0` = blocked (any `balSum > 0` rejected), `>0` = capped — on both order **create and update** paths (`api_v3/services/order_msts.js` ~786/~922). Also pin `createDC` defaults: versionless/new-client create → `0` (blocked), ≤1.77 client → `null` (`services/dealer_custs.js` ~1442), and the update-path normalization (`""`→null, `0`→version-dependent, rounding). The old `0<x<1` sentinel is retired — no red→green migration flip is pending. Cross-reference `tasks_08_maxcrlmt` Phase 4 for the truthiness-hazard site list.
+- **`legacy_credit_presenter`**: request with `meta` header version ≤ 1.77 sees blocked `0` rewritten to a `(0,1)` sentinel on the wire; ≥ 1.78 / web / headerless sees raw values. *(Re-verified 2026-07-09: the presenter is mounted in **both** `api_v/api2.js` and `api_v/api3.js` by `bf063d4` and self-parses `req.headers.meta` — it is already reachable through the test app **without** Phase 1 §1.2; only bearer/role/scope and version-gate cases need §1.2.)*
 - **AdvDep interplay**: approved AdvDep raises `dealer_custs.adv_dep` without touching invoice outstanding (pin the tasks_07 invariant); credit checks read the right balance.
 - `cr_bill_lmt` / `max_cr_days` / `cr_bill_period` enforcement — one case each.
 
@@ -70,13 +70,13 @@ The highest-value new suite. Cases (exact status codes/messages to be confirmed 
 
 Keep the architecture (JSON snapshots + factories) — ⏳ Q3. Additions:
 
-1. **Credit variants** in `relateDC_Cash_reimb.js`: today every relation ends `max_cr_lmt: null` (unlimited). Parameterize so the seed world includes one **capped** relation (small limit) and one **blocked** relation (current sentinel semantics), per tasks_08's note. Factory idiom (options-object pattern already used by factories):
+1. **Credit variants** in `relateDC_Cash_reimb.js`: today every relation ends `max_cr_lmt: null` (unlimited) — since `1169ceb` the seed **explicitly forces `null`** in `seed/v3/index.js`, because versionless creates now default to `0` (blocked) under the landed tasks_08 contract and would fail every seeded order's credit check. Parameterize so the seed world includes one **capped** relation and one **blocked** relation, using the landed semantics. Factory idiom (options-object pattern already used by factories):
 
    ```js
    // test/api_v3/temp/seed/v3/factories/relateDC_Cash_reimb.js — sketch
    // after existing relation creation:
    await dealer_custs.findByIdAndUpdate(cappedRelId, { max_cr_lmt: 50000 });
-   await dealer_custs.findByIdAndUpdate(blockedRelId, { max_cr_lmt: 0.001 }); // current sentinel; flips with tasks_08
+   await dealer_custs.findByIdAndUpdate(blockedRelId, { max_cr_lmt: 0 }); // landed tasks_08 contract: 0 = blocked (amended 2026-07-09; old 0.001 sentinel retired)
    ```
 2. **Approved AdvDep voucher** — new `advDepVoucher` step inside `createSeedvouchers.js` (tasks_07 Phase 4 explicitly suggests this): create + approve one `voc_type: "AdvDep"` so a relation carries `adv_dep > 0` in the snapshot; add a linked drawdown pair when tasks_07 v2 ships.
 3. **Scope-diverse users** — extend `createUsers.js` so each company has at least one restricted-scope user (`CView`/`DView`) for §2.2.1.

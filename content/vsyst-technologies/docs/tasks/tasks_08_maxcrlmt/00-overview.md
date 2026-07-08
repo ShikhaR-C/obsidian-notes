@@ -1,6 +1,12 @@
 # Max Credit Limit (`max_cr_lmt`) — Semantic Redesign: `0 = blocked`, `unset = unlimited`
 
-**Status:** Spec'd (2026-05-29). Not yet implemented.
+**Status:** Spec'd (2026-05-29). **Implemented in code across all three repos (doc synced 2026-07-09 — this line had gone stale while the work shipped):**
+
+- **Phase 1 (backend)** — landed in `dzzlo_oms_api` as `bf063d4` (2026-06-20, "feat(credit): adopt null/0/>0 max_cr_lmt semantics with legacy client shim"): v3 order create+update enforcement, `createDC` version-gated default (`legacyCredit ? null : 0`), v2 write coercion, `legacy_credit_presenter` wired into `api_v/api2.js` + `api_v/api3.js`. Test seed adjusted in `1169ceb` (seeded relations forced to `null`/unlimited).
+- **Phase 2 (migration/rollout)** — `scripts/migrate_max_cr_lmt.js` is committed; ⚠️ whether it has been **executed against production data** is not verifiable from the repo — confirm and record here before treating Phase 2 as closed.
+- **Phase 3 (setting screen)** — landed in `dzzlo_oms_app` v1.78: `CustSettings.js` Unlimited/Fixed-Limit control with blocked handling; tri-state helper `src/helpers/Credit/index.js` (`creditState`/`isUnlimited`/`isBlocked`/`isCapped`); `creditUtilization` counts adv_dep as spending power (`6a8109a8`).
+- **Phase 4 (consumers/web/tests)** — dip-web landed `fix/maxcrlmt` (PR #18, "distinguish unlimited vs blocked credit limit") + shared `computeCreditProgress` util, shipped v1.4.5+. **Automated tests pinning the contract are still missing** — they are owned by tasks_12 (Phase 2 §2.2.3 API credit suite, Phase 4 §4.2 app Credit helper suite).
+
 **Owner:** TBD
 **Created:** 2026-05-29
 **Scope:** Re-define the meaning of `dealer_custs.max_cr_lmt` **system-wide** (app + `dzzlo_oms_api` v3 + `dip-web`), replace the bare numeric input on `CustSettings` with an explicit control, and migrate all existing data — **while staying compatible with the live v1.77 app** via a server-side version gate (decision 4). **Legacy API v1/v2 are intentionally NOT touched** (decision below).

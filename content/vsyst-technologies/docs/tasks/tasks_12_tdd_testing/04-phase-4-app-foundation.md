@@ -69,7 +69,7 @@ One `__tests__/` folder next to each module; all paths verified to exist:
 | `src/utils/validators.js` + `src/utils/validation.js` | email/phone/password/name acceptance tables |
 | `src/utils/permissions.js` + `src/utils/userLookup.js` | owner/admin predicates, `canEditUser`/`canDeleteUser`, company lookup/enrichment |
 | `src/utils/converters/inv_no.js` | base33 encode/decode round-trip property (`de_base33_id(en_id_base33(x)) === x`), `trimInvNo` |
-| `src/helpers/Credit/index.js` | `creditState`/`isUnlimited`/`isBlocked`/`isCapped`/`creditUtilization` — mirrors API semantics; these assertions flip with tasks_08, keeping app + API in lockstep |
+| `src/helpers/Credit/index.js` | `creditState`/`isUnlimited`/`isBlocked`/`isCapped`/`creditUtilization` — mirrors the **landed** tasks_08 API contract (null=unlimited, 0=blocked, >0=capped; amended 2026-07-09). Pin it as-is, incl. `creditUtilization`'s adv_dep-as-spending-power pool (`pool = max_cr_lmt + adv_dep`, `6a8109a8`) and the `pool === 0` → fully-utilised edge, in lockstep with API Phase 2 §2.2.3 |
 | `src/store/apis/paginationHelpers.js` | `serializeQueryArgs`/`merge` sliding-window dedupe, `forceRefetch` |
 | `src/store/apis/preloadedState.js` | `errorRTK` status→message mapping precedence |
 | `src/store/selectors/auth.js` | representative selectors against a fixture state |
