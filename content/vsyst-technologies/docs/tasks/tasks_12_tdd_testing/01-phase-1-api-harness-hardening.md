@@ -109,11 +109,22 @@ Outline (repo `docs/` already exists):
 
 ## Phase 1 checklist
 
-- [ ] `test/dzzlo_oms_test.js` mirrors production middleware chain (`api_key_v1`, `logging`, `check_user_version`, `errorHandler`)
-- [ ] mongod binary version pinned + cache documented
-- [ ] `seed` script made idempotent (`uproot &&` prefix) + `try/finally` around factory run
-- [ ] `test:watch` / `test:file` / `test:coverage` scripts added
-- [ ] (optional) `counters` re-hydration branch in `helper/beforeAll/index.js`
-- [ ] Legacy verdict table written into `docs/testing.md`; deletion PR prepared but **not merged until Q4 answered**
-- [ ] `docs/testing.md` runbook committed
-- [ ] Verification steps in §1.6 all pass
+- [x] `test/dzzlo_oms_test.js` mirrors production middleware chain (`api_key_v1`, `logging`, `check_user_version`, `errorHandler`) — plus `query parser: extended` + `json 1mb`, in production order
+- [x] mongod binary version pinned (`8.2.1` via `package.json` `config.mongodbMemoryServer`) + cache path documented
+- [x] `seed` script made idempotent (`uproot &&` prefix) + `try/finally` around factory run (+ non-zero exit on seed failure)
+- [x] `test:watch` / `test:file` / `test:coverage` scripts added
+- [ ] (optional) `counters` re-hydration branch in `helper/beforeAll/index.js` — **deferred to Phase 2** (add when a numbering / version-gate test needs it)
+- [x] Legacy verdict table written into `docs/testing.md`; deletion still **gated on a separate go-ahead** (no `git rm` executed)
+- [x] `docs/testing.md` runbook written *(committing is the user's call)*
+- [x] Verification steps in §1.6 all pass
+
+## Phase 1 — implementation notes (executed 2026-07-09, branch `api_tdd`)
+
+**Result:** api_v3 suite **614 passing** (was 607; +7 harness smoke tests), 47 skipped, 0 failing; `test:full` green **twice consecutively** (~2 min/run). Only `test/`, `package.json`, and `docs/` were touched — no production source (`helpers/`, `models/`, `api_v*`), honoring the repo's "write only inside api_v3 / test" rule. The §1.2 middleware chain is proven by a new harness self-test `test/api_v3/harness/middleware_chain/index.test.js` (Bearer→200, no/bad token→401, wrong `x-api-key`→403, old `meta` version→403) against a harness-only `/__smoke/whoami` probe.
+
+**Two findings beyond the plan:**
+
+1. **`protect` / `authorize` / `scope` are unwired on v3.** §1.2 assumed a protect-gated route to smoke-test; there is none — every usage in `api_v3/routes/*` is commented out, and business routes gate on `x-api-key` + `check_user_company_status` only. The chain is now *testable* (via the probe), but **deciding where those guards belong on real v3 routes is a Phase 2 decision**, not just test-writing. Flow #2 is a *wiring* gap, not only a coverage gap — Phase 2 §2.x should call this out.
+2. **`yarn uproot` was silently a no-op** on modern Node. `uproot.js` used `fs.rmdirSync(dir, { recursive: true })`, whose `recursive` option was removed (Node v26 throws "options.recursive is no longer supported"); the throw was swallowed, so stale seed dirs accumulated and `test:full` never actually cleaned up. Fixed with `fs.rmSync(dir, { recursive: true, force: true })`, which makes the `seed` `uproot &&` prefix and the fail-fast `beforeAll` guard meaningful.
+
+**Known cosmetic noise:** the seed drives the same (now production-mirrored) test app, so `logging()` writes a `logs` doc per request during seed and ~16 *caught* `Logs.create failed` lines print as the connection closes at end of seed. Harmless (caught; data and tests unaffected). Not suppressed because `helpers/middlewares.js` is out of edit-scope (Active Development Rule); if it ever bothers, gate the log write behind an env flag when that rule is lifted.

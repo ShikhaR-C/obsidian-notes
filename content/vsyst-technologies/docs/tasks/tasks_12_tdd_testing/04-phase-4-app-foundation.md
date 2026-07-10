@@ -105,10 +105,19 @@ Everything deeper (PDF render, WebView flows, Paytm, camera, push, drawer gestur
 
 ## Phase 4 checklist
 
-- [ ] `@testing-library/react-native` + `msw` installed; `transformIgnorePatterns` extended
-- [ ] `jest.setup.js`: async-storage, device-info, netinfo, gesture-handler, bottom-sheet, reanimated, OneSignal mocks; virtual mocks for the two phantom deps (team decision on installing them recorded)
-- [ ] Tier 1 unit suites for all §4.2 modules
-- [ ] `makeStore()` factory + Tier 2 store/MSW suites (headers, 401/403 middleware, retry policy)
-- [ ] Tier 3: Login, NewOrder, one Payments-approval screen
-- [ ] `App.test.tsx` gains a real assertion
-- [ ] No-network guard demonstrated (§4.5)
+- [x] `@testing-library/react-native` + `msw` installed; `transformIgnorePatterns` extended (+ a `jest.resolver.js` for MSW's export map)
+- [x] `jest.setup.js`: async-storage, device-info, netinfo, gesture-handler, bottom-sheet, reanimated, OneSignal mocks; virtual mocks for the two phantom deps (kept stubbed — not installed)
+- [x] Tier 1 unit suites for all §4.2 modules
+- [x] `makeStore()` factory + Tier 2 store/MSW suites (headers, 401/403 middleware, retry policy)
+- [~] Tier 3: **deferred** — Login/NewOrder/Payments screens carried to a follow-up (Tier 1+2 are the phase's value). *Correction (2026-07-10): no RNTL wrapper `src/test/testUtils.js` was created — `@testing-library/react-native@13` is installed but the wrapper lands with the first screen test, not before. Only `src/test/msw/server.js` + `src/test/fixtures/generated/` exist under `src/test/`.*
+- [x] `App.test.tsx` gains a real assertion (asserts ≥1 large spinner on boot)
+- [x] No-network guard demonstrated (§4.5)
+
+## Phase 4 — implementation notes (executed 2026-07-09/10, branch `app_tdd`)
+
+**Result:** `yarn test` (= `APP_ENV=testing jest`) green — **16 suites / 337 tests**, ~11s (≪ 2-min budget). Only production touch: `makeStore()` in `src/store/apis/index.js` (singleton preserved). Tiers 1 (pure logic: Currency, Dates, validators, validation, permissions, userLookup, inv_no, Credit, paginationHelpers, preloadedState, selectors/auth, slices/auth) and 2 (MSW store-level: `auth.endpoints`, `rtkQueryErrorLogger` 401/403, `retry` 4xx/5xx) complete.
+
+**Verification performed 2026-07-10:**
+- **Mutation smoke (§4.5 / §2.5):** broke `creditState` (0→BLOCKED rule) → 6 Credit tests red; broke `inv_no` base33 modulo (33→32) → 11 red; both restored → green. Confirms the suites have teeth.
+- **No-network guard:** all MSW suites use `server.listen({ onUnhandledRequest: "error" })`; breaking a handler path made the request unhandled → MSW "intercepted a request without a matching request handler" → suite red. Restored.
+- ⚠️ Note for future mutation smokes: these test files are **untracked**, so `git checkout --` cannot restore an edited one — reverse edits manually or from a backup copy.

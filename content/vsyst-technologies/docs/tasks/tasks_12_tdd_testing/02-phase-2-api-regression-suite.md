@@ -146,14 +146,38 @@ A flow row is ✅ only if breaking its business rule turns the suite red. Ritual
 
 ## Phase 2 checklist
 
-- [ ] Flow→test map (§2.1) committed to `docs/testing.md` and kept current in PRs
-- [ ] `auth/authorization/index.test.js` — bearer/role/scope matrix
-- [ ] Company-status route-level gate cases
-- [ ] `features/credit/index.test.js` — capped/blocked/unlimited + presenter + AdvDep interplay
-- [ ] `features/version_gate/index.test.js`
-- [ ] Order delivery-OTP coverage audited (suite added if thin)
-- [ ] Invoice GST/TCS coverage audited (extended if thin)
-- [ ] `getAll/active.test.js` un-skips resolved; skipped `getAll/index.test.js` deleted or revived
-- [ ] Seed factories: credit variants, approved AdvDep, scope-diverse users, `version_gate` doc
-- [ ] Fin-year rollover / month-recompute parity confirmed vs `202405_v2` before its deletion
-- [ ] DIP decision recorded (Q1) — Phase 2b spawned or deferral noted
+- [ ] Flow→test map (§2.1) committed to `docs/testing.md` and kept current in PRs — _pending end-of-phase synthesis_
+- [x] `auth/authorization/index.test.js` — bearer/role/scope matrix *(adapted, see notes)*
+- [x] Company-status route-level gate cases — `features/company_status/index.test.js`
+- [x] `features/credit/index.test.js` — capped/blocked/unlimited + DC-update normalization + adv_dep interplay *(presenter + createDC-defaults deferred)*
+- [x] `features/version_gate/index.test.js` — pins the hardcoded `check_user_version`
+- [x] Order delivery-OTP coverage audited (thin) → `collections/order_msts/delivery_otp.test.js` added (11 tests)
+- [x] Invoice GST/TCS coverage audited (thin) → `collections/invs/tax_types.test.js` added (8 tests; `inv_props` regex widened to accept `GST`)
+- [ ] `getAll/active.test.js` un-skips resolved; skipped `getAll/index.test.js` deleted or revived — _see notes (blocked on missing v3 routes)_
+- [x] ~~Seed factories~~ — **not needed**: scenarios are set up per-test via direct mongoose writes on rehydrated seed (keeps the seed's own `createOrders` green; see notes)
+- [ ] Fin-year rollover / month-recompute parity confirmed vs `202405_v2` before its deletion — _deferred_
+- [ ] DIP decision recorded (Q1) — deferred **P2** (dip-web mocks DIP via MSW meanwhile)
+
+## Phase 2 — implementation notes (executed 2026-07-09, branch `api_tdd`)
+
+**Done & green** (each suite verified via `yarn test:file`; 36 tests incl. the Phase-1 harness smoke):
+
+| Flow | Suite | What it pins |
+| --- | --- | --- |
+| #2 | `auth/authorization/index.test.js` | `protect` expired-token→401 via the `/__smoke/whoami` probe; `authorize`/`scope` as **units** |
+| #3 | `features/company_status/index.test.js` | route-level gate: ACTIVE→200, INACTIVE/REMOVED/NOT_IN_COMPANY→403, superadmin bypass, no-Bearer no-op |
+| #8 | `features/credit/index.test.js` | order gate null=unlimited / 0=blocked / >0=capped (reject = **HTTP 404** `Credit Limit Exceeded`), adv_dep as spending power, DC-update normalization (round 2dp / 0-blocked / ""→null / negative→**400**) |
+| #13 | `features/version_gate/index.test.js` | `check_user_version` matrix: ≤1.68→403 (Apple/Google msg), 1.69+/1.510/non-numeric/no-meta→pass |
+| #4 | `collections/order_msts/delivery_otp.test.js` | DELIVERED transition; wrong OTP→400 "Invalid OTP"; expired OTP→400 "OTP Expired…"; non-PENDING process→400; `dvr_otp` gate→404 "OTP required"; can't-undo-delivered→404 |
+| #6 | `collections/invs/tax_types.test.js` | TCS: `inv_tcs_rate`/`inv_tcs_amt = base×rate/100`/total invariants (+ no-TCS control); GST intra-state `C_S_UT_GST` vs inter-state `IGST` @18%, dual PRODUCT+GST dispatch (seed has GST disabled — tests enable it on the in-memory master docs) |
+
+**Mutation smoke (§2.5) performed on the flagship flow:** credit check transiently disabled in `api_v3/services/order_msts.js` (both throw sites) → exactly the 2 rejection tests went red (201 instead of 404) → restored (`git diff` clean) → 9/9 green. Recorded 2026-07-09. The other new suites' negative-path assertions (exact status + message strings) provide equivalent teeth.
+
+**Key adaptations & decisions (confirmed with the user 2026-07-09):**
+
+1. **Flow #2 tests CURRENT behavior only** — v3 wires `protect`/`authorize`/`scope` to no business route, so the suite pins the primitives (probe for `protect`, units for `authorize`/`scope`) and documents the wiring gap. No production `api_v3` edits.
+2. **Per-test setup replaced seed factories.** Each scenario flips the relevant seeded doc in Mongo inside its own `beforeAll` (e.g. `dealer_custs.findByIdAndUpdate(rel._id, { max_cr_lmt })`, `users.updateOne(...companies.$[].status)`). This sidesteps the §2.3 risk that a blocked/capped relation would fail the seed's own `createOrders`, and keeps every suite self-contained. The §2.3 factories are therefore unnecessary for these suites.
+3. **Version gate is the hardcoded `check_user_version`**, not the DB-driven gate §2.2.4 sketched — that gate (versionGate.js / `version_gate` counters doc / soft header) is **absent from this branch** (lives only on `feature/db-driven-version-gate`). Pinned what exists.
+4. **`dealer_custs` has a compound `_id` `{dealer_id, cust_id}`**, and `updateDealerCust` resolves the relation from `body.dealer_id`+`body.cust_id` (not `:id`) and needs `allow:"permit"` past customer-verification — captured in the credit suite.
+
+**getAll matrix** — `counters`, `logs`, and a `veh_msts` GET-all have **no v3 routes**, so those rows can't be un-skipped without adding production routes (out of scope per the flow-#2 decision). Recommendation stands to delete the fully-`describe.skip`'d `getAll/index.test.js` (the maintained matrix is `active.test.js`), but deletion is left for the same go-ahead that gates legacy-suite `git rm`.

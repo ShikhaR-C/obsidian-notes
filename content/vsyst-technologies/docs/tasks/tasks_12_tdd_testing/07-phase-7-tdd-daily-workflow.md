@@ -68,9 +68,21 @@
 
 ## Phase 7 checklist
 
-- [ ] Per-repo `docs/testing.md` daily guides committed (api / web / app)
-- [ ] PR templates updated with §7.4 checklist
-- [ ] Speed budgets agreed (⏳ Q10) and recorded
-- [ ] Mandatory bugfix-TDD rule ratified by the team (⏳ Q10)
-- [ ] Onboarding path (§7.6) added to the API runbook
-- [ ] Overview status updated once two releases have run the workflow
+- [x] Per-repo `docs/testing.md` daily guides written (api extends its runbook §10; web + app new files) — *committing is the user's call*
+- [x] PR templates added with §7.4 checklist (`.github/PULL_REQUEST_TEMPLATE.md` ×3)
+- [x] Speed budgets recorded in every guide (api `test:full` ≤5min, web ≤1min, app ≤2min — all with huge headroom today: ~2min / ~1.5s / ~11s)
+- [x] Mandatory bugfix-TDD rule written into all three guides (team ratification still ⏳ Q10 — a human sign-off)
+- [x] Onboarding path (§7.6) added to the API runbook (§10.6) incl. the mutation-smoke teaching drill
+- [ ] Overview status flips to "operational" once **two real releases** have run the workflow — a future milestone, not code
+
+## Phase 7 — implementation notes (executed 2026-07-10, agent team, doc-only)
+
+**Result:** three per-repo daily-TDD guides + PR templates, nothing but docs touched (verified: zero non-doc files modified across all three repos). Each agent verified every command/path against its own repo and **corrected three inaccuracies in the brief** — a healthy sign the guides match reality, not the plan's assumptions:
+
+| Repo | Guide | Corrections the agent caught |
+| --- | --- | --- |
+| `dzzlo_oms_api` | `docs/testing.md` §10 (10.1–10.6) + PR template | none — kept `fixtures:pull` framed as a front-end-only command (not in API package.json) |
+| `dip-web` | new `docs/testing.md` + PR template | **no `yarn lint` script** — ESLint runs via husky pre-commit + CI `lint.yml`; release ritual written around that |
+| `dzzlo_oms_app` | new `docs/testing.md` + PR template | MSW export-map fix lives in `jest.config.js moduleNameMapper`, **not** `jest.resolver.js` (that's for Reanimated); **`src/test/testUtils.js` does not exist** → Tier 3 documented as genuinely deferred (see Phase 4 correction) |
+
+Each guide encodes the same three rituals (feature / bugfix-test-first-MANDATORY / refactor) + release prep + the §7.5 anti-rot rules + §7.4 PR checklist, adapted to the repo's real runner (API supertest+seed, web Vitest+jsdom-fetch+MSW, app Jest+RNTL+MSW) and its actual quirks (API mutation-smoke drill; web's custom-env do-not-revert warning; app's `APP_ENV` + jest path-pattern gotchas + untracked-test caveat).

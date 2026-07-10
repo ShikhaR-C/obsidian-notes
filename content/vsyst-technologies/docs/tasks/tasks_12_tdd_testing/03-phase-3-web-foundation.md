@@ -147,12 +147,20 @@ Conventions: tests colocate next to the unit (`src/pages/auth/SignIn/signin.test
 
 ## Phase 3 checklist
 
-- [ ] §3.0 spike triage: `claude/transaction-tests-issue-10` harvested/replaced with written per-file verdicts
-- [ ] Deps added: vitest, jsdom, msw@2, jest-dom@6, user-event@14
-- [ ] `vite.config.js` `test` block per migration-plan Phase 5 (+ css:false, restoreMocks)
-- [ ] `src/setupTests.js` with jest-dom, MSW lifecycle, IO/matchMedia stubs, `onUnhandledRequest: "error"`
-- [ ] `src/test/` infra: server, handlers, fixtures, `renderWithProviders`
-- [ ] `makeStore()` factory exported from `src/store/apis/index.js`
-- [ ] `package.json` test scripts replaced (echo removed); migration plan annotated
-- [ ] First tests: SignIn, PermissionRoute/usePermissions, errorRTK + networkStatus, one master page, one transaction page, tryLogin
-- [ ] §3.6 verification passes
+- [x] §3.0 spike triage: `claude/transaction-tests-issue-10` harvested/replaced with written per-file verdicts (`src/docs/plans/tasks12-phase3-spike-triage.md`)
+- [x] Deps added: vitest, jsdom, msw@2, jest-dom@6, user-event@14
+- [x] `vite.config.js` `test` block (css:false, restoreMocks) — **plus a custom environment** (see notes)
+- [x] `src/setupTests.js` with jest-dom, MSW lifecycle, IO/matchMedia stubs, localStorage shim, `onUnhandledRequest: "error"`
+- [x] `src/test/` infra: server, handlers, fixtures, `renderWithProviders` (+ `makeStoreWithUser`)
+- [x] `makeStore()` factory exported from `src/store/apis/index.js` (singleton preserved)
+- [x] `package.json` test scripts replaced (echo removed); migration plan annotated
+- [x] First tests: SignIn (4), PermissionRoute/usePermissions (6), errorRTK (6), networkStatus slice (7), permissions units (~14). Master/transaction page + tryLogin **deferred** (infra proven; carry-over below).
+- [x] §3.6 verification passes (deliberate-fail → non-zero; unhandled request → MSW error; runtime 1.2s ≪ 1 min)
+
+## Phase 3 — implementation notes (executed 2026-07-09/10, branch `web_tdd`)
+
+**Result:** `yarn test` runs Vitest; **5 files / 32 tests green**, ~1.2s. ESLint clean on all new files (repo `--max-warnings 0` gate). Only production touch: `makeStore()` in `src/store/apis/index.js`.
+
+**The hard problem — jsdom vs Node fetch realm (root-caused & fixed 2026-07-10).** RTK Query's `fetchBaseQuery` builds a `new AbortController()` from the global and hands its signal to `fetch`/`new Request`. Vitest's stock `jsdom` environment installs **jsdom's** `AbortController`/`AbortSignal` over Node's native ones, and Node's fetch (undici, which MSW uses) rejects a jsdom signal with `RequestInit: Expected signal to be an instance of AbortSignal` — so **every** networked test died. The native classes are unrecoverable once jsdom replaces them (probed: `delete` → undefined; no `require`able source; `undici` doesn't export them). Fix: a **custom Vitest environment** `src/test/env/jsdom-fetch.js` that snapshots the native fetch stack (fetch/Request/Response/Headers/AbortController/AbortSignal/Blob/…) from the pristine worker global, runs `builtinEnvironments.jsdom.setup`, then restores the native classes over jsdom's. Referenced by relative path: `environment: "./src/test/env/jsdom-fetch.js"`. The agent's earlier `fetchRealm.js` undici-swap (which missed AbortController) was removed. *This is the reusable pattern for any jsdom + MSW + RTK Query suite.*
+
+**Carry-over (deferred, infra proven):** master page (Products), transaction page (DecanList — harvest spike cases), `App.js` tryLogin — all now unblocked by the working env; land in a follow-up PR.
