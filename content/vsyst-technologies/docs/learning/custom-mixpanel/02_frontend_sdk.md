@@ -34,7 +34,7 @@ export const ANALYTICS_CONFIG = {
   sessionEndpoint: "/analytics/session",
   storageKey: "@analytics_queue",
   sessionStorageKey: "@analytics_session",
-};
+}
 ```
 
 ---
@@ -57,10 +57,10 @@ A Redux slice would require dispatching from non-component code, adding unnecess
 ### API Surface
 
 ```javascript
-import { ANALYTICS_CONFIG } from "./config";
-import { QueueManager } from "./queue";
-import { SessionManager } from "./session";
-import DeviceInfo from "react-native-device-info";
+import { ANALYTICS_CONFIG } from "./config"
+import { QueueManager } from "./queue"
+import { SessionManager } from "./session"
+import DeviceInfo from "react-native-device-info"
 
 // Cache static device info at module level (same pattern as createApi.js line 8-18)
 const DEVICE_CONTEXT = {
@@ -70,29 +70,29 @@ const DEVICE_CONTEXT = {
   device_brand: DeviceInfo.getBrand(),
   system_version: DeviceInfo.getSystemVersion(),
   device_id: DeviceInfo.getUniqueIdSync(),
-};
+}
 
 class Analytics {
   constructor() {
-    this.queue = null;
-    this.session = null;
-    this.userId = null;
-    this.userRole = null;
-    this.companyId = null;
-    this.initialized = false;
+    this.queue = null
+    this.session = null
+    this.userId = null
+    this.userRole = null
+    this.companyId = null
+    this.initialized = false
   }
 
   init(config = {}) {
-    if (this.initialized) return;
-    this.config = { ...ANALYTICS_CONFIG, ...config };
-    this.queue = new QueueManager(this.config);
-    this.session = new SessionManager(this.config);
-    this.session.start();
-    this.initialized = true;
+    if (this.initialized) return
+    this.config = { ...ANALYTICS_CONFIG, ...config }
+    this.queue = new QueueManager(this.config)
+    this.session = new SessionManager(this.config)
+    this.session.start()
+    this.initialized = true
   }
 
   track(eventName, properties = {}) {
-    if (!this.initialized || !this.config.enabled) return;
+    if (!this.initialized || !this.config.enabled) return
 
     const event = {
       event_name: eventName,
@@ -105,9 +105,9 @@ class Analytics {
       company_id: this.companyId,
       client_timestamp: new Date().toISOString(),
       ...DEVICE_CONTEXT,
-    };
+    }
 
-    this.queue.enqueue(event);
+    this.queue.enqueue(event)
   }
 
   screen(screenName, properties = {}) {
@@ -115,36 +115,36 @@ class Analytics {
       ...properties,
       screen_name: screenName,
       category: "navigation",
-    });
-    this.session.addScreen(screenName);
+    })
+    this.session.addScreen(screenName)
   }
 
   identify(userId, { role, companyId } = {}) {
-    this.userId = userId;
-    this.userRole = role;
-    this.companyId = companyId;
+    this.userId = userId
+    this.userRole = role
+    this.companyId = companyId
   }
 
   reset() {
-    this.userId = null;
-    this.userRole = null;
-    this.companyId = null;
-    this.session.end();
-    this.queue.flush();
+    this.userId = null
+    this.userRole = null
+    this.companyId = null
+    this.session.end()
+    this.queue.flush()
   }
 
   flush() {
-    if (this.queue) this.queue.flush();
+    if (this.queue) this.queue.flush()
   }
 
   destroy() {
-    if (this.queue) this.queue.destroy();
-    if (this.session) this.session.end();
-    this.initialized = false;
+    if (this.queue) this.queue.destroy()
+    if (this.session) this.session.end()
+    this.initialized = false
   }
 }
 
-export default new Analytics();
+export default new Analytics()
 ```
 
 ---
@@ -167,107 +167,101 @@ export default new Analytics();
 ### Implementation
 
 ```javascript
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import NetInfo from "@react-native-community/netinfo";
-import { AppState } from "react-native";
-import API from "../API"; // existing Axios instance
+import AsyncStorage from "@react-native-async-storage/async-storage"
+import NetInfo from "@react-native-community/netinfo"
+import { AppState } from "react-native"
+import API from "../API" // existing Axios instance
 
 export class QueueManager {
   constructor(config) {
-    this.config = config;
-    this.queue = [];
-    this.isFlushing = false;
-    this.isOnline = true;
+    this.config = config
+    this.queue = []
+    this.isFlushing = false
+    this.isOnline = true
 
     // Network listener
     this.netInfoUnsubscribe = NetInfo.addEventListener((state) => {
-      this.isOnline = state.isConnected;
+      this.isOnline = state.isConnected
       if (this.isOnline && this.queue.length > 0) {
-        this.flush();
+        this.flush()
       }
-    });
+    })
 
     // AppState listener
-    this.appStateSubscription = AppState.addEventListener(
-      "change",
-      (nextState) => {
-        if (nextState === "background" || nextState === "inactive") {
-          this.persistToStorage();
-        } else if (nextState === "active") {
-          this.recoverFromStorage();
-        }
-      },
-    );
+    this.appStateSubscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background" || nextState === "inactive") {
+        this.persistToStorage()
+      } else if (nextState === "active") {
+        this.recoverFromStorage()
+      }
+    })
 
     // Flush timer
-    this.flushTimer = setInterval(() => this.flush(), config.flushInterval);
+    this.flushTimer = setInterval(() => this.flush(), config.flushInterval)
 
     // Recover any persisted events from previous session
-    this.recoverFromStorage();
+    this.recoverFromStorage()
   }
 
   enqueue(event) {
-    this.queue.push(event);
+    this.queue.push(event)
     if (this.queue.length > this.config.maxQueueSize) {
-      this.queue = this.queue.slice(-this.config.maxQueueSize);
+      this.queue = this.queue.slice(-this.config.maxQueueSize)
     }
     if (this.queue.length >= this.config.maxBatchSize) {
-      this.flush();
+      this.flush()
     }
   }
 
   async flush() {
-    if (this.isFlushing || !this.isOnline || this.queue.length === 0) return;
+    if (this.isFlushing || !this.isOnline || this.queue.length === 0) return
 
-    this.isFlushing = true;
-    const batch = this.queue.splice(0, this.config.maxBatchSize);
+    this.isFlushing = true
+    const batch = this.queue.splice(0, this.config.maxBatchSize)
 
     try {
-      await API.post(this.config.endpoint, { events: batch });
+      await API.post(this.config.endpoint, { events: batch })
     } catch (err) {
       // Put events back at the front of the queue for retry
-      this.queue.unshift(...batch);
-      console.warn("Analytics flush failed:", err.message);
+      this.queue.unshift(...batch)
+      console.warn("Analytics flush failed:", err.message)
     } finally {
-      this.isFlushing = false;
+      this.isFlushing = false
     }
 
     // If more events remain, flush again
     if (this.queue.length >= this.config.maxBatchSize) {
-      this.flush();
+      this.flush()
     }
   }
 
   async persistToStorage() {
-    if (this.queue.length === 0) return;
+    if (this.queue.length === 0) return
     try {
-      await AsyncStorage.setItem(
-        this.config.storageKey,
-        JSON.stringify(this.queue),
-      );
+      await AsyncStorage.setItem(this.config.storageKey, JSON.stringify(this.queue))
     } catch (err) {
-      console.warn("Analytics persist failed:", err.message);
+      console.warn("Analytics persist failed:", err.message)
     }
   }
 
   async recoverFromStorage() {
     try {
-      const stored = await AsyncStorage.getItem(this.config.storageKey);
+      const stored = await AsyncStorage.getItem(this.config.storageKey)
       if (stored) {
-        const events = JSON.parse(stored);
-        this.queue.unshift(...events);
-        await AsyncStorage.removeItem(this.config.storageKey);
+        const events = JSON.parse(stored)
+        this.queue.unshift(...events)
+        await AsyncStorage.removeItem(this.config.storageKey)
       }
     } catch (err) {
-      console.warn("Analytics recover failed:", err.message);
+      console.warn("Analytics recover failed:", err.message)
     }
   }
 
   destroy() {
-    clearInterval(this.flushTimer);
-    this.netInfoUnsubscribe?.();
-    this.appStateSubscription?.remove();
-    this.persistToStorage();
+    clearInterval(this.flushTimer)
+    this.netInfoUnsubscribe?.()
+    this.appStateSubscription?.remove()
+    this.persistToStorage()
   }
 }
 ```
@@ -286,82 +280,79 @@ export class QueueManager {
 - Uses `crypto.randomUUID()` (available in Hermes engine, React Native 0.81)
 
 ```javascript
-import { AppState } from "react-native";
-import API from "../API";
+import { AppState } from "react-native"
+import API from "../API"
 
 export class SessionManager {
   constructor(config) {
-    this.config = config;
-    this.sessionId = null;
-    this.lastActivityTime = null;
-    this.backgroundTime = null;
+    this.config = config
+    this.sessionId = null
+    this.lastActivityTime = null
+    this.backgroundTime = null
 
-    this.appStateSubscription = AppState.addEventListener(
-      "change",
-      (nextState) => {
-        if (nextState === "background") {
-          this.backgroundTime = Date.now();
-        } else if (nextState === "active") {
-          if (this.backgroundTime) {
-            const elapsed = Date.now() - this.backgroundTime;
-            if (elapsed > this.config.sessionTimeoutMs) {
-              this.end();
-              this.start();
-            }
+    this.appStateSubscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "background") {
+        this.backgroundTime = Date.now()
+      } else if (nextState === "active") {
+        if (this.backgroundTime) {
+          const elapsed = Date.now() - this.backgroundTime
+          if (elapsed > this.config.sessionTimeoutMs) {
+            this.end()
+            this.start()
           }
-          this.backgroundTime = null;
-          this.touch();
         }
-      },
-    );
+        this.backgroundTime = null
+        this.touch()
+      }
+    })
   }
 
   start() {
-    this.sessionId = crypto.randomUUID();
-    this.lastActivityTime = Date.now();
+    this.sessionId = crypto.randomUUID()
+    this.lastActivityTime = Date.now()
 
     // Notify backend (fire-and-forget)
     API.post(this.config.sessionEndpoint, {
       session_id: this.sessionId,
       action: "start",
       started_at: new Date().toISOString(),
-    }).catch(() => {});
+    }).catch(() => {})
   }
 
   end() {
-    if (!this.sessionId) return;
-    const duration_ms = Date.now() - (this.lastActivityTime || Date.now());
+    if (!this.sessionId) return
+    const duration_ms = Date.now() - (this.lastActivityTime || Date.now())
 
     API.post(this.config.sessionEndpoint, {
       session_id: this.sessionId,
       action: "end",
       duration_ms,
-    }).catch(() => {});
+    }).catch(() => {})
 
-    this.sessionId = null;
+    this.sessionId = null
   }
 
   getSessionId() {
-    this.touch();
-    return this.sessionId;
+    this.touch()
+    return this.sessionId
   }
 
   touch() {
-    this.lastActivityTime = Date.now();
+    this.lastActivityTime = Date.now()
   }
 
   addScreen(screenName) {
-    if (!this.sessionId) return;
+    if (!this.sessionId) return
     API.post(this.config.sessionEndpoint, {
       session_id: this.sessionId,
       action: "update",
       screen_name: screenName,
-    }).catch(() => {});
+    }).catch(() => {})
   }
 
   destroy() {
-    this.appStateSubscription?.remove();
-    this.end();
+    this.appStateSubscription?.remove()
+    this.end()
   }
 }
 ```
@@ -375,33 +366,33 @@ export class SessionManager {
 Add `onStateChange` listener to the `NavigationContainer`:
 
 ```javascript
-import Analytics from "../utils/Analytics";
+import Analytics from "../utils/Analytics"
 
 // Helper to extract active route name from navigation state
 const getActiveRouteName = (state) => {
-  if (!state) return undefined;
-  const route = state.routes[state.index];
-  if (route.state) return getActiveRouteName(route.state);
-  return route.name;
-};
+  if (!state) return undefined
+  const route = state.routes[state.index]
+  if (route.state) return getActiveRouteName(route.state)
+  return route.name
+}
 
 // Inside the component:
-const previousRouteRef = useRef(null);
+const previousRouteRef = useRef(null)
 
 const onNavigationStateChange = (state) => {
-  const currentRoute = getActiveRouteName(state);
+  const currentRoute = getActiveRouteName(state)
   if (previousRouteRef.current !== currentRoute && currentRoute) {
     Analytics.screen(currentRoute, {
       previous_screen: previousRouteRef.current,
-    });
-    previousRouteRef.current = currentRoute;
+    })
+    previousRouteRef.current = currentRoute
   }
-};
+}
 
 // In JSX:
-<NavigationContainer onStateChange={onNavigationStateChange}>
+;<NavigationContainer onStateChange={onNavigationStateChange}>
   {/* ... existing navigators */}
-</NavigationContainer>;
+</NavigationContainer>
 ```
 
 ---
@@ -413,21 +404,21 @@ const onNavigationStateChange = (state) => {
 In `loginUser` thunk (after successful login):
 
 ```javascript
-import Analytics from "../../utils/Analytics";
+import Analytics from "../../utils/Analytics"
 
 // After: dispatch(authenticate({ ... }))
 Analytics.identify(resData.user._id, {
   role: resData.user.role,
   companyId: resData.user.co_id,
-});
-Analytics.track("auth_login_success", { category: "auth" });
+})
+Analytics.track("auth_login_success", { category: "auth" })
 ```
 
 In `logoutUser` thunk:
 
 ```javascript
-Analytics.track("auth_logout", { category: "auth" });
-Analytics.reset();
+Analytics.track("auth_logout", { category: "auth" })
+Analytics.reset()
 ```
 
 ---
@@ -440,23 +431,23 @@ In `requestHandler`:
 
 ```javascript
 // Generate request correlation ID
-const requestId = crypto.randomUUID();
-config.headers["X-Request-ID"] = requestId;
-config._requestId = requestId;
-config._requestStartTime = Date.now();
+const requestId = crypto.randomUUID()
+config.headers["X-Request-ID"] = requestId
+config._requestId = requestId
+config._requestStartTime = Date.now()
 ```
 
 In `responseHandler` (optional — track slow requests):
 
 ```javascript
-const duration = Date.now() - (response.config._requestStartTime || 0);
+const duration = Date.now() - (response.config._requestStartTime || 0)
 if (duration > 3000) {
   Analytics.track("api_slow_request", {
     category: "system",
     url: response.config.url,
     duration_ms: duration,
     status: response.status,
-  });
+  })
 }
 ```
 
@@ -467,15 +458,15 @@ if (duration > 3000) {
 **File to modify:** `App.js`
 
 ```javascript
-import Analytics from "./src/utils/Analytics";
+import Analytics from "./src/utils/Analytics"
 
 // Initialize before Provider renders
-Analytics.init();
+Analytics.init()
 
 // In App component, ensure cleanup:
 useEffect(() => {
-  return () => Analytics.destroy();
-}, []);
+  return () => Analytics.destroy()
+}, [])
 ```
 
 ---

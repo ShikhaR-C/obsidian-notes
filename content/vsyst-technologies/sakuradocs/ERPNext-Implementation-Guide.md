@@ -6,13 +6,13 @@
 
 ---
 
-## Phase 0 — Decide *where* to run it (Day 1)
+## Phase 0 — Decide _where_ to run it (Day 1)
 
-| Option | Best for | Cost | Effort |
-|---|---|---|---|
-| **Frappe Cloud** (managed hosting) | Startups without a DevOps person | ~₹800–2,500/mo (small plans) | Almost zero — they handle setup, backups, upgrades |
-| **Docker self-host** | Trying it out, or hosting on your own cheap VPS | Server cost only (~₹500–1,500/mo VPS) | Moderate — you manage updates and backups |
-| **Manual (bench) install** | Developers who'll customize deeply | Server cost only | High — full control, full responsibility |
+| Option                             | Best for                                        | Cost                                  | Effort                                             |
+| ---------------------------------- | ----------------------------------------------- | ------------------------------------- | -------------------------------------------------- |
+| **Frappe Cloud** (managed hosting) | Startups without a DevOps person                | ~₹800–2,500/mo (small plans)          | Almost zero — they handle setup, backups, upgrades |
+| **Docker self-host**               | Trying it out, or hosting on your own cheap VPS | Server cost only (~₹500–1,500/mo VPS) | Moderate — you manage updates and backups          |
+| **Manual (bench) install**         | Developers who'll customize deeply              | Server cost only                      | High — full control, full responsibility           |
 
 **Recommendation for a new startup:** Start with a **free trial on [Frappe Cloud](https://frappecloud.com)**, or run **Docker locally** to explore first. Your time is your scarcest resource — don't spend it maintaining servers. You can always migrate to self-hosting later; ERPNext exports everything.
 
@@ -21,22 +21,27 @@
 ## Phase 1 — Install / spin it up (Day 1–2)
 
 ### Option A: Frappe Cloud (recommended)
+
 1. Sign up at [frappecloud.com](https://frappecloud.com)
 2. Create a new site → choose **ERPNext** → pick a plan
 3. Done. You get a URL like `yourstartup.frappe.cloud` in minutes.
 
 ### Option B: Docker (local trial or your own VPS)
+
 ```bash
 # Prerequisites: Docker Desktop (docker.com), git
 git clone https://github.com/frappe/frappe_docker
 cd frappe_docker
 docker compose -f pwd.yml up -d
 ```
+
 Wait ~5 minutes for the site to initialize, then open `http://localhost:8080`.
 Login: username `Administrator`, password `admin` (change it immediately).
 
 ### Option C: Manual bench install (only for heavy customization)
+
 On an Ubuntu server:
+
 ```bash
 # Install bench via the official easy-install script, then:
 bench new-site yourstartup.localhost
@@ -58,6 +63,7 @@ Decide these **before** starting the wizard:
 5. **What you sell** — goods, services, or both.
 
 Then immediately:
+
 - [ ] Change the Administrator password
 - [ ] Set up **email** (Settings → Email Account) so quotations/invoices can be sent from the system
 - [ ] Enable **daily backups** (automatic on Frappe Cloud; on Docker set up a cron for `bench backup`)
@@ -83,27 +89,32 @@ Masters are the "nouns" of your business. Enter in this order (each supports bul
 The #1 reason ERP adoption fails is trying to use everything at once. Adopt in this sequence, moving on only when the current one is a habit:
 
 ### Week 2–3: Sales cycle (CRM → cash)
+
 > Lead → Opportunity → Quotation → Sales Order → Delivery Note → Sales Invoice → Payment Entry
 
 This is the built-in CRM plus billing. Replaces spreadsheets + Word invoices; every rupee of revenue is tracked and GST-compliant.
 
 ### Week 3–4: Purchase cycle
+
 > Material Request → Purchase Order → Purchase Receipt → Purchase Invoice → Payment
 
-### Week 4–5: Inventory *(skip if services-only)*
+### Week 4–5: Inventory _(skip if services-only)_
+
 Stock updates automatically from sales/purchase documents. Do one physical stock reconciliation to set opening quantities.
 
 ### Week 5–6: Accounting review
+
 Books build themselves from the documents above. Review **General Ledger**, **Profit & Loss**, and **Balance Sheet** with your CA. Fix account mappings once.
 
 ### Later (only when needed)
+
 HR & Payroll, Projects, Manufacturing, Website/e-commerce — don't touch until the core runs smoothly.
 
 ---
 
 ## Phase 5 — Go-live discipline (from Week 2 onward)
 
-- **Pick a cutover date** (e.g., start of a month): from that date, *every* invoice and purchase goes through ERPNext. No parallel spreadsheets — dual systems kill adoption.
+- **Pick a cutover date** (e.g., start of a month): from that date, _every_ invoice and purchase goes through ERPNext. No parallel spreadsheets — dual systems kill adoption.
 - **Train by doing:** each team member enters their own real transactions for a week, reviewed daily.
 - **One owner:** designate one ERPNext admin who answers questions and controls settings changes.
 - **Weekly review:** every Friday, check **Accounts Receivable** (who owes you money) and stock levels. This is where the ERP starts paying for itself.
@@ -131,13 +142,13 @@ HR & Payroll, Projects, Manufacturing, Website/e-commerce — don't touch until 
 
 ## Add-on apps: Frappe HR, Helpdesk & Wiki (Docker)
 
-ERPNext covers CRM → accounting out of the box, but HR/payroll, a support desk, and a knowledge wiki are **separate Frappe apps**. All three install onto the *same site* as ERPNext — one URL, one login, shared users and data.
+ERPNext covers CRM → accounting out of the box, but HR/payroll, a support desk, and a knowledge wiki are **separate Frappe apps**. All three install onto the _same site_ as ERPNext — one URL, one login, shared users and data.
 
-| App | What it gives you | Repo · branch (for v16) | Needs ERPNext? | Where it lives after install |
-|---|---|---|---|---|
-| **Frappe HR** (`hrms`) | Employees, leave, attendance, expense claims, payroll | `frappe/hrms` · `version-16` | **Yes** — major versions must match | Desk modules + employee self-service PWA at `/hr` |
-| **Helpdesk** | Support tickets, agents, SLAs, customer portal | `frappe/helpdesk` · `main` | No | `/helpdesk` |
-| **Wiki** | Public/internal documentation pages | `frappe/wiki` · `master` (v3 still RC as of Jul 2026) | No | Published pages at `/wiki`, managed from the desk |
+| App                    | What it gives you                                     | Repo · branch (for v16)                               | Needs ERPNext?                      | Where it lives after install                      |
+| ---------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------- | ------------------------------------------------- |
+| **Frappe HR** (`hrms`) | Employees, leave, attendance, expense claims, payroll | `frappe/hrms` · `version-16`                          | **Yes** — major versions must match | Desk modules + employee self-service PWA at `/hr` |
+| **Helpdesk**           | Support tickets, agents, SLAs, customer portal        | `frappe/helpdesk` · `main`                            | No                                  | `/helpdesk`                                       |
+| **Wiki**               | Public/internal documentation pages                   | `frappe/wiki` · `master` (v3 still RC as of Jul 2026) | No                                  | Published pages at `/wiki`, managed from the desk |
 
 ### Why you can't just "install" them in Docker
 
@@ -151,10 +162,10 @@ All commands below run from inside the `frappe_docker` folder.
 
 ```json
 [
-  { "url": "https://github.com/frappe/erpnext",  "branch": "version-16" },
-  { "url": "https://github.com/frappe/hrms",     "branch": "version-16" },
+  { "url": "https://github.com/frappe/erpnext", "branch": "version-16" },
+  { "url": "https://github.com/frappe/hrms", "branch": "version-16" },
   { "url": "https://github.com/frappe/helpdesk", "branch": "main" },
-  { "url": "https://github.com/frappe/wiki",     "branch": "master" }
+  { "url": "https://github.com/frappe/wiki", "branch": "master" }
 ]
 ```
 

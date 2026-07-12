@@ -10,14 +10,15 @@
 ## 7.1 `dzzlo_oms_api` — daily guide
 
 **Starting a feature (endpoint/service):**
+
 1. `yarn seed` once (idempotent), keep `yarn test:watch` running on the new spec file.
 2. Write the supertest spec first — route, envelope, Mongo side effects — in `test/api_v3/` idiom (Phase 2 §2.4). Red.
 3. Implement route → controller → service (v3 layering). Green. Refactor.
 4. If the feature adds a business flow, add a row to the flow→test map (Phase 2 §2.1) in the same PR. If it needs seed data, extend a factory + re-run `yarn seed`.
 
-**Fixing a bug:** reproduce as a failing test *before touching the fix* — name it after the symptom, reference the report in the test description (`it("does not double-charge TCS on part-paid invoice (bug 2026-07-xx)")`). Then fix. The test never gets deleted. **This is mandatory** (⏳ Q10 confirmation).
+**Fixing a bug:** reproduce as a failing test _before touching the fix_ — name it after the symptom, reference the report in the test description (`it("does not double-charge TCS on part-paid invoice (bug 2026-07-xx)")`). Then fix. The test never gets deleted. **This is mandatory** (⏳ Q10 confirmation).
 
-**Refactor:** `yarn test` green before and after; no behavior change means no assertion change — if you *must* edit assertions, it wasn't a refactor.
+**Refactor:** `yarn test` green before and after; no behavior change means no assertion change — if you _must_ edit assertions, it wasn't a refactor.
 
 **Preparing a release:** `yarn test:full`, then the cross-repo gate (Phase 6 §6.1). Contract changed? `yarn fixtures:export` + front-end pulls in the same release.
 
@@ -33,7 +34,7 @@
 
 **Feature (screen/flow):** business rules go in `src/utils`/`src/helpers`/slices **first**, unit-tested TDD-style (they run in ms — `yarn test:watch`); the screen gets an RNTL test only if it carries decisions (conditional rendering by role/credit/status), not for pure layout; new endpoints get a Tier-2 store/MSW test if they carry headers/error semantics beyond the default.
 
-**Bugfix:** failing test first at the lowest layer that reproduces it (most app bugs reproduce in a util/selector/slice test; screen-level only if the bug *is* the wiring).
+**Bugfix:** failing test first at the lowest layer that reproduces it (most app bugs reproduce in a util/selector/slice test; screen-level only if the bug _is_ the wiring).
 
 **Release prep:** `yarn test` (runs `APP_ENV=testing`; MSW guard guarantees no staging contact), then the cross-repo gate.
 
@@ -51,7 +52,7 @@
 
 - **Budgets** (⏳ Q10): API `test:full` ≤ 5 min, web ≤ 1 min, app ≤ 2 min locally. A PR that blows the budget must pay it back (split files — memory-server parallelism scales per file; narrow `beforeAllHelper` requests to only the tables the suite reads).
 - **No sleeping** in tests — poll or use the app's own cache-bust/settle mechanisms.
-- **One layer per rule** (overview taxonomy): don't re-prove an API rule in a screen test; assert the screen *reacts* to the API's answer, not that the answer is right.
+- **One layer per rule** (overview taxonomy): don't re-prove an API rule in a screen test; assert the screen _reacts_ to the API's answer, not that the answer is right.
 - **Flakes are P1 bugs** against the safety net — fix or quarantine-with-verdict within a day; a gate people don't trust is worse than none.
 
 ## 7.6 How new hires learn it
@@ -68,7 +69,7 @@
 
 ## Phase 7 checklist
 
-- [x] Per-repo `docs/testing.md` daily guides written (api extends its runbook §10; web + app new files) — *committing is the user's call*
+- [x] Per-repo `docs/testing.md` daily guides written (api extends its runbook §10; web + app new files) — _committing is the user's call_
 - [x] PR templates added with §7.4 checklist (`.github/PULL_REQUEST_TEMPLATE.md` ×3)
 - [x] Speed budgets recorded in every guide (api `test:full` ≤5min, web ≤1min, app ≤2min — all with huge headroom today: ~2min / ~1.5s / ~11s)
 - [x] Mandatory bugfix-TDD rule written into all three guides (team ratification still ⏳ Q10 — a human sign-off)
@@ -79,10 +80,10 @@
 
 **Result:** three per-repo daily-TDD guides + PR templates, nothing but docs touched (verified: zero non-doc files modified across all three repos). Each agent verified every command/path against its own repo and **corrected three inaccuracies in the brief** — a healthy sign the guides match reality, not the plan's assumptions:
 
-| Repo | Guide | Corrections the agent caught |
-| --- | --- | --- |
-| `dzzlo_oms_api` | `docs/testing.md` §10 (10.1–10.6) + PR template | none — kept `fixtures:pull` framed as a front-end-only command (not in API package.json) |
-| `dip-web` | new `docs/testing.md` + PR template | **no `yarn lint` script** — ESLint runs via husky pre-commit + CI `lint.yml`; release ritual written around that |
-| `dzzlo_oms_app` | new `docs/testing.md` + PR template | MSW export-map fix lives in `jest.config.js moduleNameMapper`, **not** `jest.resolver.js` (that's for Reanimated); **`src/test/testUtils.js` does not exist** → Tier 3 documented as genuinely deferred (see Phase 4 correction) |
+| Repo            | Guide                                           | Corrections the agent caught                                                                                                                                                                                                     |
+| --------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dzzlo_oms_api` | `docs/testing.md` §10 (10.1–10.6) + PR template | none — kept `fixtures:pull` framed as a front-end-only command (not in API package.json)                                                                                                                                         |
+| `dip-web`       | new `docs/testing.md` + PR template             | **no `yarn lint` script** — ESLint runs via husky pre-commit + CI `lint.yml`; release ritual written around that                                                                                                                 |
+| `dzzlo_oms_app` | new `docs/testing.md` + PR template             | MSW export-map fix lives in `jest.config.js moduleNameMapper`, **not** `jest.resolver.js` (that's for Reanimated); **`src/test/testUtils.js` does not exist** → Tier 3 documented as genuinely deferred (see Phase 4 correction) |
 
 Each guide encodes the same three rituals (feature / bugfix-test-first-MANDATORY / refactor) + release prep + the §7.5 anti-rot rules + §7.4 PR checklist, adapted to the repo's real runner (API supertest+seed, web Vitest+jsdom-fetch+MSW, app Jest+RNTL+MSW) and its actual quirks (API mutation-smoke drill; web's custom-env do-not-revert warning; app's `APP_ENV` + jest path-pattern gotchas + untracked-test caveat).

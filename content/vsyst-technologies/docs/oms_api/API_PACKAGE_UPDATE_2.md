@@ -11,44 +11,44 @@ These packages have minor or patch updates with stable APIs. Update all at once 
 
 ### 1A. Zero-risk updates (no active usage or CLI-only)
 
-| Package | Current | Target | Notes |
-|---------|---------|--------|-------|
-| nodemon | ^3.1.0 | ^3.1.14 | CLI-only dev tool, no code imports |
-| socket.io | ^4.8.1 | ^4.8.3 | Commented out — not actively used |
+| Package   | Current | Target  | Notes                              |
+| --------- | ------- | ------- | ---------------------------------- |
+| nodemon   | ^3.1.0  | ^3.1.14 | CLI-only dev tool, no code imports |
+| socket.io | ^4.8.1  | ^4.8.3  | Commented out — not actively used  |
 
 **Files to change:** `package.json` only
 **Validation:** `yarn install` succeeds, `yarn dev` starts
 
 ### 1B. Low-risk middleware updates
 
-| Package | Current | Target | Files Using It |
-|---------|---------|--------|----------------|
-| cookie-parser | ^1.4.5 | ^1.4.7 | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
-| cors | ^2.8.5 | ^2.8.6 | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
-| morgan | ^1.10.0 | ^1.10.1 | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
-| helmet | ^8.0.0 | ^8.1.0 | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
+| Package       | Current | Target  | Files Using It                           |
+| ------------- | ------- | ------- | ---------------------------------------- |
+| cookie-parser | ^1.4.5  | ^1.4.7  | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
+| cors          | ^2.8.5  | ^2.8.6  | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
+| morgan        | ^1.10.0 | ^1.10.1 | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
+| helmet        | ^8.0.0  | ^8.1.0  | `dzzlo_oms.js`, `test/dzzlo_oms_test.js` |
 
 **Files to change:** `package.json` only
 **Validation:** `yarn install`, `yarn test`, confirm app starts
 
 ### 1C. Low-risk library updates
 
-| Package | Current | Target | Files Using It |
-|---------|---------|--------|----------------|
-| bcryptjs | ^3.0.0 | ^3.0.3 | `models/users.js` (genSalt, hash, compare) |
-| jsonwebtoken | ^9.0.2 | ^9.0.3 | `models/users.js`, `helpers/auth.js` (sign, verify) |
-| dotenv | ^17.0.0 | ^17.4.1 | `dzzlo_oms.js` + 40 other files (`.config()`) |
-| express | ^5.0.0 | ^5.2.1 | `dzzlo_oms.js` + 30 route files (Router, json, static) |
+| Package      | Current | Target  | Files Using It                                         |
+| ------------ | ------- | ------- | ------------------------------------------------------ |
+| bcryptjs     | ^3.0.0  | ^3.0.3  | `models/users.js` (genSalt, hash, compare)             |
+| jsonwebtoken | ^9.0.2  | ^9.0.3  | `models/users.js`, `helpers/auth.js` (sign, verify)    |
+| dotenv       | ^17.0.0 | ^17.4.1 | `dzzlo_oms.js` + 40 other files (`.config()`)          |
+| express      | ^5.0.0  | ^5.2.1  | `dzzlo_oms.js` + 30 route files (Router, json, static) |
 
 **Files to change:** `package.json` only
 **Validation:** `yarn install`, `yarn test`, confirm login/auth flows work
 
 ### 1D. Low-risk ORM and test tool updates
 
-| Package | Current | Target | Files Using It |
-|---------|---------|--------|----------------|
-| mongoose | ^9.2.0 | ^9.4.1 | `helpers/db_conn.js` + 85 model/controller files |
-| supertest | ^7.0.0 | ^7.2.2 | 126+ test files |
+| Package   | Current | Target | Files Using It                                   |
+| --------- | ------- | ------ | ------------------------------------------------ |
+| mongoose  | ^9.2.0  | ^9.4.1 | `helpers/db_conn.js` + 85 model/controller files |
+| supertest | ^7.0.0  | ^7.2.2 | 126+ test files                                  |
 
 **Files to change:** `package.json` only
 **Validation:** `yarn install`, full `yarn test` pass
@@ -63,21 +63,25 @@ These are major version bumps but with low actual usage in this codebase.
 
 **Risk:** MODERATE
 **Active usage in 2 files:**
+
 - `api_v3/routes/open_apis/contact_email.js` (lines 3-9, 17)
 - `api_v2/routes/open_apis/contact_email.js` (lines 3-9, 17)
 
 **Current config pattern:**
+
 ```js
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
-});
+})
 ```
+
 Also accesses `req.rateLimit` object (line 20).
 
 **Changes required:**
+
 - [ ] Check v8 changelog for `standardHeaders` / `legacyHeaders` option renames
 - [ ] Verify `req.rateLimit` object structure is unchanged
 - [ ] Update config in `api_v3/routes/open_apis/contact_email.js`
@@ -93,6 +97,7 @@ Also accesses `req.rateLimit` object (line 20).
 **Indirect dependency:** Mongoose uses the MongoDB driver internally
 
 **Changes required:**
+
 - [ ] Verify mongoose ^9.4.1 is compatible with mongodb ^7.x (check mongoose release notes)
 - [ ] If compatible: update `package.json` only
 - [ ] If NOT compatible: hold this update until mongoose officially supports mongodb 7
@@ -107,12 +112,14 @@ Also accesses `req.rateLimit` object (line 20).
 
 **Risk:** MODERATE
 **Files directly affected:**
+
 - `helpers/sendEmail.js` — AWS SES transport (`nodemailer.createTransport({ SES: { ses, aws } })`)
 - `helpers/sendEmailnaAWS.js` — SMTP transport (`nodemailer.createTransport({ host, port, secure, auth })`)
 
 **Indirectly used in 34+ controller/service files** (all go through the helpers above).
 
 **Changes required:**
+
 - [x] Review nodemailer v8 changelog for transport API changes
 - [x] Check if AWS SES transport format (`{ SES: { ses, aws: { SendRawEmailCommand } } }`) is still supported — **NO, legacy format rejected since v7**
 - [x] Check if SMTP transport options are unchanged — **yes, unchanged**
@@ -128,11 +135,13 @@ Also accesses `req.rateLimit` object (line 20).
 
 **Risk:** MODERATE-HIGH (skipping v10 entirely)
 **Files directly affected:**
+
 - `test/database.js` (lines 39, 47, 57, 70) — `MongoMemoryServer.create()`, `.getUri()`, `.stop()`
 
 **Indirectly affects:** All 126+ test files (they all use `test/database.js` for setup/teardown)
 
 **Changes required:**
+
 - [x] Review v10 and v11 changelogs for API changes
 - [x] Verify `MongoMemoryServer.create()` still works (or find replacement) — **unchanged**
 - [x] Verify `.getUri()` method still exists — **unchanged**
@@ -148,10 +157,12 @@ Also accesses `req.rateLimit` object (line 20).
 
 **Risk:** LOW-MODERATE
 **Files directly affected:**
+
 - `jest.config.js` — config: `testEnvironment`, `verbose`, `testPathIgnorePatterns`, `testTimeout`
 - 126+ test files using: `describe`, `it`, `beforeAll`, `afterAll`, `expect`, `describe.skip`, `xit`
 
 **Changes required:**
+
 - [x] Review jest v30 changelog for config option changes — **all config options unchanged**
 - [x] Verify `testTimeout` and `testPathIgnorePatterns` are still valid — **yes, unchanged**
 - [x] Check for any deprecated assertion methods — **none used in codebase** (removed aliases like `.toBeCalled()`, `.toThrowError()` not present)

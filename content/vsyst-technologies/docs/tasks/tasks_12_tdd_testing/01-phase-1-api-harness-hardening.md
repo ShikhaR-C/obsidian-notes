@@ -3,7 +3,7 @@
 **Outcome:** `yarn test:full` in `dzzlo_oms_api` is deterministic, documented, and trustworthy as the backbone of the release gate; the test app exercises the same middleware chain as production; every legacy suite has a written verdict.
 **Effort:** 1–2 dev-days.
 
-> **TDD lens:** before writing more tests, make the harness one you'd bet a release on. Most of this phase is *verifying and documenting* what already works, then fixing the three real weaknesses found in review (middleware divergence, unpinned mongod binary, dangerous legacy suite).
+> **TDD lens:** before writing more tests, make the harness one you'd bet a release on. Most of this phase is _verifying and documenting_ what already works, then fixing the three real weaknesses found in review (middleware divergence, unpinned mongod binary, dangerous legacy suite).
 
 ---
 
@@ -31,15 +31,15 @@ These facts go into the new runbook (§1.5) so nobody re-litigates them.
 
 ```js
 // mirror production middleware order — keep in sync with dzzlo_oms.js
-const { api_key_v1, logging, check_user_version } = require("../helpers/middlewares");
+const { api_key_v1, logging, check_user_version } = require("../helpers/middlewares")
 
-app.set("query parser", "extended");
-app.use(express.json({ limit: "1mb" }));
-app.use(api_key_v1());
-app.use(logging());            // sets req.loggedInUser from Bearer JWT → protect works
-app.use(check_user_version()); // version-gate behavior becomes testable
+app.set("query parser", "extended")
+app.use(express.json({ limit: "1mb" }))
+app.use(api_key_v1())
+app.use(logging()) // sets req.loggedInUser from Bearer JWT → protect works
+app.use(check_user_version()) // version-gate behavior becomes testable
 // ...existing api_v2 / api_v3 mounts unchanged...
-app.use(errorHandler);         // helpers/error.js, mounted last like production
+app.use(errorHandler) // helpers/error.js, mounted last like production
 ```
 
 Notes: confirm `logging()`'s response-`finish` log write is harmless under memory-server (it is a normal collection write); if log noise bothers assertions, gate it with `if (process.env.NODE_ENV !== "test-quiet")` rather than forking behavior. Existing api_v3 tests keep passing because they already send `x-api-key` (`db.dheader`), which `api_key_v1` accepts (`X_API_KEY_3` allowed).
@@ -49,24 +49,28 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
 ## 1.3 Determinism & ergonomics fixes
 
 1. **Pin the mongod binary** so every machine/CI run uses the same engine and works offline after first download. Add `.mongodb-memory-server/mongodb-memory-server.config.js` (or `mongodb-memory-server` key in `package.json`) pinning `version` to the team standard; document the binary cache (`~/.cache/mongodb-binaries`) in the runbook.
-2. **Make `yarn seed` idempotent** — today a same-day re-seed silently overwrites into `data/v3_<date>/`; a *different-day* re-seed leaves two dirs (harmless — loader picks latest — but confusing). Change:
+2. **Make `yarn seed` idempotent** — today a same-day re-seed silently overwrites into `data/v3_<date>/`; a _different-day_ re-seed leaves two dirs (harmless — loader picks latest — but confusing). Change:
 
    `package.json`:
+
    ```json
    "seed": "yarn uproot && NODE_ENV=development node ./test/api_v3/temp/seed/index.js"
    ```
+
    and wrap the seed body in `try/finally` so `db.close()` always runs:
+
    ```js
    // test/api_v3/temp/seed/index.js
    const CreateDir = async () => {
-     await db.connect();
+     await db.connect()
      try {
        /* ...existing factory sequence unchanged... */
      } finally {
-       await db.close();
+       await db.close()
      }
-   };
+   }
    ```
+
 3. **Convenience scripts** (`package.json`):
    ```json
    "test:watch": "NODE_ENV=development jest --watch",
@@ -78,12 +82,12 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
 
 ## 1.4 Legacy suite triage — verdicts (✅ Q4 verdicts approved 2026-07-05; `git rm` still needs a separate explicit go-ahead)
 
-| Suite | Facts | Verdict | Rationale / what (if anything) to port |
-| --- | --- | --- | --- |
-| `test/202405_v2/` (~29 test files, ~18.6k LOC total) | Direct predecessor of api_v3; every test file has a same-named api_v3 counterpart | **Retire & delete** | Strict subset — contributes zero unique coverage. Safe immediately. |
-| `test/api_v1_test/` (28 files, ~5.3k LOC) | Targets unmounted `/api/v1`; **connects to the real remote `DATABASE_URI`** and *writes* to it | **Retire & delete — priority** | Violates the local-only principle outright; endpoints dead. Nothing to port. |
-| `test/api_v1/` (16 test files + own 2021-era fixtures) | Memory-server based but targets unmounted `/api/v1`; covers order list/get-one and `rate_msts` list — endpoints that are commented-out/"NOT USED" in v3 | **Retire & delete** | Its unique flows test **dead API surface**. If order list/get-one ever returns to v3, write fresh tests then. |
-| `test/api_v2/` (18 test files) | Targets **live, frozen** `/api/v2` (still serving app versions 1.68–1.77); currently broken anyway — `db.dheader` sends `X_API_KEY_3` but v2 validates `X_API_KEY` → 401s | **Keep ignored & frozen** until the app's min supported version reaches ≥ 1.78, then delete | v2 is change-frozen policy-wise, so regression risk is low; reviving costs a header fix + fixture rework. Not worth it unless a v2 hotfix is ever needed (decision recorded here if so). ✅ Q1/Q4 |
+| Suite                                                  | Facts                                                                                                                                                                     | Verdict                                                                                     | Rationale / what (if anything) to port                                                                                                                                                            |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `test/202405_v2/` (~29 test files, ~18.6k LOC total)   | Direct predecessor of api_v3; every test file has a same-named api_v3 counterpart                                                                                         | **Retire & delete**                                                                         | Strict subset — contributes zero unique coverage. Safe immediately.                                                                                                                               |
+| `test/api_v1_test/` (28 files, ~5.3k LOC)              | Targets unmounted `/api/v1`; **connects to the real remote `DATABASE_URI`** and _writes_ to it                                                                            | **Retire & delete — priority**                                                              | Violates the local-only principle outright; endpoints dead. Nothing to port.                                                                                                                      |
+| `test/api_v1/` (16 test files + own 2021-era fixtures) | Memory-server based but targets unmounted `/api/v1`; covers order list/get-one and `rate_msts` list — endpoints that are commented-out/"NOT USED" in v3                   | **Retire & delete**                                                                         | Its unique flows test **dead API surface**. If order list/get-one ever returns to v3, write fresh tests then.                                                                                     |
+| `test/api_v2/` (18 test files)                         | Targets **live, frozen** `/api/v2` (still serving app versions 1.68–1.77); currently broken anyway — `db.dheader` sends `X_API_KEY_3` but v2 validates `X_API_KEY` → 401s | **Keep ignored & frozen** until the app's min supported version reaches ≥ 1.78, then delete | v2 is change-frozen policy-wise, so regression risk is low; reviving costs a header fix + fixture rework. Not worth it unless a v2 hotfix is ever needed (decision recorded here if so). ✅ Q1/Q4 |
 
 Actions in this phase: add the verdict table to `docs/testing.md`; leave `testPathIgnorePatterns` as-is — deletion of `202405_v2`/`api_v1_test`/`api_v1` is approved in principle but the actual `git rm` still needs a separate explicit go-ahead before it's executed (the ignore entries are load-bearing until then).
 
@@ -115,7 +119,7 @@ Outline (repo `docs/` already exists):
 - [x] `test:watch` / `test:file` / `test:coverage` scripts added
 - [ ] (optional) `counters` re-hydration branch in `helper/beforeAll/index.js` — **deferred to Phase 2** (add when a numbering / version-gate test needs it)
 - [x] Legacy verdict table written into `docs/testing.md`; deletion still **gated on a separate go-ahead** (no `git rm` executed)
-- [x] `docs/testing.md` runbook written *(committing is the user's call)*
+- [x] `docs/testing.md` runbook written _(committing is the user's call)_
 - [x] Verification steps in §1.6 all pass
 
 ## Phase 1 — implementation notes (executed 2026-07-09, branch `api_tdd`)
@@ -124,7 +128,7 @@ Outline (repo `docs/` already exists):
 
 **Two findings beyond the plan:**
 
-1. **`protect` / `authorize` / `scope` are unwired on v3.** §1.2 assumed a protect-gated route to smoke-test; there is none — every usage in `api_v3/routes/*` is commented out, and business routes gate on `x-api-key` + `check_user_company_status` only. The chain is now *testable* (via the probe), but **deciding where those guards belong on real v3 routes is a Phase 2 decision**, not just test-writing. Flow #2 is a *wiring* gap, not only a coverage gap — Phase 2 §2.x should call this out.
+1. **`protect` / `authorize` / `scope` are unwired on v3.** §1.2 assumed a protect-gated route to smoke-test; there is none — every usage in `api_v3/routes/*` is commented out, and business routes gate on `x-api-key` + `check_user_company_status` only. The chain is now _testable_ (via the probe), but **deciding where those guards belong on real v3 routes is a Phase 2 decision**, not just test-writing. Flow #2 is a _wiring_ gap, not only a coverage gap — Phase 2 §2.x should call this out.
 2. **`yarn uproot` was silently a no-op** on modern Node. `uproot.js` used `fs.rmdirSync(dir, { recursive: true })`, whose `recursive` option was removed (Node v26 throws "options.recursive is no longer supported"); the throw was swallowed, so stale seed dirs accumulated and `test:full` never actually cleaned up. Fixed with `fs.rmSync(dir, { recursive: true, force: true })`, which makes the `seed` `uproot &&` prefix and the fail-fast `beforeAll` guard meaningful.
 
-**Known cosmetic noise:** the seed drives the same (now production-mirrored) test app, so `logging()` writes a `logs` doc per request during seed and ~16 *caught* `Logs.create failed` lines print as the connection closes at end of seed. Harmless (caught; data and tests unaffected). Not suppressed because `helpers/middlewares.js` is out of edit-scope (Active Development Rule); if it ever bothers, gate the log write behind an env flag when that rule is lifted.
+**Known cosmetic noise:** the seed drives the same (now production-mirrored) test app, so `logging()` writes a `logs` doc per request during seed and ~16 _caught_ `Logs.create failed` lines print as the connection closes at end of seed. Harmless (caught; data and tests unaffected). Not suppressed because `helpers/middlewares.js` is out of edit-scope (Active Development Rule); if it ever bothers, gate the log write behind an env flag when that rule is lifted.

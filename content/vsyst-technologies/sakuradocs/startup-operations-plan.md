@@ -1,13 +1,13 @@
 # Startup Operations Plan — App & Website Development Company
 
-*Created 2 July 2026. A step-by-step guide for a first-time founder covering legal setup, finances, operations, marketing, sales, support, and hiring, followed by a phase-wise implementation roadmap.*
+_Created 2 July 2026. A step-by-step guide for a first-time founder covering legal setup, finances, operations, marketing, sales, support, and hiring, followed by a phase-wise implementation roadmap._
 
 ---
 
 ## Two Business Models — Know Which One You Are
 
-- **Services company (agency):** clients pay you to build *their* apps/websites. Revenue from projects. Easier to start, profitable early, but you trade time for money.
-- **Product company:** you build *your own* app and customers pay to use it. Slower to earn, but scales without hiring per project.
+- **Services company (agency):** clients pay you to build _their_ apps/websites. Revenue from projects. Easier to start, profitable early, but you trade time for money.
+- **Product company:** you build _your own_ app and customers pay to use it. Slower to earn, but scales without hiring per project.
 
 Most first-time founders start as an agency (cash flow) and later build a product from the profits. This plan covers both and flags where they differ.
 
@@ -26,6 +26,7 @@ Most first-time founders start as an agency (cash flow) and later build a produc
 ## 2. Finances
 
 **Three numbers to know every week:**
+
 - **Cash in bank** — what you actually have.
 - **Burn rate** — total monthly spend.
 - **Runway** — cash ÷ burn = months until money runs out. Below 6 months, fixing this is your only job.
@@ -33,6 +34,7 @@ Most first-time founders start as an agency (cash flow) and later build a produc
 **The habit:** record every transaction. Use simple accounting software (QuickBooks, Zoho Books, Wave — Wave is free) and a part-time bookkeeper/CA from early on. They file taxes; you review numbers monthly.
 
 **Essentials:**
+
 - **Agency pricing:** cost per hour = total monthly costs ÷ billable hours; charge 2.5–3×. Fixed-price quotes with a written scope; out-of-scope work costs extra. **Take 30–50% upfront — always.**
 - **Product pricing:** one simple paid plan early. Paying users tell the truth; free users don't.
 - **Pay yourself a small salary** from day one.
@@ -64,6 +66,7 @@ Most first-time founders start as an agency (cash flow) and later build a produc
 ## 5. Sales
 
 **The pipeline — track every lead through:**
+
 1. **Lead** — someone showed interest.
 2. **Discovery call** — 30 min where you mostly ask: What are you trying to achieve? What happens if you don't build this? Budget? Timeline? Who decides?
 3. **Proposal** — one page: problem, solution, timeline, fixed price, what's included and explicitly what's not. Send within 48 hours.
@@ -73,6 +76,7 @@ Most first-time founders start as an agency (cash flow) and later build a produc
 Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn your math: leads → calls → proposals → closes. Once "10 leads = 1 client," growth is math, not hope.
 
 **Two saving rules:**
+
 - **Say no to bad clients** (hard price haggling, vague scope, "this should be easy," disrespect). They cost more than they pay.
 - **Never work free or "for equity"** from strangers.
 
@@ -96,14 +100,18 @@ Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn 
 # Part 2: Phase-Wise Implementation Plan
 
 ## Phase 0 — Foundation (Weeks 1–4)
-*Goal: legally and financially real.*
+
+_Goal: legally and financially real._
+
 - Register company; founder agreement with vesting; business bank account.
 - Accounting software + part-time CA/bookkeeper; contract templates.
 - Domain, professional email, social handles; rough niche/positioning.
 - **Exit:** you can legally sign a client and receive money into a company account.
 
 ## Phase 1 — First Revenue (Months 1–4)
-*Goal: 3–5 paying clients and a portfolio. Don't scale anything yet.*
+
+_Goal: 3–5 paying clients and a portfolio. Don't scale anything yet._
+
 - Own website with 2–3 portfolio pieces (demos count).
 - Reach out to entire personal network. Take small projects — goal is proof, not margin.
 - Every project follows the delivery checklist; advances taken; delivered on time.
@@ -112,7 +120,9 @@ Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn 
 - **Exit:** 3–5 completed paid projects, testimonials, known delivery cost per project.
 
 ## Phase 2 — Repeatability (Months 4–9)
-*Goal: leads arrive without begging; delivery without heroics.*
+
+_Goal: leads arrive without begging; delivery without heroics._
+
 - Commit to 1–2 marketing channels (referrals + LinkedIn) with weekly cadence.
 - Sharpen niche based on most profitable/pleasant Phase 1 clients.
 - Raise prices 20–30% on new clients.
@@ -122,7 +132,9 @@ Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn 
 - **Exit:** 1–2 new leads/week from marketing/referrals; one project delivered mostly without founder.
 
 ## Phase 3 — Systematize (Months 9–18)
-*Goal: business runs on process, not founder memory.*
+
+_Goal: business runs on process, not founder memory._
+
 - Hire/promote a project manager; founder shifts to sales + relationships + quality.
 - Monthly financial review: revenue, margin per project, runway, retainer % of revenue.
 - Build 3–6 month cash reserve.
@@ -131,6 +143,7 @@ Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn 
 - **Exit:** founder can take a two-week holiday and the company still ships and sells.
 
 ## Phase 4 — Scale or Transform (Month 18+)
+
 - **Path A — scale the agency:** sales lead hire, bigger clients, retainer-heavy contracts.
 - **Path B — shift to product:** move team time from client work to product as paying users grow; consider funding only now, with traction.
 - Quarterly planning; monthly financial statements; management layers only past ~7–8 people per team.
@@ -155,13 +168,13 @@ Track in a spreadsheet or free CRM (HubSpot free, Notion). Review weekly. Learn 
 - **Clients pay late. Plan for it.** Invoices due in 15 days routinely arrive in 45–60. Rules that protect you: milestone-based payments (advance / mid-project / before final handover — never deliver final code before final payment), invoice immediately when a milestone completes, and a polite-but-relentless follow-up schedule. "Final files and launch happen after the last payment clears" is a normal, professional clause.
 - **Client concentration is a hidden debt.** If one client is more than ~30–40% of your revenue, you don't have a business — you have a boss who can fire you. Keep selling even when you're busy; the pipeline must never go empty just because delivery is full.
 - **Feast-and-famine is the agency disease.** You sell hard → get busy delivering → stop selling → projects end → panic. The cure: sales activity (outreach, content, follow-ups) happens every single week regardless of workload, even 2–3 hours.
-- **Taxes have deadlines with penalties.** GST/sales tax filings, advance tax, payroll withholdings — your CA handles the filing, but *you* must know the calendar. Missed deadlines cost fines and, worse, credibility with banks and clients. Ask your CA for a one-page annual compliance calendar in month one.
-- **Never spend money that's committed elsewhere.** The advance a client paid you is partly *their* project's cost (contractor fees, tools, taxes). Mentally reserve tax money the day revenue arrives — a separate "tax savings" account you sweep 20–25% into works wonders.
+- **Taxes have deadlines with penalties.** GST/sales tax filings, advance tax, payroll withholdings — your CA handles the filing, but _you_ must know the calendar. Missed deadlines cost fines and, worse, credibility with banks and clients. Ask your CA for a one-page annual compliance calendar in month one.
+- **Never spend money that's committed elsewhere.** The advance a client paid you is partly _their_ project's cost (contractor fees, tools, taxes). Mentally reserve tax money the day revenue arrives — a separate "tax savings" account you sweep 20–25% into works wonders.
 
 ## Client Realities
 
 - **Scope creep is the silent killer.** "Can you just add one small thing?" repeated ten times turns a profitable project into a loss. The discipline: anything not written in the scope gets a friendly, immediate response — "Happy to! That's outside the current scope; it'll be ₹X and adds Y days. Want me to send a change order?" Say it cheerfully and early. Clients respect it; the ones who don't were bad clients anyway.
-- **Put IP ownership in the contract.** Standard and fair: the client owns the final work *after full payment*; you keep the right to show it in your portfolio and reuse generic internal code/tools. Without this clause, a non-paying client can still claim the work is theirs.
+- **Put IP ownership in the contract.** Standard and fair: the client owns the final work _after full payment_; you keep the right to show it in your portfolio and reuse generic internal code/tools. Without this clause, a non-paying client can still claim the work is theirs.
 - **A kill fee protects you from cancelled projects.** If the client cancels midway, the contract should say completed milestones are payable and the advance is non-refundable. This is standard.
 - **The client who haggles hardest on price demands the most and pays the slowest.** This correlation is nearly a law of nature. Price objections at the start predict the whole relationship.
 - **Under-promise, over-deliver — on timelines especially.** Whatever you estimate, things take 1.5× longer. Quote the padded number. Delivering early to a realistic deadline beats delivering late to an optimistic one, every time.

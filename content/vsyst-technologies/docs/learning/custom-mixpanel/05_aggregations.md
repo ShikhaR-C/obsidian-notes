@@ -22,7 +22,7 @@ For queries that scan large date ranges, pre-compute daily/weekly/monthly aggreg
 **File to create:** `models/analytics_aggs.js`
 
 ```javascript
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const analytics_agg_Schema = new mongoose.Schema(
   {
@@ -48,7 +48,7 @@ const analytics_agg_Schema = new mongoose.Schema(
     detail: { type: mongoose.Schema.Types.Mixed },
   },
   { timestamps: true },
-);
+)
 
 // Upsert key — one document per metric+period+dimensions
 analytics_agg_Schema.index(
@@ -62,22 +62,22 @@ analytics_agg_Schema.index(
     device_os: 1,
   },
   { unique: true },
-);
+)
 
 // Query indexes
 analytics_agg_Schema.index({
   metric_name: 1,
   period_type: 1,
   period_start: -1,
-});
+})
 analytics_agg_Schema.index({
   metric_name: 1,
   period_type: 1,
   company_id: 1,
   period_start: -1,
-});
+})
 
-module.exports = mongoose.model("analytics_aggs", analytics_agg_Schema);
+module.exports = mongoose.model("analytics_aggs", analytics_agg_Schema)
 ```
 
 ### Metrics Computed
@@ -99,22 +99,20 @@ module.exports = mongoose.model("analytics_aggs", analytics_agg_Schema);
 **File to create:** `helpers/analyticsAggregator.js`
 
 ```javascript
-const mongoose = require("mongoose");
-const AnalyticsEvent = require("../models/analytics_events");
-const AnalyticsSession = require("../models/analytics_sessions");
-const AnalyticsAgg = require("../models/analytics_aggs");
+const mongoose = require("mongoose")
+const AnalyticsEvent = require("../models/analytics_events")
+const AnalyticsSession = require("../models/analytics_sessions")
+const AnalyticsAgg = require("../models/analytics_aggs")
 
 const computeDailyAggregations = async (targetDate) => {
-  const dayStart = new Date(targetDate);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(dayStart);
-  dayEnd.setDate(dayEnd.getDate() + 1);
+  const dayStart = new Date(targetDate)
+  dayStart.setHours(0, 0, 0, 0)
+  const dayEnd = new Date(dayStart)
+  dayEnd.setDate(dayEnd.getDate() + 1)
 
-  console.log(
-    `[Analytics Aggregator] Computing for ${dayStart.toISOString().split("T")[0]}`,
-  );
+  console.log(`[Analytics Aggregator] Computing for ${dayStart.toISOString().split("T")[0]}`)
 
-  const dateMatch = { server_timestamp: { $gte: dayStart, $lt: dayEnd } };
+  const dateMatch = { server_timestamp: { $gte: dayStart, $lt: dayEnd } }
 
   // 1. DAU — broken down by company, role, OS
   const dauResults = await AnalyticsEvent.aggregate([
@@ -130,7 +128,7 @@ const computeDailyAggregations = async (targetDate) => {
       },
     },
     { $project: { _id: 1, unique_users: { $size: "$unique_users" } } },
-  ]);
+  ])
 
   for (const row of dauResults) {
     await AnalyticsAgg.findOneAndUpdate(
@@ -150,7 +148,7 @@ const computeDailyAggregations = async (targetDate) => {
         },
       },
       { upsert: true },
-    );
+    )
   }
 
   // Global DAU (no dimension breakdown)
@@ -158,7 +156,7 @@ const computeDailyAggregations = async (targetDate) => {
     { $match: { ...dateMatch, user_id: { $ne: null } } },
     { $group: { _id: "$user_id" } },
     { $count: "count" },
-  ]);
+  ])
 
   await AnalyticsAgg.findOneAndUpdate(
     {
@@ -177,7 +175,7 @@ const computeDailyAggregations = async (targetDate) => {
       },
     },
     { upsert: true },
-  );
+  )
 
   // 2. Event counts — by event_name, company, role
   const eventCounts = await AnalyticsEvent.aggregate([
@@ -193,7 +191,7 @@ const computeDailyAggregations = async (targetDate) => {
         unique_users: { $addToSet: "$user_id" },
       },
     },
-  ]);
+  ])
 
   for (const row of eventCounts) {
     await AnalyticsAgg.findOneAndUpdate(
@@ -213,7 +211,7 @@ const computeDailyAggregations = async (targetDate) => {
         },
       },
       { upsert: true },
-    );
+    )
   }
 
   // 3. Session metrics
@@ -226,7 +224,7 @@ const computeDailyAggregations = async (targetDate) => {
         avg_duration: { $avg: "$duration_ms" },
       },
     },
-  ]);
+  ])
 
   for (const row of sessionMetrics) {
     await AnalyticsAgg.findOneAndUpdate(
@@ -239,7 +237,7 @@ const computeDailyAggregations = async (targetDate) => {
       },
       { $set: { period_end: dayEnd, value: row.count } },
       { upsert: true },
-    );
+    )
 
     await AnalyticsAgg.findOneAndUpdate(
       {
@@ -253,7 +251,7 @@ const computeDailyAggregations = async (targetDate) => {
         $set: { period_end: dayEnd, value: Math.round(row.avg_duration || 0) },
       },
       { upsert: true },
-    );
+    )
   }
 
   // 4. Top screens
@@ -262,7 +260,7 @@ const computeDailyAggregations = async (targetDate) => {
     { $group: { _id: "$screen_name", count: { $sum: 1 } } },
     { $sort: { count: -1 } },
     { $limit: 20 },
-  ]);
+  ])
 
   await AnalyticsAgg.findOneAndUpdate(
     {
@@ -273,23 +271,21 @@ const computeDailyAggregations = async (targetDate) => {
     },
     { $set: { period_end: dayEnd, detail: topScreens } },
     { upsert: true },
-  );
+  )
 
-  console.log(
-    `[Analytics Aggregator] Done for ${dayStart.toISOString().split("T")[0]}`,
-  );
-};
+  console.log(`[Analytics Aggregator] Done for ${dayStart.toISOString().split("T")[0]}`)
+}
 
 // Backfill for a range of dates
 const backfillAggregations = async (startDate, endDate) => {
-  const current = new Date(startDate);
+  const current = new Date(startDate)
   while (current < endDate) {
-    await computeDailyAggregations(current);
-    current.setDate(current.getDate() + 1);
+    await computeDailyAggregations(current)
+    current.setDate(current.getDate() + 1)
   }
-};
+}
 
-module.exports = { computeDailyAggregations, backfillAggregations };
+module.exports = { computeDailyAggregations, backfillAggregations }
 ```
 
 ---
@@ -303,31 +299,31 @@ module.exports = { computeDailyAggregations, backfillAggregations };
  * Analytics Daily Aggregation Script
  * Run via PM2 cron or manually: node scripts/run_analytics_agg.js [YYYY-MM-DD]
  */
-const dotenv = require("dotenv");
-dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` });
+const dotenv = require("dotenv")
+dotenv.config({ path: `.env.${process.env.NODE_ENV || "development"}` })
 
-const { connectDB } = require("../helpers/db_conn");
-const { computeDailyAggregations } = require("../helpers/analyticsAggregator");
+const { connectDB } = require("../helpers/db_conn")
+const { computeDailyAggregations } = require("../helpers/analyticsAggregator")
 
 const run = async () => {
   try {
-    await connectDB();
+    await connectDB()
 
     // Default: compute yesterday's aggregations
     const targetDate = process.argv[2]
       ? new Date(process.argv[2])
-      : new Date(Date.now() - 24 * 60 * 60 * 1000);
+      : new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-    await computeDailyAggregations(targetDate);
-    console.log("[Analytics Cron] Aggregation complete");
-    process.exit(0);
+    await computeDailyAggregations(targetDate)
+    console.log("[Analytics Cron] Aggregation complete")
+    process.exit(0)
   } catch (err) {
-    console.error("[Analytics Cron] Failed:", err.message);
-    process.exit(1);
+    console.error("[Analytics Cron] Failed:", err.message)
+    process.exit(1)
   }
-};
+}
 
-run();
+run()
 ```
 
 ---
@@ -360,31 +356,28 @@ Add a new PM2 app entry:
 Add:
 
 ```javascript
-router.post("/backfill", triggerBackfill);
+router.post("/backfill", triggerBackfill)
 ```
 
 **Controller:**
 
 ```javascript
 exports.triggerBackfill = asyncHandler(async (req, res, next) => {
-  const { from, to } = req.body;
-  if (!from || !to)
-    return next(new ErrorResponse("from and to dates required", 400));
+  const { from, to } = req.body
+  if (!from || !to) return next(new ErrorResponse("from and to dates required", 400))
 
-  const {
-    backfillAggregations,
-  } = require("../../../helpers/analyticsAggregator");
+  const { backfillAggregations } = require("../../../helpers/analyticsAggregator")
 
   // Run async — don't block the response
   backfillAggregations(new Date(from), new Date(to))
     .then(() => console.log("[Backfill] Complete"))
-    .catch((err) => console.error("[Backfill] Failed:", err.message));
+    .catch((err) => console.error("[Backfill] Failed:", err.message))
 
   res.json({
     success: true,
     message: `Backfill started for ${from} to ${to}. Running in background.`,
-  });
-});
+  })
+})
 ```
 
 ---
@@ -412,7 +405,7 @@ const historicalDAU = await AnalyticsAgg.find({
   device_os: null,
 })
   .sort({ period_start: 1 })
-  .lean();
+  .lean()
 
 const todayDAU = await AnalyticsEvent.aggregate([
   {
@@ -420,12 +413,12 @@ const todayDAU = await AnalyticsEvent.aggregate([
   },
   { $group: { _id: "$user_id" } },
   { $count: "count" },
-]);
+])
 
 const dauTrend = [
   ...historicalDAU.map((d) => ({ date: d.period_start, value: d.value })),
   { date: todayStart, value: todayDAU[0]?.count || 0 },
-];
+]
 ```
 
 ---

@@ -32,7 +32,7 @@ This endpoint merges data from THREE collections into one chronological timeline
 
 ```javascript
 exports.getUserTimeline = asyncHandler(async (req, res) => {
-  const { userId } = req.params;
+  const { userId } = req.params
   const {
     from,
     to,
@@ -41,24 +41,22 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
     include_errors = "true",
     page = 1,
     limit = 100,
-  } = req.query;
+  } = req.query
 
-  const userObjectId = new mongoose.Types.ObjectId(userId);
-  const dateFilter = {};
-  if (from) dateFilter.$gte = new Date(from);
-  if (to) dateFilter.$lte = new Date(to);
+  const userObjectId = new mongoose.Types.ObjectId(userId)
+  const dateFilter = {}
+  if (from) dateFilter.$gte = new Date(from)
+  if (to) dateFilter.$lte = new Date(to)
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
-  const timelineItems = [];
+  const skip = (parseInt(page) - 1) * parseInt(limit)
+  const timelineItems = []
 
   // 1. Analytics Events (frontend + server events)
-  const eventFilter = { user_id: userObjectId };
-  if (Object.keys(dateFilter).length) eventFilter.server_timestamp = dateFilter;
-  if (categories) eventFilter.event_category = { $in: categories.split(",") };
+  const eventFilter = { user_id: userObjectId }
+  if (Object.keys(dateFilter).length) eventFilter.server_timestamp = dateFilter
+  if (categories) eventFilter.event_category = { $in: categories.split(",") }
 
-  const events = await AnalyticsEvent.find(eventFilter)
-    .sort({ server_timestamp: -1 })
-    .lean();
+  const events = await AnalyticsEvent.find(eventFilter).sort({ server_timestamp: -1 }).lean()
 
   events.forEach((e) => {
     timelineItems.push({
@@ -74,15 +72,15 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
         device_os: e.device_os,
         app_version: e.app_version,
       },
-    });
-  });
+    })
+  })
 
   // 2. Backend API Logs (correlated by user)
   if (include_api_logs === "true") {
-    const logFilter = { "user._id": userObjectId };
-    if (Object.keys(dateFilter).length) logFilter.createdAt = dateFilter;
+    const logFilter = { "user._id": userObjectId }
+    if (Object.keys(dateFilter).length) logFilter.createdAt = dateFilter
 
-    const logs = await Log.find(logFilter).sort({ createdAt: -1 }).lean();
+    const logs = await Log.find(logFilter).sort({ createdAt: -1 }).lean()
 
     logs.forEach((l) => {
       timelineItems.push({
@@ -96,19 +94,17 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
           request_id: l.request_id,
           status_message: l.statusMessage,
         },
-      });
-    });
+      })
+    })
   }
 
   // 3. Error Reports
   if (include_errors === "true") {
-    const errorFilter = {};
+    const errorFilter = {}
     // errors collection may store userId differently — adapt to actual schema
-    if (Object.keys(dateFilter).length) errorFilter.createdAt = dateFilter;
+    if (Object.keys(dateFilter).length) errorFilter.createdAt = dateFilter
 
-    const errors = await ErrorModel.find(errorFilter)
-      .sort({ createdAt: -1 })
-      .lean();
+    const errors = await ErrorModel.find(errorFilter).sort({ createdAt: -1 }).lean()
 
     errors.forEach((e) => {
       timelineItems.push({
@@ -119,41 +115,39 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
           error_message: e.error_res?.errorMessage,
           stack_trace: e.error_res?.stackTrace?.substring(0, 500),
         },
-      });
-    });
+      })
+    })
   }
 
   // Sort all items chronologically (newest first)
-  timelineItems.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+  timelineItems.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
 
   // Paginate
-  const paginatedItems = timelineItems.slice(skip, skip + parseInt(limit));
+  const paginatedItems = timelineItems.slice(skip, skip + parseInt(limit))
 
   // Correlate: link events to their corresponding API logs via request_id
-  const requestIds = new Set();
+  const requestIds = new Set()
   paginatedItems.forEach((item) => {
-    if (item.data.api_request_id) requestIds.add(item.data.api_request_id);
-    if (item.data.request_id) requestIds.add(item.data.request_id);
-  });
+    if (item.data.api_request_id) requestIds.add(item.data.api_request_id)
+    if (item.data.request_id) requestIds.add(item.data.request_id)
+  })
 
   // Mark correlated pairs
   paginatedItems.forEach((item) => {
     if (item.type === "event" && item.data.api_request_id) {
       const matchingLog = paginatedItems.find(
-        (i) =>
-          i.type === "api_log" &&
-          i.data.request_id === item.data.api_request_id,
-      );
+        (i) => i.type === "api_log" && i.data.request_id === item.data.api_request_id,
+      )
       if (matchingLog) {
         item.data.correlated_api_log = {
           method: matchingLog.data.method,
           url: matchingLog.data.url,
           status: matchingLog.data.status,
           response_time_ms: matchingLog.data.response_time_ms,
-        };
+        }
       }
     }
-  });
+  })
 
   res.json({
     success: true,
@@ -164,8 +158,8 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
       total: timelineItems.length,
       pages: Math.ceil(timelineItems.length / parseInt(limit)),
     },
-  });
-});
+  })
+})
 ```
 
 ---
@@ -179,10 +173,10 @@ exports.getUserTimeline = asyncHandler(async (req, res) => {
 When ErrorBoundary fires, include the session_id from Analytics:
 
 ```javascript
-import Analytics from "../../utils/Analytics";
+import Analytics from "../../utils/Analytics"
 
 // In componentDidCatch:
-const sessionId = Analytics.session?.getSessionId();
+const sessionId = Analytics.session?.getSessionId()
 
 reportError({
   userId,
@@ -190,14 +184,14 @@ reportError({
   errorMessage: error.message,
   stackTrace: errorInfo?.componentStack,
   session_id: sessionId, // NEW — links error to analytics session
-});
+})
 
 // Also emit analytics event
 Analytics.track("app_crashed", {
   category: "system",
   error_name: error.name,
   error_message: error.message,
-});
+})
 ```
 
 **File to modify:** `dzzlo_oms_api/models/errors.js`
@@ -228,31 +222,31 @@ Add these common filter parameters to every analytics query endpoint:
 **Create helper:** `dzzlo_oms_api/helpers/analyticsFilters.js`
 
 ```javascript
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const buildAnalyticsFilter = (query) => {
-  const filter = {};
+  const filter = {}
 
   if (query.company_id) {
-    filter.company_id = new mongoose.Types.ObjectId(query.company_id);
+    filter.company_id = new mongoose.Types.ObjectId(query.company_id)
   }
-  if (query.user_role) filter.user_role = query.user_role;
-  if (query.device_os) filter.device_os = query.device_os;
-  if (query.app_version) filter.app_version = query.app_version;
-  if (query.session_id) filter.session_id = query.session_id;
-  if (query.event_category) filter.event_category = query.event_category;
-  if (query.event_name) filter.event_name = query.event_name;
+  if (query.user_role) filter.user_role = query.user_role
+  if (query.device_os) filter.device_os = query.device_os
+  if (query.app_version) filter.app_version = query.app_version
+  if (query.session_id) filter.session_id = query.session_id
+  if (query.event_category) filter.event_category = query.event_category
+  if (query.event_name) filter.event_name = query.event_name
 
   if (query.from || query.to) {
-    filter.server_timestamp = {};
-    if (query.from) filter.server_timestamp.$gte = new Date(query.from);
-    if (query.to) filter.server_timestamp.$lte = new Date(query.to);
+    filter.server_timestamp = {}
+    if (query.from) filter.server_timestamp.$gte = new Date(query.from)
+    if (query.to) filter.server_timestamp.$lte = new Date(query.to)
   }
 
-  return filter;
-};
+  return filter
+}
 
-module.exports = { buildAnalyticsFilter };
+module.exports = { buildAnalyticsFilter }
 ```
 
 Then refactor all query controllers to use `buildAnalyticsFilter(req.query)` instead of inline filter building.
@@ -271,13 +265,13 @@ GET /api/v3/analytics/query/export/events?format=csv&from=&to=&event_name=
 
 ```javascript
 exports.exportEvents = asyncHandler(async (req, res) => {
-  const { format = "json", ...filterParams } = req.query;
-  const filter = buildAnalyticsFilter(filterParams);
+  const { format = "json", ...filterParams } = req.query
+  const filter = buildAnalyticsFilter(filterParams)
 
   const events = await AnalyticsEvent.find(filter)
     .sort({ server_timestamp: -1 })
     .limit(10000) // Cap at 10K rows
-    .lean();
+    .lean()
 
   if (format === "csv") {
     const fields = [
@@ -289,30 +283,28 @@ exports.exportEvents = asyncHandler(async (req, res) => {
       "device_os",
       "app_version",
       "server_timestamp",
-    ];
-    const csvHeader = fields.join(",");
+    ]
+    const csvHeader = fields.join(",")
     const csvRows = events.map((e) =>
-      fields
-        .map((f) => `"${(e[f] || "").toString().replace(/"/g, '""')}"`)
-        .join(","),
-    );
-    const csv = [csvHeader, ...csvRows].join("\n");
+      fields.map((f) => `"${(e[f] || "").toString().replace(/"/g, '""')}"`).join(","),
+    )
+    const csv = [csvHeader, ...csvRows].join("\n")
 
-    res.setHeader("Content-Type", "text/csv");
+    res.setHeader("Content-Type", "text/csv")
     res.setHeader(
       "Content-Disposition",
       `attachment; filename=analytics_events_${new Date().toISOString().split("T")[0]}.csv`,
-    );
-    return res.send(csv);
+    )
+    return res.send(csv)
   }
 
   // JSON export
   res.setHeader(
     "Content-Disposition",
     `attachment; filename=analytics_events_${new Date().toISOString().split("T")[0]}.json`,
-  );
-  res.json({ success: true, data: events, count: events.length });
-});
+  )
+  res.json({ success: true, data: events, count: events.length })
+})
 ```
 
 ### Aggregated Metrics Export
@@ -331,13 +323,13 @@ Track and visualize API endpoint performance using existing data from the `logs`
 
 ```javascript
 exports.getApiPerformance = asyncHandler(async (req, res) => {
-  const { from, to, min_response_time } = req.query;
+  const { from, to, min_response_time } = req.query
 
-  const matchFilter = {};
+  const matchFilter = {}
   if (from || to) {
-    matchFilter.createdAt = {};
-    if (from) matchFilter.createdAt.$gte = new Date(from);
-    if (to) matchFilter.createdAt.$lte = new Date(to);
+    matchFilter.createdAt = {}
+    if (from) matchFilter.createdAt.$gte = new Date(from)
+    if (to) matchFilter.createdAt.$lte = new Date(to)
   }
 
   const result = await Log.aggregate([
@@ -372,10 +364,7 @@ exports.getApiPerformance = asyncHandler(async (req, res) => {
         error_rate: {
           $round: [
             {
-              $multiply: [
-                { $divide: ["$error_count", "$total_requests"] },
-                100,
-              ],
+              $multiply: [{ $divide: ["$error_count", "$total_requests"] }, 100],
             },
             1,
           ],
@@ -384,10 +373,10 @@ exports.getApiPerformance = asyncHandler(async (req, res) => {
     },
     { $sort: { avg_response_time: -1 } },
     { $limit: 50 },
-  ]);
+  ])
 
-  res.json({ success: true, data: result });
-});
+  res.json({ success: true, data: result })
+})
 ```
 
 ### Dashboard Component
@@ -431,12 +420,12 @@ const ALERT_THRESHOLDS = {
     condition: "percentage_drop",
     threshold: 40,
   },
-};
+}
 
 const checkAlerts = async () => {
   // Compare today's aggregated metrics vs historical baselines
   // If threshold breached, create alert document and optionally send notification
-};
+}
 ```
 
 **File to create:** `dzzlo_oms_api/models/analytics_alerts.js`
@@ -455,7 +444,7 @@ const analytics_alert_Schema = new mongoose.Schema(
     acknowledged_by: { type: mongoose.Schema.Types.ObjectId, ref: "users" },
   },
   { timestamps: true },
-);
+)
 ```
 
 ### Dashboard Alerts Panel

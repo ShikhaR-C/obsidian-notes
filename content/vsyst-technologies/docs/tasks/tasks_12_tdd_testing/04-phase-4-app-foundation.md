@@ -15,46 +15,59 @@ Add (devDependencies): `@testing-library/react-native@^13` (React 19-compatible)
 
 ```js
 module.exports = {
-  preset: 'react-native',
-  setupFiles: ['<rootDir>/jest.setup.js'],
+  preset: "react-native",
+  setupFiles: ["<rootDir>/jest.setup.js"],
   transformIgnorePatterns: [
-    'node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@react-native-community|@react-native-async-storage|react-native-.*|@gorhom|@shopify/flash-list)/)',
+    "node_modules/(?!(react-native|@react-native|@react-navigation|@react-native-firebase|@react-native-community|@react-native-async-storage|react-native-.*|@gorhom|@shopify/flash-list)/)",
   ],
-};
+}
 ```
 
 `jest.setup.js` — additions in the existing style (Firebase mocks already present, keep them):
 
 ```js
 // storage / device / network
-jest.mock('@react-native-async-storage/async-storage', () =>
-  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
-);
-jest.mock('react-native-device-info', () =>
-  require('react-native-device-info/jest/react-native-device-info-mock'),
-);
-jest.mock('@react-native-community/netinfo', () =>
-  require('@react-native-community/netinfo/jest/netinfo-mock.js'),
-);
+jest.mock("@react-native-async-storage/async-storage", () =>
+  require("@react-native-async-storage/async-storage/jest/async-storage-mock"),
+)
+jest.mock("react-native-device-info", () =>
+  require("react-native-device-info/jest/react-native-device-info-mock"),
+)
+jest.mock("@react-native-community/netinfo", () =>
+  require("@react-native-community/netinfo/jest/netinfo-mock.js"),
+)
 
 // UI natives
-require('react-native-gesture-handler/jestSetup');
-jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
-require('react-native-reanimated').setUpTests(); // reanimated v4 testing setup — confirm exact call per v4 docs
+require("react-native-gesture-handler/jestSetup")
+jest.mock("@gorhom/bottom-sheet", () => require("@gorhom/bottom-sheet/mock"))
+require("react-native-reanimated").setUpTests() // reanimated v4 testing setup — confirm exact call per v4 docs
 
 // push
-jest.mock('react-native-onesignal', () => ({
-  OneSignal: { initialize: jest.fn(), Notifications: { requestPermission: jest.fn() }, InAppMessages: {}, User: {} },
-}));
+jest.mock("react-native-onesignal", () => ({
+  OneSignal: {
+    initialize: jest.fn(),
+    Notifications: { requestPermission: jest.fn() },
+    InAppMessages: {},
+    User: {},
+  },
+}))
 
 // phantom deps — imported by src/components/ImagePicker but NOT installed (flagged to team):
-jest.mock('react-native-image-picker', () => ({ launchImageLibrary: jest.fn(), launchCamera: jest.fn() }), { virtual: true });
-jest.mock('react-native-permissions', () => ({ request: jest.fn(), check: jest.fn(), PERMISSIONS: {}, RESULTS: {} }), { virtual: true });
+jest.mock(
+  "react-native-image-picker",
+  () => ({ launchImageLibrary: jest.fn(), launchCamera: jest.fn() }),
+  { virtual: true },
+)
+jest.mock(
+  "react-native-permissions",
+  () => ({ request: jest.fn(), check: jest.fn(), PERMISSIONS: {}, RESULTS: {} }),
+  { virtual: true },
+)
 ```
 
 The two `virtual: true` mocks are the confirmed approach (2026-07-05) — keep them stubbed for now rather than installing the real packages; revisit later.
 
-**Env note:** `yarn test` → `APP_ENV=testing` → `react-native-dotenv` inlines `.env.testing` (**remote staging URL**) into `@env` imports. That is acceptable *only because* every network path is intercepted: MSW's `onUnhandledRequest: 'error'` (§4.3) turns any real request attempt into a test failure — the local-only principle, enforced mechanically. If this ever chafes, add `.env.jest` + a `test:jest` script; not needed now.
+**Env note:** `yarn test` → `APP_ENV=testing` → `react-native-dotenv` inlines `.env.testing` (**remote staging URL**) into `@env` imports. That is acceptable _only because_ every network path is intercepted: MSW's `onUnhandledRequest: 'error'` (§4.3) turns any real request attempt into a test failure — the local-only principle, enforced mechanically. If this ever chafes, add `.env.jest` + a `test:jest` script; not needed now.
 
 `__tests__/App.test.tsx` stays as the boot smoke (it's the one test that catches provider-wiring breakage), but gains one assertion (e.g. startup screen testID) so it can actually fail.
 
@@ -62,18 +75,18 @@ The two `virtual: true` mocks are the confirmed approach (2026-07-05) — keep t
 
 One `__tests__/` folder next to each module; all paths verified to exist:
 
-| Module | What to pin |
-| --- | --- |
-| `src/utils/Currency/index.js` | `formatCurrency`/`formatQty` Indian grouping; `roundDecimal`; `price_in_words`/`amtWords` (lakh/crore words — classic regression magnet) |
-| `src/utils/Dates/index.js` | `getCurrentFinancialYear`/`getLastFinYY` around April boundary (mock system time), `msToHMS`, `DateIST` |
-| `src/utils/validators.js` + `src/utils/validation.js` | email/phone/password/name acceptance tables |
-| `src/utils/permissions.js` + `src/utils/userLookup.js` | owner/admin predicates, `canEditUser`/`canDeleteUser`, company lookup/enrichment |
-| `src/utils/converters/inv_no.js` | base33 encode/decode round-trip property (`de_base33_id(en_id_base33(x)) === x`), `trimInvNo` |
-| `src/helpers/Credit/index.js` | `creditState`/`isUnlimited`/`isBlocked`/`isCapped`/`creditUtilization` — mirrors the **landed** tasks_08 API contract (null=unlimited, 0=blocked, >0=capped; amended 2026-07-09). Pin it as-is, incl. `creditUtilization`'s adv_dep-as-spending-power pool (`pool = max_cr_lmt + adv_dep`, `6a8109a8`) and the `pool === 0` → fully-utilised edge, in lockstep with API Phase 2 §2.2.3 |
-| `src/store/apis/paginationHelpers.js` | `serializeQueryArgs`/`merge` sliding-window dedupe, `forceRefetch` |
-| `src/store/apis/preloadedState.js` | `errorRTK` status→message mapping precedence |
-| `src/store/selectors/auth.js` | representative selectors against a fixture state |
-| `src/store/slices/auth.js` | reducer paths (`authenticate`, `setCredentials`, `logout`) — module imports AsyncStorage + `createApi`, both now mocked in setup |
+| Module                                                 | What to pin                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/utils/Currency/index.js`                          | `formatCurrency`/`formatQty` Indian grouping; `roundDecimal`; `price_in_words`/`amtWords` (lakh/crore words — classic regression magnet)                                                                                                                                                                                                                                               |
+| `src/utils/Dates/index.js`                             | `getCurrentFinancialYear`/`getLastFinYY` around April boundary (mock system time), `msToHMS`, `DateIST`                                                                                                                                                                                                                                                                                |
+| `src/utils/validators.js` + `src/utils/validation.js`  | email/phone/password/name acceptance tables                                                                                                                                                                                                                                                                                                                                            |
+| `src/utils/permissions.js` + `src/utils/userLookup.js` | owner/admin predicates, `canEditUser`/`canDeleteUser`, company lookup/enrichment                                                                                                                                                                                                                                                                                                       |
+| `src/utils/converters/inv_no.js`                       | base33 encode/decode round-trip property (`de_base33_id(en_id_base33(x)) === x`), `trimInvNo`                                                                                                                                                                                                                                                                                          |
+| `src/helpers/Credit/index.js`                          | `creditState`/`isUnlimited`/`isBlocked`/`isCapped`/`creditUtilization` — mirrors the **landed** tasks_08 API contract (null=unlimited, 0=blocked, >0=capped; amended 2026-07-09). Pin it as-is, incl. `creditUtilization`'s adv_dep-as-spending-power pool (`pool = max_cr_lmt + adv_dep`, `6a8109a8`) and the `pool === 0` → fully-utilised edge, in lockstep with API Phase 2 §2.2.3 |
+| `src/store/apis/paginationHelpers.js`                  | `serializeQueryArgs`/`merge` sliding-window dedupe, `forceRefetch`                                                                                                                                                                                                                                                                                                                     |
+| `src/store/apis/preloadedState.js`                     | `errorRTK` status→message mapping precedence                                                                                                                                                                                                                                                                                                                                           |
+| `src/store/selectors/auth.js`                          | representative selectors against a fixture state                                                                                                                                                                                                                                                                                                                                       |
+| `src/store/slices/auth.js`                             | reducer paths (`authenticate`, `setCredentials`, `logout`) — module imports AsyncStorage + `createApi`, both now mocked in setup                                                                                                                                                                                                                                                       |
 
 ## 4.3 Tier 2 — RTK Query layer against MSW
 
@@ -109,7 +122,7 @@ Everything deeper (PDF render, WebView flows, Paytm, camera, push, drawer gestur
 - [x] `jest.setup.js`: async-storage, device-info, netinfo, gesture-handler, bottom-sheet, reanimated, OneSignal mocks; virtual mocks for the two phantom deps (kept stubbed — not installed)
 - [x] Tier 1 unit suites for all §4.2 modules
 - [x] `makeStore()` factory + Tier 2 store/MSW suites (headers, 401/403 middleware, retry policy)
-- [~] Tier 3: **deferred** — Login/NewOrder/Payments screens carried to a follow-up (Tier 1+2 are the phase's value). *Correction (2026-07-10): no RNTL wrapper `src/test/testUtils.js` was created — `@testing-library/react-native@13` is installed but the wrapper lands with the first screen test, not before. Only `src/test/msw/server.js` + `src/test/fixtures/generated/` exist under `src/test/`.*
+- [~] Tier 3: **deferred** — Login/NewOrder/Payments screens carried to a follow-up (Tier 1+2 are the phase's value). _Correction (2026-07-10): no RNTL wrapper `src/test/testUtils.js` was created — `@testing-library/react-native@13` is installed but the wrapper lands with the first screen test, not before. Only `src/test/msw/server.js` + `src/test/fixtures/generated/` exist under `src/test/`._
 - [x] `App.test.tsx` gains a real assertion (asserts ≥1 large spinner on boot)
 - [x] No-network guard demonstrated (§4.5)
 
@@ -118,6 +131,7 @@ Everything deeper (PDF render, WebView flows, Paytm, camera, push, drawer gestur
 **Result:** `yarn test` (= `APP_ENV=testing jest`) green — **16 suites / 337 tests**, ~11s (≪ 2-min budget). Only production touch: `makeStore()` in `src/store/apis/index.js` (singleton preserved). Tiers 1 (pure logic: Currency, Dates, validators, validation, permissions, userLookup, inv_no, Credit, paginationHelpers, preloadedState, selectors/auth, slices/auth) and 2 (MSW store-level: `auth.endpoints`, `rtkQueryErrorLogger` 401/403, `retry` 4xx/5xx) complete.
 
 **Verification performed 2026-07-10:**
+
 - **Mutation smoke (§4.5 / §2.5):** broke `creditState` (0→BLOCKED rule) → 6 Credit tests red; broke `inv_no` base33 modulo (33→32) → 11 red; both restored → green. Confirms the suites have teeth.
 - **No-network guard:** all MSW suites use `server.listen({ onUnhandledRequest: "error" })`; breaking a handler path made the request unhandled → MSW "intercepted a request without a matching request handler" → suite red. Restored.
 - ⚠️ Note for future mutation smokes: these test files are **untracked**, so `git checkout --` cannot restore an edited one — reverse edits manually or from a backup copy.

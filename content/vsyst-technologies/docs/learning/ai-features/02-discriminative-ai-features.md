@@ -1,6 +1,6 @@
 # 02 — Discriminative AI Features (Prediction, Scoring, Anomaly Detection)
 
-> Discriminative AI answers: *given what we know, what is this — and what happens next?* Every feature below follows the same recipe: **start as a Mongo aggregation + threshold (heuristic v0), surface it in the app, log outcomes, then train a real model** (logistic regression / gradient-boosted trees — nothing exotic) on the outcomes. Format per feature: what it does → data inputs → approach → where it surfaces → KPIs.
+> Discriminative AI answers: _given what we know, what is this — and what happens next?_ Every feature below follows the same recipe: **start as a Mongo aggregation + threshold (heuristic v0), surface it in the app, log outcomes, then train a real model** (logistic regression / gradient-boosted trees — nothing exotic) on the outcomes. Format per feature: what it does → data inputs → approach → where it surfaces → KPIs.
 
 Personas: **D# = dealer-facing**, **T# = transporter-facing**, **P# = platform/both**.
 
@@ -64,7 +64,7 @@ Dealers extend lakhs of rupees of credit on informal trust. Their two nightmares
 
 **Inputs:** `insps` reconciliation (book vs physical dip), `meter_reads` (`c_test` — test pours, `c_mtr`), `decants` (invoiced `rcvd_qty` vs dip-measured received, before/after nozzle totals), nozzle stamping/renewal dates, temperature seasonality (diesel expands ~0.08%/°C — naive dips mis-read in summer).
 
-**Approach:** statistical process control (CUSUM/EWMA control charts per tank) — deliberately *not* a black box, because accusations of theft need defensible math. Classify variance signatures: step change after a decant = short delivery; gradual drift on one nozzle = calibration; overnight drops = pilferage window.
+**Approach:** statistical process control (CUSUM/EWMA control charts per tank) — deliberately _not_ a black box, because accusations of theft need defensible math. Classify variance signatures: step change after a decant = short delivery; gradual drift on one nozzle = calibration; overnight drops = pilferage window.
 
 **Surfaces:** DIP inspection screen + severity-ranked alert feed; weekly variance report email.
 
@@ -86,9 +86,9 @@ Dealers extend lakhs of rupees of credit on informal trust. Their two nightmares
 
 **What:** Flags relations whose order cadence is decaying ("Gupta Roadlines: 12 orders/month → 3; last order 19 days ago; likely moved to another pump") with a win-back suggestion (pair with D2 limit raise or discount review).
 
-**Inputs:** order frequency/recency/volume trends per relation, app activity from `logs` (customer stopped opening the app vs stopped buying *here*), rate competitiveness (P1), credit friction events (orders blocked at limit).
+**Inputs:** order frequency/recency/volume trends per relation, app activity from `logs` (customer stopped opening the app vs stopped buying _here_), rate competitiveness (P1), credit friction events (orders blocked at limit).
 
-**Approach:** v0 = RFM decay rules; v1 = survival/hazard model. The interesting signal is *why*: blocked-at-limit events preceding churn → the fix is D2, not marketing.
+**Approach:** v0 = RFM decay rules; v1 = survival/hazard model. The interesting signal is _why_: blocked-at-limit events preceding churn → the fix is D2, not marketing.
 
 **Surfaces:** "At risk" section in dealer `Customers`; monthly business review (G5) narrative.
 
@@ -98,7 +98,7 @@ Dealers extend lakhs of rupees of credit on informal trust. Their two nightmares
 
 ## Transporter-Facing (truck owners / fleet operators)
 
-Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% of fuel spend); #2 is credit opacity across multiple pumps. T1–T5 are the fleet-intelligence suite — and a genuine differentiator: DZZLO sees *purchases at the pump with OTP-verified delivery*, which telematics-only tools don't.
+Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% of fuel spend); #2 is credit opacity across multiple pumps. T1–T5 are the fleet-intelligence suite — and a genuine differentiator: DZZLO sees _purchases at the pump with OTP-verified delivery_, which telematics-only tools don't.
 
 ### T1 — Vehicle Fuel-Consumption Anomaly (fuel-theft detection) ⭐ flagship
 
@@ -110,7 +110,7 @@ Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% o
 
 **Surfaces:** vehicle detail (`InfoVehicle` bottom sheet → new "Fuel Health" tab); weekly fleet digest push; anomaly list with driver + pump context.
 
-**KPIs:** fuel ₹/vehicle/month trend after adoption; % anomalies confirmed by owner; feature-driven retention (this is a feature transporters would *pay* for).
+**KPIs:** fuel ₹/vehicle/month trend after adoption; % anomalies confirmed by owner; feature-driven retention (this is a feature transporters would _pay_ for).
 
 ### T2 — Refuel Prediction & Smart Reorder
 
@@ -140,7 +140,7 @@ Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% o
 
 **Inputs:** outstanding + open orders (the same math as the existing credit check in `order_msts` service), spend velocity, upcoming `inv_term` due dates, historical payment cadence.
 
-**Approach:** v0 = linear burn-rate projection — deliberately simple and explainable. It's the *packaging* (proactive push before the block happens) that's new.
+**Approach:** v0 = linear burn-rate projection — deliberately simple and explainable. It's the _packaging_ (proactive push before the block happens) that's new.
 
 **Surfaces:** `CreditProgressORDER` panel (already in `NewOrder`), relation credit sheet, proactive OneSignal at T-3 days.
 
@@ -162,7 +162,7 @@ Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% o
 
 ### P1 — Fuel Rate Intelligence
 
-**What:** For dealers: "your HSD rate is ₹0.40 above district median; you lost 2 high-volume customers' orders on rate-sensitive days." For transporters: rate trend sparkline per dealer and "rates in your district rose ₹0.25 this week." Note: bulk/pump diesel pricing in India is OMC-influenced but dealer-variant — the *relative* benchmark is the value, not absolute prediction.
+**What:** For dealers: "your HSD rate is ₹0.40 above district median; you lost 2 high-volume customers' orders on rate-sensitive days." For transporters: rate trend sparkline per dealer and "rates in your district rose ₹0.25 this week." Note: bulk/pump diesel pricing in India is OMC-influenced but dealer-variant — the _relative_ benchmark is the value, not absolute prediction.
 
 **Inputs:** `rate_msts` across dealers (aggregated with k-anonymity ≥ 5 dealers per benchmark — doc 01 §5), geo (`district`, `highway_no`), order volumes around rate changes.
 
@@ -194,21 +194,21 @@ Transporters' #1 leak is **fuel theft/misuse** (industry folklore says 5–15% o
 
 ## Summary Table
 
-| Feature | v0 (weeks, no ML) | v1 (with ML) | Blocking data gap |
-|---|---|---|---|
-| D1 Credit Score | weighted scorecard | GBT classifier | none (labels accrue via `ai_outcomes`) |
-| D2 Limit Recommender | quantile rules | expected-value optimization | `cr_limit_history` (gap 9) |
-| D3 Collections | amount×age×late-rate | survival model | none |
-| D4 Demand/Refill | seasonal averages | time-series model | OMS↔DIP link (gap 6) |
-| D5 Shrinkage | control charts | variance-signature classifier | none (DIP has it) |
-| D6 Order Guard | rules + z-scores | isolation forest | tank capacity (gap 2) |
-| D7 Churn | RFM decay | hazard model | analytics events (gap 7) |
-| T1 Fuel Anomaly | EWMA + z-scores | mileage regression | odometer (gap 1) ← *start capturing now* |
-| T2 Refuel Predict | cadence timer | 24h-refuel classifier | none |
-| T3 Pump Ranking | scoring function | learning-to-rank | structured route (gap 3) |
-| T4 Headroom Forecast | burn-rate projection | — (simple is right) | none |
-| T5 Driver Score | transparent scorecard | — (keep transparent) | none |
-| P1 Rate Intelligence | aggregation + benchmark | elasticity regression | none |
-| P2 Matchmaking | geo/graph heuristics | collaborative filtering | none |
+| Feature              | v0 (weeks, no ML)       | v1 (with ML)                  | Blocking data gap                        |
+| -------------------- | ----------------------- | ----------------------------- | ---------------------------------------- |
+| D1 Credit Score      | weighted scorecard      | GBT classifier                | none (labels accrue via `ai_outcomes`)   |
+| D2 Limit Recommender | quantile rules          | expected-value optimization   | `cr_limit_history` (gap 9)               |
+| D3 Collections       | amount×age×late-rate    | survival model                | none                                     |
+| D4 Demand/Refill     | seasonal averages       | time-series model             | OMS↔DIP link (gap 6)                     |
+| D5 Shrinkage         | control charts          | variance-signature classifier | none (DIP has it)                        |
+| D6 Order Guard       | rules + z-scores        | isolation forest              | tank capacity (gap 2)                    |
+| D7 Churn             | RFM decay               | hazard model                  | analytics events (gap 7)                 |
+| T1 Fuel Anomaly      | EWMA + z-scores         | mileage regression            | odometer (gap 1) ← _start capturing now_ |
+| T2 Refuel Predict    | cadence timer           | 24h-refuel classifier         | none                                     |
+| T3 Pump Ranking      | scoring function        | learning-to-rank              | structured route (gap 3)                 |
+| T4 Headroom Forecast | burn-rate projection    | — (simple is right)           | none                                     |
+| T5 Driver Score      | transparent scorecard   | — (keep transparent)          | none                                     |
+| P1 Rate Intelligence | aggregation + benchmark | elasticity regression         | none                                     |
+| P2 Matchmaking       | geo/graph heuristics    | collaborative filtering       | none                                     |
 
 **Next: [03 — Generative AI Features](03-generative-ai-features.md)** — where these scores and forecasts get voices, explanations, and hands.

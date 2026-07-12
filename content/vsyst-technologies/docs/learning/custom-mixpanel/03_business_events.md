@@ -115,7 +115,7 @@ export const EVENTS = {
   REPORT_VIEWED: "report_viewed",
   REPORT_EXPORTED: "report_exported",
   DAILY_SUMMARY_VIEWED: "daily_summary_viewed",
-};
+}
 
 export const CATEGORIES = {
   AUTH: "auth",
@@ -129,7 +129,7 @@ export const CATEGORIES = {
   PROFILE: "profile",
   SYSTEM: "system",
   REPORT: "report",
-};
+}
 ```
 
 ---
@@ -141,33 +141,33 @@ export const CATEGORIES = {
 ### `src/screens/Login/AuthNavigator/Login.js`
 
 ```javascript
-import Analytics from "../../../utils/Analytics";
-import { EVENTS, CATEGORIES } from "../../../utils/Analytics/events";
+import Analytics from "../../../utils/Analytics"
+import { EVENTS, CATEGORIES } from "../../../utils/Analytics/events"
 
 // On login button press:
 Analytics.track(EVENTS.AUTH_LOGIN_STARTED, {
   category: CATEGORIES.AUTH,
   method: isOTP ? "otp" : "password",
-});
+})
 
 // On login success:
 Analytics.track(EVENTS.AUTH_LOGIN_SUCCESS, {
   category: CATEGORIES.AUTH,
   method: isOTP ? "otp" : "password",
   user_role: response.user.role,
-});
+})
 
 // On login failure:
 Analytics.track(EVENTS.AUTH_LOGIN_FAILED, {
   category: CATEGORIES.AUTH,
   error: errorMessage,
-});
+})
 ```
 
 ### `src/screens/Login/AuthNavigator/ForgotPassword.js`
 
 ```javascript
-Analytics.track(EVENTS.AUTH_PASSWORD_RESET, { category: CATEGORIES.AUTH });
+Analytics.track(EVENTS.AUTH_PASSWORD_RESET, { category: CATEGORIES.AUTH })
 ```
 
 ### `src/screens/Login/AuthNavigator/Customer.js` / `Dealer.js`
@@ -176,7 +176,7 @@ Analytics.track(EVENTS.AUTH_PASSWORD_RESET, { category: CATEGORIES.AUTH });
 Analytics.track(EVENTS.AUTH_SIGNUP_COMPLETED, {
   category: CATEGORIES.AUTH,
   role: "customer", // or 'dealer'
-});
+})
 ```
 
 ---
@@ -192,21 +192,21 @@ This is the most critical funnel: Order Creation → Processing → Delivery
 Analytics.track(EVENTS.ORDER_CREATE_STARTED, {
   category: CATEGORIES.ORDER,
   role: "dealer",
-});
+})
 
 // Product selected
 Analytics.track(EVENTS.ORDER_PRODUCT_SELECTED, {
   category: CATEGORIES.ORDER,
   product_id: selectedProduct._id,
   product_name: selectedProduct.name,
-});
+})
 
 // Quantity entered
 Analytics.track(EVENTS.ORDER_QUANTITY_ENTERED, {
   category: CATEGORIES.ORDER,
   quantity: qty,
   unit: selectedUnit,
-});
+})
 
 // Order submitted
 Analytics.track(EVENTS.ORDER_SUBMITTED, {
@@ -215,7 +215,7 @@ Analytics.track(EVENTS.ORDER_SUBMITTED, {
   items_count: items.length,
   total_amount: totalAmount,
   customer_id: selectedCustomer._id,
-});
+})
 ```
 
 ### Customer-side Order View (`src/screens/Customer/Orders/`)
@@ -227,14 +227,14 @@ Analytics.track(EVENTS.ORDER_LIST_VIEWED, {
   role: "customer",
   filter_status: activeFilter,
   results_count: orders.length,
-});
+})
 
 // Order detail viewed
 Analytics.track(EVENTS.ORDER_DETAIL_VIEWED, {
   category: CATEGORIES.ORDER,
   order_id: order._id,
   order_status: order.status,
-});
+})
 ```
 
 ### RTK Query Order Mutations (`src/store/apis/dzzlooms/order_msts.js`)
@@ -274,7 +274,7 @@ Analytics.track(EVENTS.INVOICE_CREATED, {
   order_id: linkedOrderId,
   amount: invoiceAmount,
   has_gst: Boolean(gstNumber),
-});
+})
 ```
 
 ### `src/screens/Common/Invoices/`
@@ -283,13 +283,13 @@ Analytics.track(EVENTS.INVOICE_CREATED, {
 Analytics.track(EVENTS.INVOICE_LIST_VIEWED, {
   category: CATEGORIES.INVOICE,
   count: invoices.length,
-});
+})
 
 Analytics.track(EVENTS.INVOICE_DETAIL_VIEWED, {
   category: CATEGORIES.INVOICE,
   invoice_id: invoice._id,
   amount: invoice.total,
-});
+})
 ```
 
 ### `src/components/Download/` (PDF/Excel export)
@@ -298,7 +298,7 @@ Analytics.track(EVENTS.INVOICE_DETAIL_VIEWED, {
 Analytics.track(EVENTS.INVOICE_PDF_DOWNLOADED, {
   category: CATEGORIES.INVOICE,
   invoice_id: invoiceId,
-});
+})
 ```
 
 ---
@@ -313,19 +313,19 @@ Analytics.track(EVENTS.PAYMENT_INITIATED, {
   amount: paymentAmount,
   method: paymentMethod,
   invoice_id: linkedInvoiceId,
-});
+})
 
 Analytics.track(EVENTS.PAYMENT_COMPLETED, {
   category: CATEGORIES.PAYMENT,
   amount: paymentAmount,
   transaction_id: txnId,
-});
+})
 
 Analytics.track(EVENTS.PAYMENT_FAILED, {
   category: CATEGORIES.PAYMENT,
   error: errorMessage,
   amount: paymentAmount,
-});
+})
 ```
 
 ---
@@ -335,8 +335,8 @@ Analytics.track(EVENTS.PAYMENT_FAILED, {
 **File to modify:** `src/helpers/OneSignal/index.js`
 
 ```javascript
-import Analytics from "../../utils/Analytics";
-import { EVENTS, CATEGORIES } from "../../utils/Analytics/events";
+import Analytics from "../../utils/Analytics"
+import { EVENTS, CATEGORIES } from "../../utils/Analytics/events"
 
 // In the click handler (line 26-29):
 OneSignal.Notifications.addEventListener("click", (event) => {
@@ -344,9 +344,9 @@ OneSignal.Notifications.addEventListener("click", (event) => {
     category: CATEGORIES.SYSTEM,
     notification_type: event.notification?.additionalData?.type,
     notification_id: event.notification?.notificationId,
-  });
+  })
   // ... existing navigation logic
-});
+})
 ```
 
 ---
@@ -362,7 +362,7 @@ Analytics.track(EVENTS.APP_CRASHED, {
   error_name: error.name,
   error_message: error.message,
   component_stack: errorInfo?.componentStack?.substring(0, 500),
-});
+})
 ```
 
 ### App Lifecycle (`App.js` or `AppNavigatorContainer.js`)
@@ -370,11 +370,11 @@ Analytics.track(EVENTS.APP_CRASHED, {
 ```javascript
 AppState.addEventListener("change", (nextState) => {
   if (nextState === "active") {
-    Analytics.track(EVENTS.APP_OPENED, { category: CATEGORIES.SYSTEM });
+    Analytics.track(EVENTS.APP_OPENED, { category: CATEGORIES.SYSTEM })
   } else if (nextState === "background") {
-    Analytics.track(EVENTS.APP_BACKGROUNDED, { category: CATEGORIES.SYSTEM });
+    Analytics.track(EVENTS.APP_BACKGROUNDED, { category: CATEGORIES.SYSTEM })
   }
-});
+})
 ```
 
 ---
@@ -386,14 +386,11 @@ For critical business transactions, emit events from the backend where the DB wr
 **File to create:** `dzzlo_oms_api/helpers/analyticsEmitter.js`
 
 ```javascript
-const AnalyticsEvent = require("../models/analytics_events");
+const AnalyticsEvent = require("../models/analytics_events")
 
-const emitServerEvent = (
-  eventName,
-  { user_id, company_id, user_role, properties = {} },
-) => {
-  const now = new Date();
-  const timeIST = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+const emitServerEvent = (eventName, { user_id, company_id, user_role, properties = {} }) => {
+  const now = new Date()
+  const timeIST = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
 
   // Fire and forget — never block the API response
   AnalyticsEvent.create({
@@ -406,10 +403,10 @@ const emitServerEvent = (
     client_timestamp: now,
     server_timestamp: now,
     timeIST,
-  }).catch((err) => console.error("Analytics emit failed:", err.message));
-};
+  }).catch((err) => console.error("Analytics emit failed:", err.message))
+}
 
-module.exports = { emitServerEvent };
+module.exports = { emitServerEvent }
 ```
 
 ### Backend Files to Instrument:
@@ -422,7 +419,7 @@ emitServerEvent("order_created_server", {
   company_id: req.user.co_id,
   user_role: req.user.role,
   properties: { order_id: newOrder._id, items_count: newOrder.items?.length },
-});
+})
 ```
 
 **`api_v3/controllers/collections/invs.js`** — After invoice creation:
@@ -433,7 +430,7 @@ emitServerEvent("invoice_created_server", {
   company_id: req.user.co_id,
   user_role: req.user.role,
   properties: { invoice_id: newInv._id, amount: newInv.total },
-});
+})
 ```
 
 **`api_v3/controllers/auth/index.js`** — After login:
@@ -444,7 +441,7 @@ emitServerEvent("auth_login_server", {
   company_id: user.co_id,
   user_role: user.role,
   properties: { method: loginMethod, ip: req.ip },
-});
+})
 ```
 
 ---

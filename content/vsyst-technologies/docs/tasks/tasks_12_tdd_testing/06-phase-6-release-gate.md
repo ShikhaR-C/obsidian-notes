@@ -47,7 +47,7 @@ Run from anywhere: `bash dzzlo_oms_api/scripts/release_gate.sh`. Deliberately du
 1. **Green gate or no release.** No "just this once," no partial runs, no local diffs on the release commit after the gate ran. If the gate is red, the release date moves, not the bar.
 2. **Every gate failure becomes a regression test.** If the failure is a real bug: write/point-to the failing test **in the owning repo** first, fix, re-run the **entire** gate from scratch. If the failure is a flaky/bad test: fixing the test is the release work — flakes are bugs in the safety net.
 3. **Bugs found after release** (by a customer or otherwise) enter the same loop: failing regression test → fix → test stays forever. This is the mandatory-TDD rule from Phase 7.
-4. **Contract changes** (API response shapes) require `fixtures:export` → `fixtures:pull` → front-end suites green *within the same release* (Phase 5 drift detector enforces the API side).
+4. **Contract changes** (API response shapes) require `fixtures:export` → `fixtures:pull` → front-end suites green _within the same release_ (Phase 5 drift detector enforces the API side).
 
 ## 6.3 The release checklist (copy per release into the release notes/PR)
 
@@ -66,7 +66,7 @@ Release vX.YY gate — run on commit <sha> per repo
 
 ## 6.4 E2E smoke — decision slot (⏳ Q6)
 
-Deliberately *not* specified until Q6 is answered. The reserved design if adopted: a `scripts/e2e/` runner that (a) starts a standalone local mongod via `mongodb-memory-server`'s persistent mode, (b) boots the API against it (`NODE_ENV=development`, overridden `DATABASE_URI`), (c) seeds via the existing factories, then (d) runs Playwright (web, ~5 scenarios) and/or Maestro (app, ~3 flows) against it. Strictly local, ≤ 10 minutes, release-gate-only — never in the inner loop. Until then, the gate above ships without e2e and is still a massive upgrade over manual verification.
+Deliberately _not_ specified until Q6 is answered. The reserved design if adopted: a `scripts/e2e/` runner that (a) starts a standalone local mongod via `mongodb-memory-server`'s persistent mode, (b) boots the API against it (`NODE_ENV=development`, overridden `DATABASE_URI`), (c) seeds via the existing factories, then (d) runs Playwright (web, ~5 scenarios) and/or Maestro (app, ~3 flows) against it. Strictly local, ≤ 10 minutes, release-gate-only — never in the inner loop. Until then, the gate above ships without e2e and is still a massive upgrade over manual verification.
 
 ## 6.5 CI — reconcile with `tasks_02_major/05-cicd-github-actions.md` (⏳ Q8)
 
@@ -86,9 +86,9 @@ The **local gate script remains the release ritual** even after CI exists (CI pr
 
 ## Phase 6 checklist
 
-- [x] `dzzlo_oms_api/scripts/release_gate.sh` executable (+ `scripts/check_fixtures_fresh.js`) — *committing is the user's call*
+- [x] `dzzlo_oms_api/scripts/release_gate.sh` executable (+ `scripts/check_fixtures_fresh.js`) — _committing is the user's call_
 - [x] Policy §6.2 adopted verbatim in `docs/testing.md` §9 (team ack still ⏳ Q10)
-- [x] Release checklist template in `docs/testing.md` §9 — *physical home per release still pending Q8 release-cut mechanics*
+- [x] Release checklist template in `docs/testing.md` §9 — _physical home per release still pending Q8 release-cut mechanics_
 - [x] E2E decision recorded (Q6) — **explicitly deferred**; checklist keeps a marked `e2e smoke … when adopted` slot; Maestro-preferred design in §6.4
 - [x] CI workflows added per repo (`.github/workflows/test.yml` ×3) with mongod binary cache
 - [x] First gated release completed — the §6.6 gate run below **is** the demonstration
@@ -96,6 +96,7 @@ The **local gate script remains the release ritual** even after CI exists (CI pr
 ## Phase 6 — implementation notes (executed 2026-07-10, agent team)
 
 **Result — the gate is GREEN and proven both ways:**
+
 ```
 ✅ fixtures fresh
 ✅ api (seed → jest → uproot)     668 passed (via yarn test:full = fresh seed)
@@ -103,14 +104,16 @@ The **local gate script remains the release ritual** even after CI exists (CI pr
 ✅ app (jest)                     337 passed
 RELEASE GATE: PASS   (exit 0)
 ```
+
 BLOCKED path also proven: a throwaway failing test in one repo → that repo `❌`, `RELEASE GATE: BLOCKED`, exit 1, offending repo obvious (throwaway removed after).
 
 **What Phase 6 delivered:**
+
 - `scripts/release_gate.sh` — the §6.1 design, deliberately dumb (no parallelism/skipping, full output), runnable from any cwd. Gate order: **fixtures-fresh (fast fail) → api `test:full` → web `test` → app `test`**.
 - `scripts/check_fixtures_fresh.js` — Phase-5-aware provenance gate: compares each front-end's `generated/fixtures.meta.json` `gitSha`+`seedSnapshot` against the API's `fixtures/api_v3/fixtures.meta.json`; fails with a `run yarn fixtures:pull in <repo>` message if a front-end is behind; tolerant (skip-with-warning) if fixtures/meta absent.
 - `docs/testing.md` §9 — the §6.2 policy verbatim + the §6.3 checklist + how-to.
 - Per-repo `.github/workflows/test.yml` (CI, §6.5): mirror dip-web's `lint.yml` idiom (`checkout@v4` → `setup-node@v4 cache:yarn` → `yarn install --frozen-lockfile` → run); triggers `pull_request` + `push` to default branch (API `master`, web/app `main`); Node 22 (web 20 to match its lint.yml). **API job caches `~/.cache/mongodb-binaries`** keyed on the pinned `8.2.1`.
 
-**Critical fix Phase 6 forced (see tasks_08… no — see Phase 5 §Correction):** the healthy gate was initially **BLOCKED**, because `test:full` re-seeds and the Phase 5 contract spec had pinned non-deterministic ObjectIds / `inv_no`. That was a *real* Phase 5 latent bug (green under `yarn test`, red under `test:full`) — fixed in `test/api_v3/features/contract/fixtures.test.js` by scrubbing ObjectIds + `inv_no` and comparing lists order-insensitively; drift teeth re-verified. Only after that fix does the gate reach PASS. **Takeaway now baked into the policy: the gate (`test:full`), not `yarn test`, is what certifies the API.**
+**Critical fix Phase 6 forced (see tasks_08… no — see Phase 5 §Correction):** the healthy gate was initially **BLOCKED**, because `test:full` re-seeds and the Phase 5 contract spec had pinned non-deterministic ObjectIds / `inv_no`. That was a _real_ Phase 5 latent bug (green under `yarn test`, red under `test:full`) — fixed in `test/api_v3/features/contract/fixtures.test.js` by scrubbing ObjectIds + `inv_no` and comparing lists order-insensitively; drift teeth re-verified. Only after that fix does the gate reach PASS. **Takeaway now baked into the policy: the gate (`test:full`), not `yarn test`, is what certifies the API.**
 
 **Still open (correctly deferred):** full cross-repo CI orchestration + where the release checklist physically lives both wait on the **release-cut mechanics (Q8)** — how `vN_NN → vN_(NN+1)` is actually cut, who tags, when. The local gate is the release ritual regardless; CI proves PRs.

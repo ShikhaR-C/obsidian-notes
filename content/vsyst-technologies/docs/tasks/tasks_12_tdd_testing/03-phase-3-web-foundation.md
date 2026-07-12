@@ -13,7 +13,7 @@ Unmerged remote branch `origin/claude/transaction-tests-issue-10` (tip `1b16244`
 
 Before writing anything in §3.1–3.4, spend ≤ half a day reconciling:
 
-- **Harvest**: the page/store test *cases* (they encode real expected behavior for the P2 DIP flows) and any jsdom stubs its `setupTests.js` proved necessary — rebase them onto this phase's structure.
+- **Harvest**: the page/store test _cases_ (they encode real expected behavior for the P2 DIP flows) and any jsdom stubs its `setupTests.js` proved necessary — rebase them onto this phase's structure.
 - **Replace**: `mockApi.js` with MSW (§3.2–3.3) — a hand-rolled fetch mock is exactly the drift-prone claim layer Phase 5 exists to kill; do not merge it as-is.
 - **Reconcile paths**: the spike uses `src/test-utils/`; this plan specifies `src/test/` — pick one (default: this plan's `src/test/`) and record the verdict here.
 - **Verdict per file** goes in the PR that lands §3.2–3.3; the branch is then closed with a pointer to it (no test deleted without a written verdict — Phase 7 §7.4 rule).
@@ -51,23 +51,31 @@ export default defineConfig({
     css: false,
     restoreMocks: true,
   },
-});
+})
 ```
 
 `src/setupTests.js` (new):
 
 ```js
-import "@testing-library/jest-dom/vitest";
-import { server } from "./test/msw/server";
+import "@testing-library/jest-dom/vitest"
+import { server } from "./test/msw/server"
 
 // jsdom gaps the app relies on
-class IO { observe() {} unobserve() {} disconnect() {} }
-globalThis.IntersectionObserver = globalThis.IntersectionObserver || IO; // infinite-query sentinels
-window.matchMedia = window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }));
+class IO {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.IntersectionObserver = globalThis.IntersectionObserver || IO // infinite-query sentinels
+window.matchMedia =
+  window.matchMedia || (() => ({ matches: false, addEventListener() {}, removeEventListener() {} }))
 
-beforeAll(() => server.listen({ onUnhandledRequest: "error" })); // local-only principle, enforced
-afterEach(() => { server.resetHandlers(); localStorage.clear(); });
-afterAll(() => server.close());
+beforeAll(() => server.listen({ onUnhandledRequest: "error" })) // local-only principle, enforced
+afterEach(() => {
+  server.resetHandlers()
+  localStorage.clear()
+})
+afterAll(() => server.close())
 ```
 
 `onUnhandledRequest: "error"` is the guarantee that no test can silently hit `VITE_API_URL` (all env files point at remote servers and there is no Vite proxy — verified).
@@ -85,27 +93,27 @@ src/test/
 `src/test/msw/handlers.js` — match by path, not origin, so env URLs don't matter:
 
 ```js
-import { http, HttpResponse } from "msw";
-import login from "../fixtures/auth_loginrx.json";
+import { http, HttpResponse } from "msw"
+import login from "../fixtures/auth_loginrx.json"
 
 export const handlers = [
   http.post("*/api/v3/auth/loginrx", () => HttpResponse.json(login)),
   http.get("*/api/dip/v1/dealers/:id", () => HttpResponse.json(/* dealer fixture */)),
   // add per test via server.use(...) for error cases
-];
+]
 ```
 
 `src/test/testUtils.js` — every component needs Provider + Router + Theme (verified render requirements):
 
 ```js
-import { render } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
-import { Provider } from "react-redux";
-import { makeStore } from "../store/apis"; // small refactor: export a store factory alongside the singleton
-import { ThemeProvider } from "../utils/Hooks/themeContext";
+import { render } from "@testing-library/react"
+import { MemoryRouter } from "react-router-dom"
+import { Provider } from "react-redux"
+import { makeStore } from "../store/apis" // small refactor: export a store factory alongside the singleton
+import { ThemeProvider } from "../utils/Hooks/themeContext"
 
 export function renderWithProviders(ui, { route = "/", store = makeStore(), auth = null } = {}) {
-  if (auth) localStorage.setItem("userData", JSON.stringify(auth)); // token shape: {userId, ..., token, expiryDate}
+  if (auth) localStorage.setItem("userData", JSON.stringify(auth)) // token shape: {userId, ..., token, expiryDate}
   return {
     store,
     ...render(
@@ -113,9 +121,9 @@ export function renderWithProviders(ui, { route = "/", store = makeStore(), auth
         <ThemeProvider>
           <MemoryRouter initialEntries={[route]}>{ui}</MemoryRouter>
         </ThemeProvider>
-      </Provider>
+      </Provider>,
     ),
-  };
+  }
 }
 ```
 
@@ -161,6 +169,6 @@ Conventions: tests colocate next to the unit (`src/pages/auth/SignIn/signin.test
 
 **Result:** `yarn test` runs Vitest; **5 files / 32 tests green**, ~1.2s. ESLint clean on all new files (repo `--max-warnings 0` gate). Only production touch: `makeStore()` in `src/store/apis/index.js`.
 
-**The hard problem — jsdom vs Node fetch realm (root-caused & fixed 2026-07-10).** RTK Query's `fetchBaseQuery` builds a `new AbortController()` from the global and hands its signal to `fetch`/`new Request`. Vitest's stock `jsdom` environment installs **jsdom's** `AbortController`/`AbortSignal` over Node's native ones, and Node's fetch (undici, which MSW uses) rejects a jsdom signal with `RequestInit: Expected signal to be an instance of AbortSignal` — so **every** networked test died. The native classes are unrecoverable once jsdom replaces them (probed: `delete` → undefined; no `require`able source; `undici` doesn't export them). Fix: a **custom Vitest environment** `src/test/env/jsdom-fetch.js` that snapshots the native fetch stack (fetch/Request/Response/Headers/AbortController/AbortSignal/Blob/…) from the pristine worker global, runs `builtinEnvironments.jsdom.setup`, then restores the native classes over jsdom's. Referenced by relative path: `environment: "./src/test/env/jsdom-fetch.js"`. The agent's earlier `fetchRealm.js` undici-swap (which missed AbortController) was removed. *This is the reusable pattern for any jsdom + MSW + RTK Query suite.*
+**The hard problem — jsdom vs Node fetch realm (root-caused & fixed 2026-07-10).** RTK Query's `fetchBaseQuery` builds a `new AbortController()` from the global and hands its signal to `fetch`/`new Request`. Vitest's stock `jsdom` environment installs **jsdom's** `AbortController`/`AbortSignal` over Node's native ones, and Node's fetch (undici, which MSW uses) rejects a jsdom signal with `RequestInit: Expected signal to be an instance of AbortSignal` — so **every** networked test died. The native classes are unrecoverable once jsdom replaces them (probed: `delete` → undefined; no `require`able source; `undici` doesn't export them). Fix: a **custom Vitest environment** `src/test/env/jsdom-fetch.js` that snapshots the native fetch stack (fetch/Request/Response/Headers/AbortController/AbortSignal/Blob/…) from the pristine worker global, runs `builtinEnvironments.jsdom.setup`, then restores the native classes over jsdom's. Referenced by relative path: `environment: "./src/test/env/jsdom-fetch.js"`. The agent's earlier `fetchRealm.js` undici-swap (which missed AbortController) was removed. _This is the reusable pattern for any jsdom + MSW + RTK Query suite._
 
 **Carry-over (deferred, infra proven):** master page (Products), transaction page (DecanList — harvest spike cases), `App.js` tryLogin — all now unblocked by the working env; land in a follow-up PR.

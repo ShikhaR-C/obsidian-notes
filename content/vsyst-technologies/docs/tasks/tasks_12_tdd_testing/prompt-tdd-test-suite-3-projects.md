@@ -10,12 +10,12 @@
 You are working in the **DZZLO OMS workspace** (`v1_78/`), which contains three
 sibling projects that ship together as one product, plus this notes vault:
 
-| Project | Stack | Testing today |
-| --- | --- | --- |
-| `dzzlo_oms_api` | Node.js + Express 5, Mongoose 9, MongoDB | Jest works. Active suite in `test/api_v3/`; legacy suites in `test/api_v1*`, `test/api_v2`, `test/202405_v2` are excluded via `testPathIgnorePatterns`. A local **seed/uproot** system exists. |
-| `dzzlo_oms_app` | React Native (Jest + `jest.setup.js`, `APP_ENV` variants) | Only the default `__tests__/App.test.tsx`. No business-logic or screen tests. |
-| `dip-web` | React + Vite + RTK Query | **No test runner configured** — `yarn test` echoes "No test runner configured — see Phase 5". `@testing-library/react`, `jest-dom`, `user-event` are already in devDependencies but nothing runs them. |
-| `obsidian-notes` | Quartz vault | Plans live in `content/vsyst-technologies/docs/tasks/tasks_NN_*/` as phase files. |
+| Project          | Stack                                                     | Testing today                                                                                                                                                                                          |
+| ---------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `dzzlo_oms_api`  | Node.js + Express 5, Mongoose 9, MongoDB                  | Jest works. Active suite in `test/api_v3/`; legacy suites in `test/api_v1*`, `test/api_v2`, `test/202405_v2` are excluded via `testPathIgnorePatterns`. A local **seed/uproot** system exists.         |
+| `dzzlo_oms_app`  | React Native (Jest + `jest.setup.js`, `APP_ENV` variants) | Only the default `__tests__/App.test.tsx`. No business-logic or screen tests.                                                                                                                          |
+| `dip-web`        | React + Vite + RTK Query                                  | **No test runner configured** — `yarn test` echoes "No test runner configured — see Phase 5". `@testing-library/react`, `jest-dom`, `user-event` are already in devDependencies but nothing runs them. |
+| `obsidian-notes` | Quartz vault                                              | Plans live in `content/vsyst-technologies/docs/tasks/tasks_NN_*/` as phase files.                                                                                                                      |
 
 ## Problem
 

@@ -8,7 +8,7 @@
 
 Three questions rank every feature:
 
-1. **Does it need new data?** If yes (odometer, tank capacity, delivered qty), the *capture* ships now, the feature ships later. If no (credit scoring, assistant, narrated reports), it can ship in weeks.
+1. **Does it need new data?** If yes (odometer, tank capacity, delivered qty), the _capture_ ships now, the feature ships later. If no (credit scoring, assistant, narrated reports), it can ship in weeks.
 2. **Wrong answer cost?** A wrong push nudge is free; a wrong credit grade or theft accusation is expensive → those need heuristic-first rollout, reason codes, and confirm loops.
 3. **Does it compound?** G1's tool layer is reused by G2/G3/G8/G9; D1's score feeds D2/D3/G4/P2; `ai_outcomes` labels train everything. Build the compounding pieces first.
 
@@ -16,13 +16,13 @@ Three questions rank every feature:
 
 ### Phase 0 — Foundations (immediately, alongside regular releases)
 
-| Item | What ships | Why now |
-|---|---|---|
-| Schema additions | `odometer`, `tank_capacity` + `veh_type`, `delivered_qty`, `delete_reason`, `cr_limit_history[]`, `lang` (doc 01 §2) | Data accrues while we build; T1/D6/D2 blocked without it |
-| `ai_outcomes` collection | Event-sourced label store | Free training labels from day one |
-| Feature-store crons | Nightly aggregations → `ai_features_*` collections (doc 01 §3–4) | Powers every heuristic v0; also improves existing reports |
-| Analytics events | The [custom-mixpanel plan](../custom-mixpanel/00_README.md), at least order/payment funnels | Churn features + AI-feature KPIs need it |
-| G10 internal copilot | NL → Mongo aggregation for VSYST ops | Team learns tool-use patterns risk-free |
+| Item                     | What ships                                                                                                           | Why now                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| Schema additions         | `odometer`, `tank_capacity` + `veh_type`, `delivered_qty`, `delete_reason`, `cr_limit_history[]`, `lang` (doc 01 §2) | Data accrues while we build; T1/D6/D2 blocked without it  |
+| `ai_outcomes` collection | Event-sourced label store                                                                                            | Free training labels from day one                         |
+| Feature-store crons      | Nightly aggregations → `ai_features_*` collections (doc 01 §3–4)                                                     | Powers every heuristic v0; also improves existing reports |
+| Analytics events         | The [custom-mixpanel plan](../custom-mixpanel/00_README.md), at least order/payment funnels                          | Churn features + AI-feature KPIs need it                  |
+| G10 internal copilot     | NL → Mongo aggregation for VSYST ops                                                                                 | Team learns tool-use patterns risk-free                   |
 
 **Exit criteria:** cron-built features refreshing nightly; new fields visible in app forms; first `ai_outcomes` events flowing.
 
@@ -95,42 +95,42 @@ First trained models (on Phase-0/1 accumulated labels) + first write-path genAI.
 
 Key decisions:
 
-| Decision | Choice | Rationale |
-|---|---|---|
-| Where does AI code live? | Inside `dzzlo_oms_api` (`api_v3/services/ai/` + separate PM2 worker process), not a new microservice | Reuses auth/tenancy/service layer; team is one codebase-fluent unit; extract later if load demands |
-| Model serving for D-features | **No model server.** v0 heuristics = aggregation code; v1 models = train offline (Python/scikt-learn or XGBoost in a notebook/repo), export coefficients/trees to JSON, score in Node inside the worker | Logistic/GBT scoring is trivial arithmetic; avoids Python service ops on our 2-EC2 footprint |
-| LLM provider | Claude API (Haiku default, Sonnet for complex/vision, Batch API for G5) via `services/ai/llm.js` adapter | Tool-use quality, vision, Hindi fluency; adapter keeps us swappable |
-| Streaming | SSE on `/ai/chat` | RN fetch-stream friendly; no socket infra (socket.io is dormant) |
-| Feature flags | Firebase Remote Config (app) + `counters` config docs (API) — both exist | Staged rollouts per company/version; kill switches per AI feature |
-| Conversation state | `ai_conversations` (messages + tool traces + feedback), TTL for raw content, aggregates retained | Evaluation, debugging, and DPDP-compliant retention |
-| Evaluation | `eval/` suite: golden Q&A set per tool, ₹-figure == tool-trace assertion, jailbreak set; runs in CI like existing Jest suites | The hallucination guarantee is a *test*, not a hope |
+| Decision                     | Choice                                                                                                                                                                                                  | Rationale                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Where does AI code live?     | Inside `dzzlo_oms_api` (`api_v3/services/ai/` + separate PM2 worker process), not a new microservice                                                                                                    | Reuses auth/tenancy/service layer; team is one codebase-fluent unit; extract later if load demands |
+| Model serving for D-features | **No model server.** v0 heuristics = aggregation code; v1 models = train offline (Python/scikt-learn or XGBoost in a notebook/repo), export coefficients/trees to JSON, score in Node inside the worker | Logistic/GBT scoring is trivial arithmetic; avoids Python service ops on our 2-EC2 footprint       |
+| LLM provider                 | Claude API (Haiku default, Sonnet for complex/vision, Batch API for G5) via `services/ai/llm.js` adapter                                                                                                | Tool-use quality, vision, Hindi fluency; adapter keeps us swappable                                |
+| Streaming                    | SSE on `/ai/chat`                                                                                                                                                                                       | RN fetch-stream friendly; no socket infra (socket.io is dormant)                                   |
+| Feature flags                | Firebase Remote Config (app) + `counters` config docs (API) — both exist                                                                                                                                | Staged rollouts per company/version; kill switches per AI feature                                  |
+| Conversation state           | `ai_conversations` (messages + tool traces + feedback), TTL for raw content, aggregates retained                                                                                                        | Evaluation, debugging, and DPDP-compliant retention                                                |
+| Evaluation                   | `eval/` suite: golden Q&A set per tool, ₹-figure == tool-trace assertion, jailbreak set; runs in CI like existing Jest suites                                                                           | The hallucination guarantee is a _test_, not a hope                                                |
 
 ## 4. Build vs Buy
 
-| Capability | Verdict | Notes |
-|---|---|---|
-| LLM | **Buy** (Claude API) | Never self-host for our scale |
-| Speech-to-text | **Platform** (Android SpeechRecognizer / iOS Speech) first; hosted STT only if quality forces it | Free, offline-capable, Hindi support |
-| Credit scoring | **Build** | Our data moat; scorecard math is not vendor-worthy |
-| Time-series forecasting | **Build** (classical methods) | Prophet-class problems |
-| WhatsApp | **Buy** BSP (Gupshup/Twilio/Meta direct) | Compliance + template machinery |
-| OCR/doc parsing | **Buy** (Claude vision) | vs. dedicated OCR vendors: one API for parse+reason |
-| Analytics/events | **Build** (custom-mixpanel plan already decided) | — |
-| Vector DB / RAG infra | **Defer** | Only G9 help-RAG needs embeddings; Mongo Atlas Vector Search when needed — no new vendor |
+| Capability              | Verdict                                                                                          | Notes                                                                                    |
+| ----------------------- | ------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| LLM                     | **Buy** (Claude API)                                                                             | Never self-host for our scale                                                            |
+| Speech-to-text          | **Platform** (Android SpeechRecognizer / iOS Speech) first; hosted STT only if quality forces it | Free, offline-capable, Hindi support                                                     |
+| Credit scoring          | **Build**                                                                                        | Our data moat; scorecard math is not vendor-worthy                                       |
+| Time-series forecasting | **Build** (classical methods)                                                                    | Prophet-class problems                                                                   |
+| WhatsApp                | **Buy** BSP (Gupshup/Twilio/Meta direct)                                                         | Compliance + template machinery                                                          |
+| OCR/doc parsing         | **Buy** (Claude vision)                                                                          | vs. dedicated OCR vendors: one API for parse+reason                                      |
+| Analytics/events        | **Build** (custom-mixpanel plan already decided)                                                 | —                                                                                        |
+| Vector DB / RAG infra   | **Defer**                                                                                        | Only G9 help-RAG needs embeddings; Mongo Atlas Vector Search when needed — no new vendor |
 
 ## 5. Risks & Mitigations
 
-| Risk | Severity | Mitigation |
-|---|---|---|
-| Hallucinated financial figures destroy trust in one screenshot | Fatal | Iron rule + eval assertions (doc 03 §Grounding); numbers rendered from tool JSON, not model prose, wherever UI allows |
-| Wrong theft/fraud accusation (T1/D5/T5) damages a livelihood | High | Language discipline: "unusual pattern — worth checking", never "theft"; evidence always attached; transparent math (control charts, z-scores) over black boxes |
-| Credit score becomes self-fulfilling (low grade → less credit → business dies) | High | Reason codes + "how to improve" path; dealer sets limits, we only inform; monitor grade-migration fairness quarterly |
-| Alert fatigue (D3/D6/T1/T2 all push) | Medium | Unified notification budget per user/day; digest-first defaults; per-feature opt-outs in existing `notif[]` prefs |
-| Cost blowout on LLM tokens | Medium | Tier routing, per-user caps via Remote Config, Batch API for crons, monthly cost dashboards (G10 can report on itself) |
-| DPDP / data-to-third-party exposure | High | PII minimization to LLM APIs; DPA with provider; consent copy at onboarding; driver phone redaction |
-| Prompt injection via remarks/documents/WhatsApp | Medium | Data-vs-instruction delimiting, tool allowlists per surface, no tool that dumps raw collections |
-| Team bandwidth (small team, big catalog) | High | The phasing *is* the mitigation: Phase 1 is ~2 engineer-quarters of work; every phase ships standalone value even if the plan stops there |
-| Low-end devices / patchy connectivity | Medium | Server-side inference only; streaming text degrades gracefully; voice uses on-device STT; WhatsApp surface (Ph. 3) is the ultimate low-end fallback |
+| Risk                                                                           | Severity | Mitigation                                                                                                                                                     |
+| ------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hallucinated financial figures destroy trust in one screenshot                 | Fatal    | Iron rule + eval assertions (doc 03 §Grounding); numbers rendered from tool JSON, not model prose, wherever UI allows                                          |
+| Wrong theft/fraud accusation (T1/D5/T5) damages a livelihood                   | High     | Language discipline: "unusual pattern — worth checking", never "theft"; evidence always attached; transparent math (control charts, z-scores) over black boxes |
+| Credit score becomes self-fulfilling (low grade → less credit → business dies) | High     | Reason codes + "how to improve" path; dealer sets limits, we only inform; monitor grade-migration fairness quarterly                                           |
+| Alert fatigue (D3/D6/T1/T2 all push)                                           | Medium   | Unified notification budget per user/day; digest-first defaults; per-feature opt-outs in existing `notif[]` prefs                                              |
+| Cost blowout on LLM tokens                                                     | Medium   | Tier routing, per-user caps via Remote Config, Batch API for crons, monthly cost dashboards (G10 can report on itself)                                         |
+| DPDP / data-to-third-party exposure                                            | High     | PII minimization to LLM APIs; DPA with provider; consent copy at onboarding; driver phone redaction                                                            |
+| Prompt injection via remarks/documents/WhatsApp                                | Medium   | Data-vs-instruction delimiting, tool allowlists per surface, no tool that dumps raw collections                                                                |
+| Team bandwidth (small team, big catalog)                                       | High     | The phasing _is_ the mitigation: Phase 1 is ~2 engineer-quarters of work; every phase ships standalone value even if the plan stops there                      |
+| Low-end devices / patchy connectivity                                          | Medium   | Server-side inference only; streaming text degrades gracefully; voice uses on-device STT; WhatsApp surface (Ph. 3) is the ultimate low-end fallback            |
 
 ## 6. What Success Looks Like (12–18 months)
 

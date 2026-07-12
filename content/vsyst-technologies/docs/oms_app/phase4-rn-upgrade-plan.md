@@ -13,6 +13,7 @@
 **RN 0.84.1 requires Node >= 22.11.0. Current system Node is v22.2.0.**
 
 ### Option A: Homebrew (current setup)
+
 ```bash
 brew update
 brew upgrade node
@@ -20,6 +21,7 @@ node --version   # verify >= 22.11.0
 ```
 
 ### Option B: nvm (if you use nvm)
+
 ```bash
 nvm install --lts
 nvm use --lts
@@ -27,6 +29,7 @@ node --version
 ```
 
 ### Option C: fnm
+
 ```bash
 fnm install --lts
 fnm use lts-latest
@@ -34,6 +37,7 @@ node --version
 ```
 
 After upgrading, update the Xcode Node path:
+
 ```bash
 # Find new Node binary path
 which node
@@ -45,11 +49,13 @@ which node
 ## Step 1: Update package.json (7 packages + engines)
 
 ### Production dependencies:
+
 ```bash
 yarn add react@19.2.4 react-native@0.84.1
 ```
 
 ### Dev dependencies:
+
 ```bash
 yarn add -D \
   @react-native/babel-preset@0.84.1 \
@@ -60,6 +66,7 @@ yarn add -D \
 ```
 
 ### Update engines field in package.json:
+
 ```json
 "engines": {
   "node": ">= 22.11.0"
@@ -75,6 +82,7 @@ yarn add -D \
 RN 0.84 removes the `ReactNativeHost`/`DefaultReactNativeHost` pattern entirely. The new pattern uses `reactHost by lazy` with direct `packageList` parameter.
 
 ### Current (0.81.0):
+
 ```kotlin
 package `in`.vsyst.dzzlooms
 
@@ -113,6 +121,7 @@ class MainApplication : Application(), ReactApplication {
 ```
 
 ### New (0.84.1):
+
 ```kotlin
 package `in`.vsyst.dzzlooms
 
@@ -143,6 +152,7 @@ class MainApplication : Application(), ReactApplication {
 ```
 
 **What changed:**
+
 - Removed imports: `ReactNativeHost`, `ReactPackage`, `DefaultReactNativeHost`
 - Removed entire `reactNativeHost` property (the anonymous `DefaultReactNativeHost` object)
 - Changed `reactHost` from `get()` custom getter to `by lazy` delegate
@@ -156,10 +166,13 @@ class MainApplication : Application(), ReactApplication {
 **File:** `android/gradle/wrapper/gradle-wrapper.properties`
 
 Change:
+
 ```
 distributionUrl=https\://services.gradle.org/distributions/gradle-8.14.3-bin.zip
 ```
+
 To:
+
 ```
 distributionUrl=https\://services.gradle.org/distributions/gradle-9.0.0-bin.zip
 ```
@@ -173,6 +186,7 @@ distributionUrl=https\://services.gradle.org/distributions/gradle-9.0.0-bin.zip
 Add `android:usesCleartextTraffic="${usesCleartextTraffic}"` to the `<application>` tag.
 
 Change:
+
 ```xml
     <application
       android:name=".MainApplication"
@@ -183,7 +197,9 @@ Change:
       android:theme="@style/AppTheme"
       android:supportsRtl="true">
 ```
+
 To:
+
 ```xml
     <application
       android:name=".MainApplication"
@@ -203,13 +219,17 @@ To:
 **File:** `ios/.xcode.env.local`
 
 Change from:
+
 ```
 export NODE_BINARY=/opt/homebrew/Cellar/node/22.2.0/bin/node
 ```
+
 To the new Node path (run `which node` after upgrading):
+
 ```
 export NODE_BINARY=/opt/homebrew/bin/node
 ```
+
 (Exact path depends on how Node was upgraded)
 
 ---
@@ -237,6 +257,7 @@ cd android && ./gradlew clean && cd ..
 ## Files That Do NOT Need Changes
 
 These files are **identical** between RN 0.81.0 and 0.84.1 (verified via [rn-diff-purge](https://github.com/react-native-community/rn-diff-purge)):
+
 - `android/build.gradle`
 - `android/gradle.properties`
 - `android/settings.gradle`
@@ -259,35 +280,36 @@ These files are **identical** between RN 0.81.0 and 0.84.1 (verified via [rn-dif
 
 **All 45 dependencies are compatible with RN 0.84.1.** No additional upgrades needed beyond the 7 core packages.
 
-| Package | Status |
-|---------|--------|
-| react-native-reanimated ^4.3.0 | Supports RN 0.81-0.85 |
-| react-native-worklets ^0.8.1 | Supports RN 0.81-0.85 |
-| react-native-gesture-handler ^2.31.0 | Compatible |
-| react-native-screens ^4.24.0 | Compatible |
-| @gorhom/bottom-sheet ^5.2.8 | Compatible |
-| react-native-paper ^5.15.0 | Compatible |
-| react-native-svg ^15.15.4 | Compatible |
-| All @react-navigation/* | Compatible |
-| react-native-onesignal ^5.4.1 | Requires RN >=0.76 |
-| @react-native-community/cli 20.1.3 | Compatible |
-| react-native-html-to-pdf ^0.12.0 | No declared peer deps, should work |
-| react-native-device-info ^15.0.2 | Compatible |
-| @react-native-async-storage/async-storage ^3.0.2 | Compatible |
-| @react-native-community/datetimepicker ^9.1.0 | Compatible |
-| @react-native-community/netinfo ^12.0.1 | Compatible |
-| react-native-webview ^13.16.1 | Compatible |
-| react-native-linear-gradient ^2.8.3 | Compatible |
-| @reduxjs/toolkit ^2.11.2 | Pure JS, compatible |
-| axios ^1.14.0 | Pure JS, compatible |
-| react-redux ^9.2.0 | Compatible |
-| moment ^2.30.1 | Pure JS, compatible |
+| Package                                          | Status                             |
+| ------------------------------------------------ | ---------------------------------- |
+| react-native-reanimated ^4.3.0                   | Supports RN 0.81-0.85              |
+| react-native-worklets ^0.8.1                     | Supports RN 0.81-0.85              |
+| react-native-gesture-handler ^2.31.0             | Compatible                         |
+| react-native-screens ^4.24.0                     | Compatible                         |
+| @gorhom/bottom-sheet ^5.2.8                      | Compatible                         |
+| react-native-paper ^5.15.0                       | Compatible                         |
+| react-native-svg ^15.15.4                        | Compatible                         |
+| All @react-navigation/\*                         | Compatible                         |
+| react-native-onesignal ^5.4.1                    | Requires RN >=0.76                 |
+| @react-native-community/cli 20.1.3               | Compatible                         |
+| react-native-html-to-pdf ^0.12.0                 | No declared peer deps, should work |
+| react-native-device-info ^15.0.2                 | Compatible                         |
+| @react-native-async-storage/async-storage ^3.0.2 | Compatible                         |
+| @react-native-community/datetimepicker ^9.1.0    | Compatible                         |
+| @react-native-community/netinfo ^12.0.1          | Compatible                         |
+| react-native-webview ^13.16.1                    | Compatible                         |
+| react-native-linear-gradient ^2.8.3              | Compatible                         |
+| @reduxjs/toolkit ^2.11.2                         | Pure JS, compatible                |
+| axios ^1.14.0                                    | Pure JS, compatible                |
+| react-redux ^9.2.0                               | Compatible                         |
+| moment ^2.30.1                                   | Pure JS, compatible                |
 
 ---
 
 ## Verification Checklist
 
 After all steps:
+
 1. `yarn install` completes without errors
 2. `npx tsc --noEmit` passes
 3. `yarn test:test` passes

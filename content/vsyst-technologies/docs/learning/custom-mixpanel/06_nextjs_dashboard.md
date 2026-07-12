@@ -125,38 +125,38 @@ NEXT_PUBLIC_API_VERSION=/api/v3
 ### `src/lib/api.ts`
 
 ```typescript
-import axios from "axios";
+import axios from "axios"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION;
+const API_URL = process.env.NEXT_PUBLIC_API_URL
+const API_VERSION = process.env.NEXT_PUBLIC_API_VERSION
 
 const api = axios.create({
   baseURL: `${API_URL}${API_VERSION}`,
   timeout: 15000,
-});
+})
 
 // Attach JWT token from localStorage
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("analytics_token");
+  const token = localStorage.getItem("analytics_token")
   if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+    config.headers.Authorization = `Bearer ${token}`
   }
   // Use the same API key as the mobile app
-  config.headers["x-api-key"] = process.env.NEXT_PUBLIC_API_KEY || "";
-  return config;
-});
+  config.headers["x-api-key"] = process.env.NEXT_PUBLIC_API_KEY || ""
+  return config
+})
 
 // Handle 401 — redirect to login
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem("analytics_token");
-      window.location.href = "/login";
+      localStorage.removeItem("analytics_token")
+      window.location.href = "/login"
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   },
-);
+)
 
 // Type imports (defined in types.ts)
 import type {
@@ -168,41 +168,35 @@ import type {
   SessionParams,
   UserActivityParams,
   TimelineParams,
-} from "./types";
+} from "./types"
 
 // Analytics API methods
 export const analyticsAPI = {
   // Auth
-  login: (email: string, password: string) =>
-    api.post("/auth/loginrx", { email, password }),
+  login: (email: string, password: string) => api.post("/auth/loginrx", { email, password }),
 
   // Query endpoints (from Phase 4)
-  getOverview: (params?: OverviewParams) =>
-    api.get("/analytics/query/overview", { params }),
+  getOverview: (params?: OverviewParams) => api.get("/analytics/query/overview", { params }),
 
   getEventCounts: (params: EventCountParams) =>
     api.get("/analytics/query/events/count", { params }),
 
-  getLiveEvents: (params?: LiveEventParams) =>
-    api.get("/analytics/query/events/live", { params }),
+  getLiveEvents: (params?: LiveEventParams) => api.get("/analytics/query/events/live", { params }),
 
-  getFunnel: (params: FunnelParams) =>
-    api.get("/analytics/query/funnel", { params }),
+  getFunnel: (params: FunnelParams) => api.get("/analytics/query/funnel", { params }),
 
-  getRetention: (params?: RetentionParams) =>
-    api.get("/analytics/query/retention", { params }),
+  getRetention: (params?: RetentionParams) => api.get("/analytics/query/retention", { params }),
 
-  getSessions: (params?: SessionParams) =>
-    api.get("/analytics/query/sessions", { params }),
+  getSessions: (params?: SessionParams) => api.get("/analytics/query/sessions", { params }),
 
   getUserActivity: (params?: UserActivityParams) =>
     api.get("/analytics/query/users/activity", { params }),
 
   getUserTimeline: (userId: string, params?: TimelineParams) =>
     api.get(`/analytics/query/users/${userId}/timeline`, { params }),
-};
+}
 
-export default api;
+export default api
 ```
 
 ### Key design decisions
@@ -222,152 +216,152 @@ export default api;
 // ─── API Response Types ────────────────────────────────────
 
 export interface OverviewData {
-  dau: number;
-  wau: number;
-  mau: number;
-  events_today: number;
-  avg_session_duration_ms: number;
-  top_events: { _id: string; count: number }[];
+  dau: number
+  wau: number
+  mau: number
+  events_today: number
+  avg_session_duration_ms: number
+  top_events: { _id: string; count: number }[]
 }
 
 export interface EventCount {
-  period: string; // ISO date string for the period start
-  event_name: string;
-  count: number;
-  unique_users: number;
+  period: string // ISO date string for the period start
+  event_name: string
+  count: number
+  unique_users: number
 }
 
 export interface LiveEvent {
-  _id: string;
-  event_name: string;
-  event_category: string;
-  event_properties: Record<string, any>;
-  screen_name: string;
-  user_id: string;
-  user_role: string;
-  device_os: string;
-  app_version: string;
-  server_timestamp: string;
-  session_id: string;
+  _id: string
+  event_name: string
+  event_category: string
+  event_properties: Record<string, any>
+  screen_name: string
+  user_id: string
+  user_role: string
+  device_os: string
+  app_version: string
+  server_timestamp: string
+  session_id: string
 }
 
 export interface FunnelStep {
-  step_index: number;
-  event_name: string;
-  users: number;
-  conversion_rate: string; // e.g. "84.4%"
-  overall_rate: string; // e.g. "55.6%" (from step 0)
+  step_index: number
+  event_name: string
+  users: number
+  conversion_rate: string // e.g. "84.4%"
+  overall_rate: string // e.g. "55.6%" (from step 0)
 }
 
 export interface FunnelData {
-  steps: FunnelStep[];
-  total_users: number;
-  date_range: { from: string; to: string };
+  steps: FunnelStep[]
+  total_users: number
+  date_range: { from: string; to: string }
 }
 
 export interface RetentionCohort {
-  cohort_start: string; // ISO date
-  cohort_end: string; // ISO date
-  cohort_size: number;
+  cohort_start: string // ISO date
+  cohort_end: string // ISO date
+  cohort_size: number
   retention: {
-    period_index: number; // 0, 1, 2, ...
-    active_users: number;
-    retention_rate: string; // e.g. "62.0%"
-  }[];
+    period_index: number // 0, 1, 2, ...
+    active_users: number
+    retention_rate: string // e.g. "62.0%"
+  }[]
 }
 
 export interface Session {
-  _id: string;
-  session_id: string;
-  user_id: { _id: string; username: string; email: string };
-  started_at: string;
-  ended_at: string;
-  duration_ms: number;
-  event_count: number;
-  screens_visited: string[];
-  app_version: string;
-  device_os: string;
-  device_brand: string;
+  _id: string
+  session_id: string
+  user_id: { _id: string; username: string; email: string }
+  started_at: string
+  ended_at: string
+  duration_ms: number
+  event_count: number
+  screens_visited: string[]
+  app_version: string
+  device_os: string
+  device_brand: string
 }
 
 export interface UserActivity {
-  _id: string;
-  user_id: string;
-  event_count: number;
-  session_count: number;
-  first_active: string;
-  last_active: string;
-  roles: string[];
-  devices: string[];
+  _id: string
+  user_id: string
+  event_count: number
+  session_count: number
+  first_active: string
+  last_active: string
+  roles: string[]
+  devices: string[]
   user_info: {
-    username: string;
-    email: string;
-    phone: string;
-    role: string;
-  };
+    username: string
+    email: string
+    phone: string
+    role: string
+  }
 }
 
 // ─── API Request Param Types ───────────────────────────────
 
 export interface OverviewParams {
-  company_id?: string;
-  date?: string; // ISO date, defaults to today
+  company_id?: string
+  date?: string // ISO date, defaults to today
 }
 
 export interface EventCountParams {
-  event_name?: string;
-  group_by: "hour" | "day" | "week" | "month";
-  from: string; // ISO date
-  to: string; // ISO date
-  company_id?: string;
-  role?: string;
+  event_name?: string
+  group_by: "hour" | "day" | "week" | "month"
+  from: string // ISO date
+  to: string // ISO date
+  company_id?: string
+  role?: string
 }
 
 export interface LiveEventParams {
-  limit?: number; // default 50
-  event_name?: string;
-  event_category?: string;
-  role?: string;
-  device_os?: string;
+  limit?: number // default 50
+  event_name?: string
+  event_category?: string
+  role?: string
+  device_os?: string
 }
 
 export interface FunnelParams {
-  steps: string; // comma-separated event names
-  from: string;
-  to: string;
-  company_id?: string;
+  steps: string // comma-separated event names
+  from: string
+  to: string
+  company_id?: string
 }
 
 export interface RetentionParams {
-  period: "week" | "month";
-  cohorts?: number; // default 8
-  company_id?: string;
+  period: "week" | "month"
+  cohorts?: number // default 8
+  company_id?: string
 }
 
 export interface SessionParams {
-  from?: string;
-  to?: string;
-  user_id?: string;
-  min_duration_ms?: number;
-  max_duration_ms?: number;
-  page?: number;
-  limit?: number;
+  from?: string
+  to?: string
+  user_id?: string
+  min_duration_ms?: number
+  max_duration_ms?: number
+  page?: number
+  limit?: number
 }
 
 export interface UserActivityParams {
-  sort_by?: "event_count" | "last_active" | "session_count";
-  order?: "asc" | "desc";
-  search?: string; // search by email or username
-  page?: number;
-  limit?: number;
+  sort_by?: "event_count" | "last_active" | "session_count"
+  order?: "asc" | "desc"
+  search?: string // search by email or username
+  page?: number
+  limit?: number
 }
 
 export interface TimelineParams {
-  from?: string;
-  to?: string;
-  event_category?: string;
-  page?: number;
-  limit?: number;
+  from?: string
+  to?: string
+  event_category?: string
+  page?: number
+  limit?: number
 }
 ```
 
@@ -440,69 +434,69 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 ### `src/hooks/useAuth.ts`
 
 ```typescript
-"use client";
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { jwtDecode } from "jwt-decode";
-import { analyticsAPI } from "@/lib/api";
+"use client"
+import { useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import { jwtDecode } from "jwt-decode"
+import { analyticsAPI } from "@/lib/api"
 
 interface AuthUser {
-  userId: string;
-  email: string;
-  role: string;
+  userId: string
+  email: string
+  role: string
 }
 
 export function useAuth() {
-  const router = useRouter();
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter()
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem("analytics_token");
+    const token = localStorage.getItem("analytics_token")
     if (token) {
       try {
-        const decoded: any = jwtDecode(token);
+        const decoded: any = jwtDecode(token)
         if (decoded.exp * 1000 > Date.now() && decoded.role === "superadmin") {
           setUser({
             userId: decoded.userId,
             email: decoded.email,
             role: decoded.role,
-          });
+          })
         }
       } catch {
         // Invalid token, ignore
       }
     }
-    setLoading(false);
-  }, []);
+    setLoading(false)
+  }, [])
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const response = await analyticsAPI.login(email, password);
-      const { token, user: userData } = response.data;
+      const response = await analyticsAPI.login(email, password)
+      const { token, user: userData } = response.data
 
       if (userData.role !== "superadmin") {
-        throw new Error("Access denied. SuperAdmin role required.");
+        throw new Error("Access denied. SuperAdmin role required.")
       }
 
-      localStorage.setItem("analytics_token", token);
+      localStorage.setItem("analytics_token", token)
       setUser({
         userId: userData._id,
         email: userData.email,
         role: userData.role,
-      });
-      router.push("/dashboard");
+      })
+      router.push("/dashboard")
     },
     [router],
-  );
+  )
 
   const logout = useCallback(() => {
-    localStorage.removeItem("analytics_token");
-    setUser(null);
-    router.push("/login");
-  }, [router]);
+    localStorage.removeItem("analytics_token")
+    setUser(null)
+    router.push("/login")
+  }, [router])
 
-  return { user, loading, login, logout };
+  return { user, loading, login, logout }
 }
 ```
 
@@ -785,7 +779,7 @@ import {
   AreaChart,
   BarChart,
   DonutChart,
-} from "@tremor/react";
+} from "@tremor/react"
 ```
 
 ### Data fetching pattern
@@ -886,15 +880,15 @@ export default function KPICard({ title, value, delta, deltaType }: KPICardProps
 ```typescript
 // src/lib/utils.ts
 export function formatDuration(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  if (minutes === 0) return `${seconds}s`;
-  return `${minutes}m ${seconds}s`;
+  const totalSeconds = Math.floor(ms / 1000)
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  if (minutes === 0) return `${seconds}s`
+  return `${minutes}m ${seconds}s`
 }
 
 export function formatNumber(n: number): string {
-  return n.toLocaleString("en-IN");
+  return n.toLocaleString("en-IN")
 }
 ```
 
@@ -1930,57 +1924,57 @@ export default function RoleFilter({ value, onChange }: RoleFilterProps) {
 A reusable hook that wraps API calls with loading, error, and refresh state.
 
 ```typescript
-"use client";
-import { useState, useEffect, useCallback } from "react";
+"use client"
+import { useState, useEffect, useCallback } from "react"
 
 interface UseAnalyticsResult<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-  refresh: () => void;
+  data: T | null
+  loading: boolean
+  error: string | null
+  refresh: () => void
 }
 
 export function useAnalytics<T>(
   fetcher: () => Promise<{ data: { data: T } }>,
   deps: any[] = [],
 ): UseAnalyticsResult<T> {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [data, setData] = useState<T | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
 
   const refresh = useCallback(() => {
-    setRefreshKey((k) => k + 1);
-  }, []);
+    setRefreshKey((k) => k + 1)
+  }, [])
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
+    let cancelled = false
+    setLoading(true)
+    setError(null)
 
     fetcher()
       .then((res) => {
         if (!cancelled) {
-          setData(res.data.data);
+          setData(res.data.data)
         }
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err.message || "An error occurred");
+          setError(err.message || "An error occurred")
         }
       })
       .finally(() => {
         if (!cancelled) {
-          setLoading(false);
+          setLoading(false)
         }
-      });
+      })
 
     return () => {
-      cancelled = true;
-    };
-  }, [...deps, refreshKey]);
+      cancelled = true
+    }
+  }, [...deps, refreshKey])
 
-  return { data, loading, error, refresh };
+  return { data, loading, error, refresh }
 }
 ```
 
@@ -1992,10 +1986,7 @@ const {
   loading,
   error,
   refresh,
-} = useAnalytics(
-  () => analyticsAPI.getOverview({ company_id: companyId }),
-  [companyId],
-);
+} = useAnalytics(() => analyticsAPI.getOverview({ company_id: companyId }), [companyId])
 ```
 
 ---
@@ -2016,7 +2007,7 @@ app.use(
     ],
     credentials: true,
   }),
-);
+)
 ```
 
 **Why this is needed**: The Next.js dashboard runs as a separate web application on a different port (dev: 3000) or domain (production). Without CORS configuration, the browser will block API requests from the dashboard to the Express server. The `credentials: true` flag allows the dashboard to send cookies if session-based auth is ever added.

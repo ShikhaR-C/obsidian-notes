@@ -8,6 +8,7 @@
 ## 📱 End-User Release Notes
 
 ### ✨ New: Advance Deposits
+
 - Record and track **advance deposits** with a dedicated voucher type and a full ledger.
 - View advance-deposit balances right from the **Accounts** balance header, and open the ledger from there.
 - Each ledger entry shows the **counterparty name** and any **linked on-account voucher**; balances refresh automatically after an adjustment.
@@ -15,26 +16,31 @@
 - "On Account" payments are now handled through the unified voucher flow, with payment details shown only after you pick a payment mode.
 
 ### 💳 Smarter Credit Limits
-- Credit limits now support **three states**: *Unlimited*, *Limit Credit*, and *Capped*.
+
+- Credit limits now support **three states**: _Unlimited_, _Limit Credit_, and _Capped_.
 - A **credit-utilization bar** and a shared **Credit Summary** make it easy to see how much credit is used at a glance.
 - Tap to **restore your last cap**, with the limit field always mirroring the real value.
 - Advance deposits now count toward available **spending power** in credit utilization.
 
 ### 🚚 Faster Vehicles List
+
 - Vehicles now load with **server-side pagination, search, and filters** plus smooth infinite scroll.
 - Significantly faster scrolling and lower memory use thanks to list recycling.
 - Search is streamlined to **registration number**, and the list jumps back to the top on a new search.
 - When you add a new vehicle in an order, it's now **auto-selected** for you.
 
 ### 🏷️ Discounts
-- Discount editing is consolidated into a single **bottom-sheet editor** that saves reliably on *Done*.
+
+- Discount editing is consolidated into a single **bottom-sheet editor** that saves reliably on _Done_.
 - The product and relation lists stay visible while data refreshes in the background — no more disappearing content.
 - Clearer messaging when no rate is set.
 
 ### 📅 Product Rates
+
 - The product calendar now shows the **carried-forward effective rate on every day**, even when no new rate was set that day.
 
 ### 🧰 Polish & Fixes
+
 - Smoother bottom sheets — no more accidental **drag-to-dismiss** when scrolling lists or searching (iOS & Android).
 - The bottom tab bar is now **hidden on create/edit screens** (orders, invoices, payments, vouchers) for a cleaner, more focused view.
 - Pull-to-refresh only triggers on a **real pull**, and lists no longer flicker while loading more.
@@ -49,6 +55,7 @@
 ## 🛠️ Developer Release Notes
 
 ### Features
+
 - **Advance Deposit module** (`advdep`)
   - New Advance Deposit voucher type, ledger view, and account-balance adjustment (`5e0ee266`).
   - New Payment Ack screen with scope-gated entry and advdep ledger UI (`1bd79d55`).
@@ -72,6 +79,7 @@
   - Cached vehicle lists patched in place instead of invalidating LIST (`fe947901`); list scroll handling reworked around FlashList v2 MVCP (`20615d06`); vehicle-type filter relation mapping fixed (`7d500be1`).
 
 ### Fixes
+
 - **Discounts:** centralized edits in bottom sheet with cache/state-sync fixes (`d5448486`); single add/edit/remove mutation persisted on Done (`667e9bbd`); editor re-seeded on open & no-rate state clarified (`29ba2f62`); product list & relation kept visible during background refetch (`2d4ef5c3`, `1d1e7744`); error state cleared on category-sheet close (`3310415a`); relation refetched on pull-to-refresh (`0e03889c`).
 - **Bottom sheets:** content panning kept enabled on Android (`0c85f8c4`); content panning disabled to prevent drag-to-dismiss on more sheets (`ec5a652a`); iOS drag-to-dismiss prevented on list-with-search sheets (`66bb55eb`).
 - **Navigation:** tab bar hidden on order/invoice/payment create & edit (`d2fcce66`); bottom tab removed from new-voucher screen (`de8f7913`).
@@ -86,10 +94,12 @@
 - **Misc:** new-voucher add-driver error text color corrected (`de8f7913`).
 
 ### Chore / Docs
+
 - iOS code signing cert & provisioning profile workflow documented (`48a53e58`); Ruby/CocoaPods toolchain documented, pods pinned to `bundle exec` (`5ba4abcb`).
 - Release build bump: Android 102, iOS 8 (`d802e88e`) → current Android 103.
 
 ### PRs merged in this range
+
 - #41 — veh_trns server-side vehicle pagination + NewOrder vehicle select
 - #42 — Advance Deposit voucher, ledger & New Payment Ack
 - #43 — centralize discount edits in bottom sheet, fix cache & state sync

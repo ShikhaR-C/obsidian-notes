@@ -14,55 +14,53 @@
 
 ## Impact Analysis
 
-
-| Package                                          | Current | Latest  | Breaking? | Integration Depth       | Files Affected | Phase  |
-| ------------------------------------------------ | ------- | ------- | --------- | ----------------------- | -------------- | ------ |
-| **@gorhom/bottom-sheet**                         | 5.2.6   | 5.2.8   | No        | Heavy (65 files)        | 0              | 1      |
-| **@react-navigation/bottom-tabs**                | 7.4.6   | 7.15.9  | No        | Critical (177 files)    | 0              | 1      |
-| **@react-navigation/drawer**                     | 7.5.7   | 7.9.8   | No        | Critical                | 0              | 1      |
-| **@react-navigation/elements**                   | 2.6.4   | 2.9.14  | No        | Critical                | 0              | 1      |
-| **@react-navigation/native**                     | 7.1.17  | 7.2.2   | No        | Critical                | 0              | 1      |
-| **@react-navigation/native-stack**               | 7.3.26  | 7.14.10 | No        | Critical                | 0              | 1      |
-| **@react-navigation/stack**                      | 7.4.7   | 7.8.9   | No        | Critical                | 0              | 1      |
-| **@reduxjs/toolkit**                             | 2.8.2   | 2.11.2  | No        | Critical (123 files)    | 0              | 1      |
-| **axios**                                        | 1.11.0  | 1.14.0  | No        | Moderate (4 files)      | 0              | 1      |
-| **react-native-gesture-handler**                 | 2.28.0  | 2.31.0  | No        | Low (3 files)           | 0              | 1      |
-| **react-native-onesignal**                       | 5.2.13  | 5.4.1   | No        | Moderate (1 file)       | 0              | 1      |
-| **react-native-paper**                           | 5.14.5  | 5.15.0  | No        | Critical (250+ files)   | 0              | 1      |
-| **react-native-reanimated**                      | 4.1.5   | 4.3.0   | No        | Low-Mod (15 files)      | 0              | 1      |
-| **react-native-safe-area-context**               | 5.6.1   | 5.7.0   | No        | Low (3 files)           | 0              | 1      |
-| **react-native-screens**                         | 4.15.2  | 4.24.0  | No        | Low (peer dep)          | 0              | 1      |
-| **react-native-svg**                             | 15.12.1 | 15.15.4 | No        | High (165 files)        | 0              | 1      |
-| **react-native-webview**                         | 13.15.0 | 13.16.1 | No        | Low-Mod (10 files)      | 0              | 1      |
-| **react-redux**                                  | 9.2.0   | 9.2.0   | --        | Critical                | 0              | --     |
-| **moment**                                       | 2.30.1  | 2.30.1  | --        | Moderate                | 0              | --     |
-| **react-native-linear-gradient**                 | 2.8.3   | 2.8.3   | --        | Low (7 files)           | 0              | --     |
-| **@babel/core**                                  | 7.25.2  | 7.29.0  | No        | Dev                     | 0              | 1      |
-| **@babel/preset-env**                            | 7.25.3  | 7.29.2  | No        | Dev                     | 0              | 1      |
-| **@babel/runtime**                               | 7.25.0  | 7.29.2  | No        | Dev                     | 0              | 1      |
-| **@types/react**                                 | 19.1.0  | 19.2.14 | No        | Dev                     | 0              | 1      |
-| **@react-native-community/cli**                  | 20.0.0  | 20.1.3  | No        | Dev                     | 0              | 1      |
-| **@react-native-community/cli-platform-android** | 20.0.0  | 20.1.3  | No        | Dev                     | 0              | 1      |
-| **@react-native-community/cli-platform-ios**     | 20.0.0  | 20.1.3  | No        | Dev                     | 0              | 1      |
-| **@react-native-community/netinfo**              | 11.4.1  | 12.0.1  | **YES**   | Moderate (4 files)      | 0-1            | 2      |
-| **@react-native-community/datetimepicker**       | 8.4.4   | 9.1.0   | **YES**   | Moderate (17 files)     | 0              | 2      |
-| **react-native-device-info**                     | 14.0.4  | 15.0.2  | **YES**   | Moderate (9 files)      | 0              | 2      |
-| **react-native-worklets**                        | 0.6.1   | 0.8.1   | **YES**   | Low (babel plugin only) | 0              | 2      |
-| **@react-native-async-storage/async-storage**    | 2.2.0   | 3.0.2   | **YES**   | High (10 files)         | 0              | 2      |
-| **react-native-html-to-pdf**                     | 0.12.0  | 1.3.0   | No (API unchanged) | Low (4 files)    | 0              | ✅ DONE |
-| **prettier**                                     | 2.8.8   | 3.8.1   | **YES**   | Dev                     | all (reformat) | 3      |
-| **eslint**                                       | 8.19.0  | 9.39.4  | **YES**   | Dev                     | 1 config       | ✅ DONE |
-| **@types/jest**                                  | 29.5.13 | 30.0.0  | **YES**   | Dev                     | 0              | 3      |
-| **jest**                                         | 29.6.3  | 30.3.0  | **YES**   | Dev                     | 0-few          | 3      |
-| **typescript**                                   | 5.8.3   | 6.0.2   | **YES**   | Dev                     | 0              | 3      |
-| **react**                                        | 19.1.0  | 19.2.4  | Minor     | Critical                | 0              | 4      |
-| **react-native**                                 | 0.81.0  | 0.84.1  | **YES**   | Critical                | many           | 4      |
-| **@react-native/babel-preset**                   | 0.81.0  | 0.84.1  | **YES**   | Dev                     | 0              | 4      |
-| **@react-native/eslint-config**                  | 0.81.0  | 0.84.1  | **YES**   | Dev                     | 0              | 4      |
-| **@react-native/metro-config**                   | 0.81.0  | 0.84.1  | **YES**   | Dev                     | 0              | 4      |
-| **@react-native/typescript-config**              | 0.81.0  | 0.84.1  | **YES**   | Dev                     | 0              | 4      |
-| **react-test-renderer**                          | 19.1.0  | 19.2.4  | Minor     | Dev                     | 0              | 4      |
-
+| Package                                          | Current | Latest  | Breaking?          | Integration Depth       | Files Affected | Phase   |
+| ------------------------------------------------ | ------- | ------- | ------------------ | ----------------------- | -------------- | ------- |
+| **@gorhom/bottom-sheet**                         | 5.2.6   | 5.2.8   | No                 | Heavy (65 files)        | 0              | 1       |
+| **@react-navigation/bottom-tabs**                | 7.4.6   | 7.15.9  | No                 | Critical (177 files)    | 0              | 1       |
+| **@react-navigation/drawer**                     | 7.5.7   | 7.9.8   | No                 | Critical                | 0              | 1       |
+| **@react-navigation/elements**                   | 2.6.4   | 2.9.14  | No                 | Critical                | 0              | 1       |
+| **@react-navigation/native**                     | 7.1.17  | 7.2.2   | No                 | Critical                | 0              | 1       |
+| **@react-navigation/native-stack**               | 7.3.26  | 7.14.10 | No                 | Critical                | 0              | 1       |
+| **@react-navigation/stack**                      | 7.4.7   | 7.8.9   | No                 | Critical                | 0              | 1       |
+| **@reduxjs/toolkit**                             | 2.8.2   | 2.11.2  | No                 | Critical (123 files)    | 0              | 1       |
+| **axios**                                        | 1.11.0  | 1.14.0  | No                 | Moderate (4 files)      | 0              | 1       |
+| **react-native-gesture-handler**                 | 2.28.0  | 2.31.0  | No                 | Low (3 files)           | 0              | 1       |
+| **react-native-onesignal**                       | 5.2.13  | 5.4.1   | No                 | Moderate (1 file)       | 0              | 1       |
+| **react-native-paper**                           | 5.14.5  | 5.15.0  | No                 | Critical (250+ files)   | 0              | 1       |
+| **react-native-reanimated**                      | 4.1.5   | 4.3.0   | No                 | Low-Mod (15 files)      | 0              | 1       |
+| **react-native-safe-area-context**               | 5.6.1   | 5.7.0   | No                 | Low (3 files)           | 0              | 1       |
+| **react-native-screens**                         | 4.15.2  | 4.24.0  | No                 | Low (peer dep)          | 0              | 1       |
+| **react-native-svg**                             | 15.12.1 | 15.15.4 | No                 | High (165 files)        | 0              | 1       |
+| **react-native-webview**                         | 13.15.0 | 13.16.1 | No                 | Low-Mod (10 files)      | 0              | 1       |
+| **react-redux**                                  | 9.2.0   | 9.2.0   | --                 | Critical                | 0              | --      |
+| **moment**                                       | 2.30.1  | 2.30.1  | --                 | Moderate                | 0              | --      |
+| **react-native-linear-gradient**                 | 2.8.3   | 2.8.3   | --                 | Low (7 files)           | 0              | --      |
+| **@babel/core**                                  | 7.25.2  | 7.29.0  | No                 | Dev                     | 0              | 1       |
+| **@babel/preset-env**                            | 7.25.3  | 7.29.2  | No                 | Dev                     | 0              | 1       |
+| **@babel/runtime**                               | 7.25.0  | 7.29.2  | No                 | Dev                     | 0              | 1       |
+| **@types/react**                                 | 19.1.0  | 19.2.14 | No                 | Dev                     | 0              | 1       |
+| **@react-native-community/cli**                  | 20.0.0  | 20.1.3  | No                 | Dev                     | 0              | 1       |
+| **@react-native-community/cli-platform-android** | 20.0.0  | 20.1.3  | No                 | Dev                     | 0              | 1       |
+| **@react-native-community/cli-platform-ios**     | 20.0.0  | 20.1.3  | No                 | Dev                     | 0              | 1       |
+| **@react-native-community/netinfo**              | 11.4.1  | 12.0.1  | **YES**            | Moderate (4 files)      | 0-1            | 2       |
+| **@react-native-community/datetimepicker**       | 8.4.4   | 9.1.0   | **YES**            | Moderate (17 files)     | 0              | 2       |
+| **react-native-device-info**                     | 14.0.4  | 15.0.2  | **YES**            | Moderate (9 files)      | 0              | 2       |
+| **react-native-worklets**                        | 0.6.1   | 0.8.1   | **YES**            | Low (babel plugin only) | 0              | 2       |
+| **@react-native-async-storage/async-storage**    | 2.2.0   | 3.0.2   | **YES**            | High (10 files)         | 0              | 2       |
+| **react-native-html-to-pdf**                     | 0.12.0  | 1.3.0   | No (API unchanged) | Low (4 files)           | 0              | ✅ DONE |
+| **prettier**                                     | 2.8.8   | 3.8.1   | **YES**            | Dev                     | all (reformat) | 3       |
+| **eslint**                                       | 8.19.0  | 9.39.4  | **YES**            | Dev                     | 1 config       | ✅ DONE |
+| **@types/jest**                                  | 29.5.13 | 30.0.0  | **YES**            | Dev                     | 0              | 3       |
+| **jest**                                         | 29.6.3  | 30.3.0  | **YES**            | Dev                     | 0-few          | 3       |
+| **typescript**                                   | 5.8.3   | 6.0.2   | **YES**            | Dev                     | 0              | 3       |
+| **react**                                        | 19.1.0  | 19.2.4  | Minor              | Critical                | 0              | 4       |
+| **react-native**                                 | 0.81.0  | 0.84.1  | **YES**            | Critical                | many           | 4       |
+| **@react-native/babel-preset**                   | 0.81.0  | 0.84.1  | **YES**            | Dev                     | 0              | 4       |
+| **@react-native/eslint-config**                  | 0.81.0  | 0.84.1  | **YES**            | Dev                     | 0              | 4       |
+| **@react-native/metro-config**                   | 0.81.0  | 0.84.1  | **YES**            | Dev                     | 0              | 4       |
+| **@react-native/typescript-config**              | 0.81.0  | 0.84.1  | **YES**            | Dev                     | 0              | 4       |
+| **react-test-renderer**                          | 19.1.0  | 19.2.4  | Minor              | Dev                     | 0              | 4       |
 
 ---
 
@@ -104,40 +102,46 @@ react-native-webview             13.15.0 -> 13.16.1
 
 1. **Create a checkpoint commit** on the current branch
 2. **Update all Phase 1 packages at once:**
-  ```bash
-   yarn add @gorhom/bottom-sheet@^5.2.8 \
-     @react-navigation/bottom-tabs@^7.15.9 \
-     @react-navigation/drawer@^7.9.8 \
-     @react-navigation/elements@^2.9.14 \
-     @react-navigation/native@^7.2.2 \
-     @react-navigation/native-stack@^7.14.10 \
-     @react-navigation/stack@^7.8.9 \
-     @reduxjs/toolkit@^2.11.2 \
-     axios@^1.14.0 \
-     react-native-gesture-handler@^2.31.0 \
-     react-native-onesignal@^5.4.1 \
-     react-native-paper@^5.15.0 \
-     react-native-reanimated@^4.3.0 \
-     react-native-safe-area-context@^5.7.0 \
-     react-native-screens@^4.24.0 \
-     react-native-svg@^15.15.4 \
-     react-native-webview@^13.16.1
-  ```
+
+```bash
+ yarn add @gorhom/bottom-sheet@^5.2.8 \
+   @react-navigation/bottom-tabs@^7.15.9 \
+   @react-navigation/drawer@^7.9.8 \
+   @react-navigation/elements@^2.9.14 \
+   @react-navigation/native@^7.2.2 \
+   @react-navigation/native-stack@^7.14.10 \
+   @react-navigation/stack@^7.8.9 \
+   @reduxjs/toolkit@^2.11.2 \
+   axios@^1.14.0 \
+   react-native-gesture-handler@^2.31.0 \
+   react-native-onesignal@^5.4.1 \
+   react-native-paper@^5.15.0 \
+   react-native-reanimated@^4.3.0 \
+   react-native-safe-area-context@^5.7.0 \
+   react-native-screens@^4.24.0 \
+   react-native-svg@^15.15.4 \
+   react-native-webview@^13.16.1
+```
+
 3. **Update dev dependencies:**
-  ```bash
-   yarn add -D @babel/core@^7.29.0 \
-     @babel/preset-env@^7.29.2 \
-     @babel/runtime@^7.29.2 \
-     @types/react@^19.2.14 \
-     @react-native-community/cli@20.1.3 \
-     @react-native-community/cli-platform-android@20.1.3 \
-     @react-native-community/cli-platform-ios@20.1.3
-  ```
+
+```bash
+ yarn add -D @babel/core@^7.29.0 \
+   @babel/preset-env@^7.29.2 \
+   @babel/runtime@^7.29.2 \
+   @types/react@^19.2.14 \
+   @react-native-community/cli@20.1.3 \
+   @react-native-community/cli-platform-android@20.1.3 \
+   @react-native-community/cli-platform-ios@20.1.3
+```
+
 4. **Clean & rebuild:**
-  ```bash
-   yarn reset
-   cd ios && pod install && cd ..
-  ```
+
+```bash
+ yarn reset
+ cd ios && pod install && cd ..
+```
+
 5. **Test**
 
 ### Testing Checklist
@@ -256,6 +260,7 @@ The v3 default export provides a backward-compatible singleton for basic `getIte
 **Impact:** ZERO code changes. All 4 files use `RNHTMLtoPDF.convert({ html, fileName, directory })` which is unchanged.
 
 **What changed in v1.0.0–1.3.0 (all additive):**
+
 - New Architecture (TurboModules/Fabric) support
 - JavaScript enabled in Android WebView for PDF rendering
 - Build tooling updates
@@ -424,27 +429,23 @@ These packages require native rebuilds (pod install + gradle sync):
 
 ### Stale / Consider Replacement (Future)
 
-
 | Package                      | Issue                    | Alternative                         |
 | ---------------------------- | ------------------------ | ----------------------------------- |
 | moment                       | Maintenance mode, 300KB+ | dayjs (2KB) or date-fns             |
 | react-native-linear-gradient | No updates in 3+ years   | expo-linear-gradient or RN built-in |
 
-
 ---
 
 ## Risk Matrix
 
-
-| Risk                                          | Likelihood               | Impact | Mitigation                                                                                                                                         |
-| --------------------------------------------- | ------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Paper animations broken on RN 0.81+           | Medium                   | High   | Test thoroughly; check GitHub #4797                                                                                                                |
-| async-storage v3 data migration               | Low                      | High   | v3 default singleton is backward-compatible for basic API                                                                                          |
-| html-to-pdf API changed                       | ~~Medium~~ **Resolved**  | Low    | ✅ API unchanged in v1.3.0 — drop-in replacement. Only native rebuild needed.                                                                       |
+| Risk                                          | Likelihood              | Impact | Mitigation                                                                                                                                                                        |
+| --------------------------------------------- | ----------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paper animations broken on RN 0.81+           | Medium                  | High   | Test thoroughly; check GitHub #4797                                                                                                                                               |
+| async-storage v3 data migration               | Low                     | High   | v3 default singleton is backward-compatible for basic API                                                                                                                         |
+| html-to-pdf API changed                       | ~~Medium~~ **Resolved** | Low    | ✅ API unchanged in v1.3.0 — drop-in replacement. Only native rebuild needed.                                                                                                     |
 | ESLint flat config not supported by RN config | ~~Medium~~ **Resolved** | Medium | ✅ Upgraded to ESLint 9.39.4 with flat config. `eslint-plugin-ft-flow` incompatibility mitigated by disabling unused Flow rules. ESLint 10 deferred until peer dep support added. |
-| Worklets type errors                          | Low                      | Low    | Only babel plugin usage; no direct API calls                                                                                                       |
-| Jest 30 test breakage                         | Low                      | Medium | Run codemod; fix matcher aliases                                                                                                                   |
-
+| Worklets type errors                          | Low                     | Low    | Only babel plugin usage; no direct API calls                                                                                                                                      |
+| Jest 30 test breakage                         | Low                     | Medium | Run codemod; fix matcher aliases                                                                                                                                                  |
 
 ---
 
@@ -461,4 +462,3 @@ Phase 3C (typescript)      --> commit --> test --> merge
 Phase 3D (jest)            --> commit --> test --> merge
 Phase 4 (RN upgrade)       --> separate branch --> full QA --> merge
 ```
-

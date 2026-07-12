@@ -43,9 +43,9 @@ User's ask: "create dzzlo_oms_api updates to have v1.77 support as it did before
   client side did not change — Symptom #2 is entirely about what the server returns.
 - v1.77 client read (`@44656be1 Customer/Vehicles/index.js`, lines ~256-271):
   ```js
-  const response = await fetch_veh_trns_other({ comp_id: customerId, showReqCount: true }).unwrap();
-  const reqCnt = response.requestCount;   // throws if response is undefined
-  setVehReqCnt(reqCnt);
+  const response = await fetch_veh_trns_other({ comp_id: customerId, showReqCount: true }).unwrap()
+  const reqCnt = response.requestCount // throws if response is undefined
+  setVehReqCnt(reqCnt)
   ```
   When that line throws, it is caught and `errorRTK(err)` returns `err.message`, so the
   literal Hermes string "Cannot read property 'requestCount' of undefined" renders on the
@@ -65,7 +65,7 @@ and `getAllVehicles` (`:357-388`) already guard the same spots. Against the dev 
 these unguarded reads make `GET /veh_trns` fail, so the v1.77 client's `response` is not the
 clean object it expects:
 
-- `:150` `return \`${vmst.cust_id}\`;` — throws if a `veh_trn.veh_id` has no `veh_mst`.
+- `:150` `return \`${vmst.cust_id}\`;`— throws if a`veh_trn.veh_id`has no`veh_mst`.
 - `:186` `Customers.find(i => \`${i._id}\` === \`${vmst.cust_id}\`)` — same.
 - `:197` `vT.cust_name = cust.cust_name;` — throws if the customer is missing.
 - `:205` `vT.veh_reg_no = ... : vmst.veh_reg_no;` — same.
@@ -78,29 +78,31 @@ returns `200 { success:true, data, requestCount }`.
 ## 1. Harden `getMultiple` — `api_v3/services/veh_trns.js` (primary, behavior-preserving)
 
 **a. `customerIdsA` builder** (~lines 146-153) — guard + filter:
+
 ```js
-  const customerIdsA = [
-    ...new Set(
-      veh_trn.map((a) => {
-        const vmst = Vehs.find((vm) => `${vm._id}` === `${a.veh_id}`);
-        return vmst ? `${vmst.cust_id}` : null;
-      }),
-    ),
-  ].filter(Boolean);
+const customerIdsA = [
+  ...new Set(
+    veh_trn.map((a) => {
+      const vmst = Vehs.find((vm) => `${vm._id}` === `${a.veh_id}`)
+      return vmst ? `${vmst.cust_id}` : null
+    }),
+  ),
+].filter(Boolean)
 ```
 
 **b. inside the `Promise.all` map** (~lines 185-205) — optional-chain the master/customer:
+
 ```js
-      const vmst = Vehs.find((vm) => `${vm._id}` === `${vT.veh_id}`);
-      const cust = Customers.find((i) => `${i._id}` === `${vmst?.cust_id}`);
-      const hirer = Customers.find((i) => `${i._id}` === `${vT.cust_id}`);
-      // ...
-      vT.cust_name = cust ? cust.cust_name : "";
-      // ...
-      if (!!version && !!isntTestv && !!olderversion && vmst) {
-        vT.veh_id = vmst;
-      }
-      vT.veh_reg_no = vT.veh_reg_no || vmst?.veh_reg_no;
+const vmst = Vehs.find((vm) => `${vm._id}` === `${vT.veh_id}`)
+const cust = Customers.find((i) => `${i._id}` === `${vmst?.cust_id}`)
+const hirer = Customers.find((i) => `${i._id}` === `${vT.cust_id}`)
+// ...
+vT.cust_name = cust ? cust.cust_name : ""
+// ...
+if (!!version && !!isntTestv && !!olderversion && vmst) {
+  vT.veh_id = vmst
+}
+vT.veh_reg_no = vT.veh_reg_no || vmst?.veh_reg_no
 ```
 
 Healthy data is unaffected; orphaned data no longer 500s. This is exactly the guard
@@ -109,24 +111,27 @@ pattern already used in `listPaginated`/`getAllVehicles` — reuse, not new logi
 ## 2. Validate `cust_id` — `api_v3/services/veh_trns.js` (defensive; helps the NEW app)
 
 **`listPaginated`** (~line 422, before building the ObjectId/match):
+
 ```js
-  if (!mongoose.isValidObjectId(cust_id)) {
-    return { data: [], pagination: { page: pageNum, limit: lim, total: 0, hasMore: false } };
-  }
-  const match = { cust_id: new mongoose.Types.ObjectId(cust_id) };
+if (!mongoose.isValidObjectId(cust_id)) {
+  return { data: [], pagination: { page: pageNum, limit: lim, total: 0, hasMore: false } }
+}
+const match = { cust_id: new mongoose.Types.ObjectId(cust_id) }
 ```
 
 **`getVehReqCount`** (~line 400, symmetry):
+
 ```js
 exports.getVehReqCount = async ({ cust_id }) => {
-  if (!mongoose.isValidObjectId(cust_id)) return { requestCount: 0 };
+  if (!mongoose.isValidObjectId(cust_id)) return { requestCount: 0 }
   const requestCount = await VehReq.countDocuments({
     $or: [{ cust_id }, { oth_cust_id: cust_id }],
     req_status: "PENDING",
-  });
-  return { requestCount };
-};
+  })
+  return { requestCount }
+}
 ```
+
 A missing/transient company id now yields an empty page / `{ requestCount: 0 }` instead of a
 500 (BSONError) the new app would surface as a connection/server error. (`mongoose` is
 already imported at the top of the file.)
@@ -140,17 +145,21 @@ the `isError` effect (~line 116), or migrate to the lazy-query + `swallowAbort` 
 Vehicles screens use. Outside the API scope the user named — implement only if wanted.
 
 # Diagnostic (read-only) — confirm the exact trigger
+
 With the API running, capture what the v1.77 request actually returns (needs a real
 `cust_id` + auth token) and watch server logs:
+
 ```
 curl -i 'localhost:8030/api/v3/veh_trns?cust_id=<id>&showReqCount=true' \
   -H 'authorization: Bearer <token>' -H 'x-api-key: <key>' \
   -H 'meta:{"version":"1.77","deviceBrand":"Apple"}'
 ```
+
 Expect `200 {success:true,data:[...],requestCount:N}`. A 500 / empty / different shape pins
 the trigger; change #1 should make it a clean 200.
 
 # Verification
+
 - Find/seed an orphaned `veh_trn` (veh_id → deleted veh_mst); `GET /veh_trns` returns 200
   (not 500) after change #1.
 - Old v1.77 build: Vehicles screen loads, request badge shows, no "requestCount" crash.
@@ -160,6 +169,7 @@ the trigger; change #1 should make it a clean 200.
 - `cd dzzlo_oms_api && yarn test --testPathPattern=veh_trns` if a suite exists.
 
 # Notes
+
 - All API edits stay inside `api_v3/` (AI.md compliant). v1.77 uses `/api/v3`, so no
   `api_v2/` change is required.
 - Optional follow-up (not required here): the `meta.version` gate uses `Number("1.77")`

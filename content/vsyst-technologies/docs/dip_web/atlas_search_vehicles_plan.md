@@ -15,12 +15,9 @@ Today `VehList.js` (lines 39-44) does:
 
 ```js
 return vehData.data.filter((item) => {
-  if (!search) return true;
-  return (
-    item.veh_reg_no &&
-    item.veh_reg_no.toLowerCase().includes(search.toLowerCase())
-  );
-});
+  if (!search) return true
+  return item.veh_reg_no && item.veh_reg_no.toLowerCase().includes(search.toLowerCase())
+})
 ```
 
 This is a `String.includes` over whatever pages have already been loaded.
@@ -83,13 +80,13 @@ Cleanest refactor: extract the enrichment block from
 ### A4. Search controller — `api_v3/controllers/sadmin/veh_msts.js` (NEW)
 
 ```js
-const asyncHandler = require("../../../helpers/async");
-const { searchVehicles } = require("../../services/veh_msts");
+const asyncHandler = require("../../../helpers/async")
+const { searchVehicles } = require("../../services/veh_msts")
 
 exports.SearchAllVehicles = asyncHandler(async (req, res) => {
-  const result = await searchVehicles({ query: req.query });
-  res.status(200).json({ success: true, ...result });
-});
+  const result = await searchVehicles({ query: req.query })
+  res.status(200).json({ success: true, ...result })
+})
 ```
 
 (Place under `controllers/sadmin/` because the screen is sadmin-scoped.)
@@ -97,10 +94,10 @@ exports.SearchAllVehicles = asyncHandler(async (req, res) => {
 ### A5. Sadmin route — `api_v3/routes/sadmin/index.js` (EDIT)
 
 ```js
-const { SearchAllVehicles } = require("../../controllers/sadmin/veh_msts");
-const { searchLimiter } = require("../../helpers/searchRateLimit");
+const { SearchAllVehicles } = require("../../controllers/sadmin/veh_msts")
+const { searchLimiter } = require("../../helpers/searchRateLimit")
 
-router.get("/search/vehicles", searchLimiter, SearchAllVehicles);
+router.get("/search/vehicles", searchLimiter, SearchAllVehicles)
 ```
 
 Final URL: `GET /api/v3/sadmin/search/vehicles?q=&cust_id=&from=&to=&page=&limit=`
@@ -123,7 +120,7 @@ fallback path covers dev.
 ### A7. Fallback `$text` index — `models/veh_msts.js` (EDIT)
 
 ```js
-veh_mst_Schema.index({ veh_reg_no: "text", route: "text" });
+veh_mst_Schema.index({ veh_reg_no: "text", route: "text" })
 ```
 
 Skip if running only on Atlas; needed for unit tests on
@@ -134,7 +131,7 @@ test to a real Atlas test cluster.
 ### A8. Tests — `test/api_v3/features/sadmin/search_vehicles.test.js` (NEW)
 
 ```js
-process.env.ATLAS_SEARCH = "false";
+process.env.ATLAS_SEARCH = "false"
 // seed 3-5 vehicles
 // supertest GET /api/v3/sadmin/search/vehicles?q=KA01
 // assert data[0].veh_trn is populated
@@ -200,15 +197,15 @@ Export `useLazySearch_sadmin_veh_mstsQuery`.
 ### B3. Tiny debounce hook — `src/utils/Hooks/useDebouncedValue.js` (NEW)
 
 ```js
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 
 export default function useDebouncedValue(value, delay = 300) {
-  const [v, setV] = useState(value);
+  const [v, setV] = useState(value)
   useEffect(() => {
-    const id = setTimeout(() => setV(value), delay);
-    return () => clearTimeout(id);
-  }, [value, delay]);
-  return v;
+    const id = setTimeout(() => setV(value), delay)
+    return () => clearTimeout(id)
+  }, [value, delay])
+  return v
 }
 ```
 

@@ -23,9 +23,9 @@ Build aggregation endpoints that transform raw event data into meaningful analyt
 **File to create:** `api_v3/routes/analytics/queries.js`
 
 ```javascript
-const express = require("express");
-const router = express.Router();
-const { protect, authorize } = require("../../../helpers/auth");
+const express = require("express")
+const router = express.Router()
+const { protect, authorize } = require("../../../helpers/auth")
 const {
   getOverview,
   getEventCounts,
@@ -34,21 +34,21 @@ const {
   getRetention,
   getSessions,
   getUserActivity,
-} = require("../../controllers/analytics/queries");
+} = require("../../controllers/analytics/queries")
 
 // All query routes are SuperAdmin only
-router.use(protect);
-router.use(authorize("superadmin"));
+router.use(protect)
+router.use(authorize("superadmin"))
 
-router.get("/overview", getOverview);
-router.get("/events/count", getEventCounts);
-router.get("/events/live", getLiveEvents);
-router.get("/funnel", getFunnel);
-router.get("/retention", getRetention);
-router.get("/sessions", getSessions);
-router.get("/users/activity", getUserActivity);
+router.get("/overview", getOverview)
+router.get("/events/count", getEventCounts)
+router.get("/events/live", getLiveEvents)
+router.get("/funnel", getFunnel)
+router.get("/retention", getRetention)
+router.get("/sessions", getSessions)
+router.get("/users/activity", getUserActivity)
 
-module.exports = router;
+module.exports = router
 ```
 
 **File to modify:** `api_v3/routes/analytics/index.js`
@@ -67,16 +67,15 @@ Add: `router.use("/query", require("./queries"));`
 
 ```javascript
 exports.getOverview = asyncHandler(async (req, res) => {
-  const { company_id } = req.query;
-  const now = new Date();
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const { company_id } = req.query
+  const now = new Date()
+  const todayStart = new Date(now)
+  todayStart.setHours(0, 0, 0, 0)
+  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  const monthAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
 
-  const matchFilter = {};
-  if (company_id)
-    matchFilter.company_id = new mongoose.Types.ObjectId(company_id);
+  const matchFilter = {}
+  if (company_id) matchFilter.company_id = new mongoose.Types.ObjectId(company_id)
 
   // Use $facet for parallel aggregation in a single query
   const result = await AnalyticsEvent.aggregate([
@@ -94,10 +93,7 @@ exports.getOverview = asyncHandler(async (req, res) => {
           { $count: "count" },
         ],
         mau: [{ $group: { _id: "$user_id" } }, { $count: "count" }],
-        eventsToday: [
-          { $match: { server_timestamp: { $gte: todayStart } } },
-          { $count: "count" },
-        ],
+        eventsToday: [{ $match: { server_timestamp: { $gte: todayStart } } }, { $count: "count" }],
         topEvents: [
           { $match: { server_timestamp: { $gte: weekAgo } } },
           { $group: { _id: "$event_name", count: { $sum: 1 } } },
@@ -106,15 +102,15 @@ exports.getOverview = asyncHandler(async (req, res) => {
         ],
       },
     },
-  ]);
+  ])
 
   // Session duration average
   const sessionAvg = await AnalyticsSession.aggregate([
     { $match: { started_at: { $gte: weekAgo }, duration_ms: { $gt: 0 } } },
     { $group: { _id: null, avg_duration: { $avg: "$duration_ms" } } },
-  ]);
+  ])
 
-  const facet = result[0];
+  const facet = result[0]
   res.json({
     success: true,
     data: {
@@ -125,8 +121,8 @@ exports.getOverview = asyncHandler(async (req, res) => {
       avg_session_duration_ms: sessionAvg[0]?.avg_duration || 0,
       top_events: facet.topEvents,
     },
-  });
-});
+  })
+})
 ```
 
 ---
@@ -148,19 +144,18 @@ exports.getEventCounts = asyncHandler(async (req, res) => {
     company_id,
     user_role,
     device_os,
-  } = req.query;
+  } = req.query
 
-  const matchFilter = {};
-  if (event_name) matchFilter.event_name = event_name;
-  if (event_category) matchFilter.event_category = event_category;
-  if (company_id)
-    matchFilter.company_id = new mongoose.Types.ObjectId(company_id);
-  if (user_role) matchFilter.user_role = user_role;
-  if (device_os) matchFilter.device_os = device_os;
+  const matchFilter = {}
+  if (event_name) matchFilter.event_name = event_name
+  if (event_category) matchFilter.event_category = event_category
+  if (company_id) matchFilter.company_id = new mongoose.Types.ObjectId(company_id)
+  if (user_role) matchFilter.user_role = user_role
+  if (device_os) matchFilter.device_os = device_os
   if (from || to) {
-    matchFilter.server_timestamp = {};
-    if (from) matchFilter.server_timestamp.$gte = new Date(from);
-    if (to) matchFilter.server_timestamp.$lte = new Date(to);
+    matchFilter.server_timestamp = {}
+    if (from) matchFilter.server_timestamp.$gte = new Date(from)
+    if (to) matchFilter.server_timestamp.$lte = new Date(to)
   }
 
   const dateFormats = {
@@ -168,7 +163,7 @@ exports.getEventCounts = asyncHandler(async (req, res) => {
     day: "%Y-%m-%d",
     week: "%Y-W%V",
     month: "%Y-%m",
-  };
+  }
 
   const result = await AnalyticsEvent.aggregate([
     { $match: matchFilter },
@@ -198,10 +193,10 @@ exports.getEventCounts = asyncHandler(async (req, res) => {
       },
     },
     { $sort: { period: 1 } },
-  ]);
+  ])
 
-  res.json({ success: true, data: result });
-});
+  res.json({ success: true, data: result })
+})
 ```
 
 ---
@@ -214,12 +209,12 @@ exports.getEventCounts = asyncHandler(async (req, res) => {
 
 ```javascript
 exports.getLiveEvents = asyncHandler(async (req, res) => {
-  const { limit = 100, event_name, event_category, user_id } = req.query;
+  const { limit = 100, event_name, event_category, user_id } = req.query
 
-  const matchFilter = {};
-  if (event_name) matchFilter.event_name = event_name;
-  if (event_category) matchFilter.event_category = event_category;
-  if (user_id) matchFilter.user_id = new mongoose.Types.ObjectId(user_id);
+  const matchFilter = {}
+  if (event_name) matchFilter.event_name = event_name
+  if (event_category) matchFilter.event_category = event_category
+  if (user_id) matchFilter.user_id = new mongoose.Types.ObjectId(user_id)
 
   const events = await AnalyticsEvent.find(matchFilter)
     .sort({ server_timestamp: -1 })
@@ -227,10 +222,10 @@ exports.getLiveEvents = asyncHandler(async (req, res) => {
     .select(
       "event_name event_category event_properties screen_name user_id user_role device_os app_version server_timestamp session_id",
     )
-    .lean();
+    .lean()
 
-  res.json({ success: true, data: events, count: events.length });
-});
+  res.json({ success: true, data: events, count: events.length })
+})
 ```
 
 ---
@@ -243,25 +238,19 @@ exports.getLiveEvents = asyncHandler(async (req, res) => {
 
 ```javascript
 exports.getFunnel = asyncHandler(async (req, res, next) => {
-  const { steps: stepsStr, from, to, company_id } = req.query;
+  const { steps: stepsStr, from, to, company_id } = req.query
 
   if (!stepsStr)
-    return next(
-      new ErrorResponse(
-        "steps parameter required (comma-separated event names)",
-        400,
-      ),
-    );
+    return next(new ErrorResponse("steps parameter required (comma-separated event names)", 400))
 
-  const steps = stepsStr.split(",").map((s) => s.trim());
+  const steps = stepsStr.split(",").map((s) => s.trim())
 
-  const matchFilter = { event_name: { $in: steps } };
-  if (company_id)
-    matchFilter.company_id = new mongoose.Types.ObjectId(company_id);
+  const matchFilter = { event_name: { $in: steps } }
+  if (company_id) matchFilter.company_id = new mongoose.Types.ObjectId(company_id)
   if (from || to) {
-    matchFilter.server_timestamp = {};
-    if (from) matchFilter.server_timestamp.$gte = new Date(from);
-    if (to) matchFilter.server_timestamp.$lte = new Date(to);
+    matchFilter.server_timestamp = {}
+    if (from) matchFilter.server_timestamp.$gte = new Date(from)
+    if (to) matchFilter.server_timestamp.$lte = new Date(to)
   }
 
   const userSteps = await AnalyticsEvent.aggregate([
@@ -275,32 +264,23 @@ exports.getFunnel = asyncHandler(async (req, res, next) => {
         last_event: { $last: "$server_timestamp" },
       },
     },
-  ]);
+  ])
 
   const funnelData = steps.map((step, index) => {
-    const usersAtStep = userSteps.filter((u) =>
-      u.completed_steps.includes(step),
-    ).length;
+    const usersAtStep = userSteps.filter((u) => u.completed_steps.includes(step)).length
     const previousCount =
       index === 0
         ? userSteps.length
-        : userSteps.filter((u) => u.completed_steps.includes(steps[index - 1]))
-            .length;
+        : userSteps.filter((u) => u.completed_steps.includes(steps[index - 1])).length
 
     return {
       step_index: index,
       event_name: step,
       users: usersAtStep,
-      conversion_rate:
-        previousCount > 0
-          ? ((usersAtStep / previousCount) * 100).toFixed(1)
-          : 0,
-      overall_rate:
-        userSteps.length > 0
-          ? ((usersAtStep / userSteps.length) * 100).toFixed(1)
-          : 0,
-    };
-  });
+      conversion_rate: previousCount > 0 ? ((usersAtStep / previousCount) * 100).toFixed(1) : 0,
+      overall_rate: userSteps.length > 0 ? ((usersAtStep / userSteps.length) * 100).toFixed(1) : 0,
+    }
+  })
 
   res.json({
     success: true,
@@ -309,8 +289,8 @@ exports.getFunnel = asyncHandler(async (req, res, next) => {
       total_users: userSteps.length,
       date_range: { from, to },
     },
-  });
-});
+  })
+})
 ```
 
 ---
@@ -323,17 +303,15 @@ exports.getFunnel = asyncHandler(async (req, res, next) => {
 
 ```javascript
 exports.getRetention = asyncHandler(async (req, res) => {
-  const { period = "week", cohorts = 8, company_id } = req.query;
-  const numCohorts = Math.min(parseInt(cohorts), 12);
+  const { period = "week", cohorts = 8, company_id } = req.query
+  const numCohorts = Math.min(parseInt(cohorts), 12)
 
-  const periodMs =
-    period === "week" ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000;
-  const lookbackMs = numCohorts * periodMs;
-  const startDate = new Date(Date.now() - lookbackMs);
+  const periodMs = period === "week" ? 7 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000
+  const lookbackMs = numCohorts * periodMs
+  const startDate = new Date(Date.now() - lookbackMs)
 
-  const matchFilter = { server_timestamp: { $gte: startDate } };
-  if (company_id)
-    matchFilter.company_id = new mongoose.Types.ObjectId(company_id);
+  const matchFilter = { server_timestamp: { $gte: startDate } }
+  if (company_id) matchFilter.company_id = new mongoose.Types.ObjectId(company_id)
 
   // Find each user's first event date and active dates
   const userFirstSeen = await AnalyticsEvent.aggregate([
@@ -353,37 +331,36 @@ exports.getRetention = asyncHandler(async (req, res) => {
         },
       },
     },
-  ]);
+  ])
 
   // Build cohort grid
-  const cohortGrid = [];
+  const cohortGrid = []
   for (let i = 0; i < numCohorts; i++) {
-    const cohortStart = new Date(startDate.getTime() + i * periodMs);
-    const cohortEnd = new Date(cohortStart.getTime() + periodMs);
+    const cohortStart = new Date(startDate.getTime() + i * periodMs)
+    const cohortEnd = new Date(cohortStart.getTime() + periodMs)
 
     const cohortUsers = userFirstSeen.filter(
       (u) => u.first_seen >= cohortStart && u.first_seen < cohortEnd,
-    );
-    const cohortSize = cohortUsers.length;
-    const retention = [];
+    )
+    const cohortSize = cohortUsers.length
+    const retention = []
 
     for (let j = 0; j <= numCohorts - i - 1; j++) {
-      const periodStart = new Date(cohortStart.getTime() + j * periodMs);
-      const periodEnd = new Date(periodStart.getTime() + periodMs);
+      const periodStart = new Date(cohortStart.getTime() + j * periodMs)
+      const periodEnd = new Date(periodStart.getTime() + periodMs)
 
       const activeInPeriod = cohortUsers.filter((u) =>
         u.active_dates.some((d) => {
-          const date = new Date(d);
-          return date >= periodStart && date < periodEnd;
+          const date = new Date(d)
+          return date >= periodStart && date < periodEnd
         }),
-      ).length;
+      ).length
 
       retention.push({
         period_index: j,
         active_users: activeInPeriod,
-        retention_rate:
-          cohortSize > 0 ? ((activeInPeriod / cohortSize) * 100).toFixed(1) : 0,
-      });
+        retention_rate: cohortSize > 0 ? ((activeInPeriod / cohortSize) * 100).toFixed(1) : 0,
+      })
     }
 
     cohortGrid.push({
@@ -391,11 +368,11 @@ exports.getRetention = asyncHandler(async (req, res) => {
       cohort_end: cohortEnd,
       cohort_size: cohortSize,
       retention,
-    });
+    })
   }
 
-  res.json({ success: true, data: { period, cohorts: cohortGrid } });
-});
+  res.json({ success: true, data: { period, cohorts: cohortGrid } })
+})
 ```
 
 ---
@@ -408,31 +385,23 @@ exports.getRetention = asyncHandler(async (req, res) => {
 
 ```javascript
 exports.getSessions = asyncHandler(async (req, res) => {
-  const {
-    from,
-    to,
-    user_id,
-    page = 1,
-    limit = 50,
-    min_duration,
-    max_duration,
-  } = req.query;
+  const { from, to, user_id, page = 1, limit = 50, min_duration, max_duration } = req.query
 
-  const filter = {};
-  if (user_id) filter.user_id = new mongoose.Types.ObjectId(user_id);
+  const filter = {}
+  if (user_id) filter.user_id = new mongoose.Types.ObjectId(user_id)
   if (from || to) {
-    filter.started_at = {};
-    if (from) filter.started_at.$gte = new Date(from);
-    if (to) filter.started_at.$lte = new Date(to);
+    filter.started_at = {}
+    if (from) filter.started_at.$gte = new Date(from)
+    if (to) filter.started_at.$lte = new Date(to)
   }
-  if (min_duration) filter.duration_ms = { $gte: parseInt(min_duration) };
+  if (min_duration) filter.duration_ms = { $gte: parseInt(min_duration) }
   if (max_duration)
     filter.duration_ms = {
       ...filter.duration_ms,
       $lte: parseInt(max_duration),
-    };
+    }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const skip = (parseInt(page) - 1) * parseInt(limit)
 
   const [sessions, total] = await Promise.all([
     AnalyticsSession.find(filter)
@@ -442,7 +411,7 @@ exports.getSessions = asyncHandler(async (req, res) => {
       .populate("user_id", "username email role")
       .lean(),
     AnalyticsSession.countDocuments(filter),
-  ]);
+  ])
 
   res.json({
     success: true,
@@ -453,8 +422,8 @@ exports.getSessions = asyncHandler(async (req, res) => {
       total,
       pages: Math.ceil(total / parseInt(limit)),
     },
-  });
-});
+  })
+})
 ```
 
 ---
@@ -467,18 +436,17 @@ exports.getSessions = asyncHandler(async (req, res) => {
 
 ```javascript
 exports.getUserActivity = asyncHandler(async (req, res) => {
-  const { from, to, sort_by = "event_count", limit = 50, page = 1 } = req.query;
+  const { from, to, sort_by = "event_count", limit = 50, page = 1 } = req.query
 
-  const matchFilter = { user_id: { $ne: null } };
+  const matchFilter = { user_id: { $ne: null } }
   if (from || to) {
-    matchFilter.server_timestamp = {};
-    if (from) matchFilter.server_timestamp.$gte = new Date(from);
-    if (to) matchFilter.server_timestamp.$lte = new Date(to);
+    matchFilter.server_timestamp = {}
+    if (from) matchFilter.server_timestamp.$gte = new Date(from)
+    if (to) matchFilter.server_timestamp.$lte = new Date(to)
   }
 
-  const sortField =
-    sort_by === "last_active" ? { last_active: -1 } : { event_count: -1 };
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const sortField = sort_by === "last_active" ? { last_active: -1 } : { event_count: -1 }
+  const skip = (parseInt(page) - 1) * parseInt(limit)
 
   const result = await AnalyticsEvent.aggregate([
     { $match: matchFilter },
@@ -517,10 +485,10 @@ exports.getUserActivity = asyncHandler(async (req, res) => {
       },
     },
     { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
-  ]);
+  ])
 
-  res.json({ success: true, data: result, count: result.length });
-});
+  res.json({ success: true, data: result, count: result.length })
+})
 ```
 
 ---
@@ -535,11 +503,11 @@ analytics_event_Schema.index({
   event_name: 1,
   user_id: 1,
   server_timestamp: -1,
-});
+})
 // Live feed
-analytics_event_Schema.index({ server_timestamp: -1, event_name: 1 });
+analytics_event_Schema.index({ server_timestamp: -1, event_name: 1 })
 // User activity
-analytics_event_Schema.index({ user_id: 1, server_timestamp: -1 });
+analytics_event_Schema.index({ user_id: 1, server_timestamp: -1 })
 ```
 
 ---

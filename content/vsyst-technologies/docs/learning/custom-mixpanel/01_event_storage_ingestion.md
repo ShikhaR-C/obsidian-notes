@@ -25,7 +25,7 @@ Create MongoDB schemas optimized for time-series event storage, build the batch 
 ### Schema Design
 
 ```javascript
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const analytics_event_Schema = new mongoose.Schema(
   {
@@ -62,27 +62,24 @@ const analytics_event_Schema = new mongoose.Schema(
     timeIST: { type: String },
   },
   { timestamps: true },
-);
+)
 
 // Compound indexes for common query patterns
-analytics_event_Schema.index({ event_name: 1, server_timestamp: -1 });
+analytics_event_Schema.index({ event_name: 1, server_timestamp: -1 })
 analytics_event_Schema.index({
   user_id: 1,
   session_id: 1,
   server_timestamp: 1,
-});
+})
 analytics_event_Schema.index({
   company_id: 1,
   event_name: 1,
   server_timestamp: -1,
-});
-analytics_event_Schema.index({ session_id: 1, server_timestamp: 1 });
-analytics_event_Schema.index(
-  { server_timestamp: 1 },
-  { expireAfterSeconds: 7776000 },
-); // 90-day TTL
+})
+analytics_event_Schema.index({ session_id: 1, server_timestamp: 1 })
+analytics_event_Schema.index({ server_timestamp: 1 }, { expireAfterSeconds: 7776000 }) // 90-day TTL
 
-module.exports = mongoose.model("analytics_events", analytics_event_Schema);
+module.exports = mongoose.model("analytics_events", analytics_event_Schema)
 ```
 
 ### Design Decisions
@@ -101,7 +98,7 @@ module.exports = mongoose.model("analytics_events", analytics_event_Schema);
 **File to create:** `models/analytics_sessions.js`
 
 ```javascript
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
 const analytics_session_Schema = new mongoose.Schema(
   {
@@ -133,13 +130,13 @@ const analytics_session_Schema = new mongoose.Schema(
     build_number: { type: String },
   },
   { timestamps: true },
-);
+)
 
-analytics_session_Schema.index({ user_id: 1, started_at: -1 });
-analytics_session_Schema.index({ started_at: -1 });
-analytics_session_Schema.index({ is_active: 1 });
+analytics_session_Schema.index({ user_id: 1, started_at: -1 })
+analytics_session_Schema.index({ started_at: -1 })
+analytics_session_Schema.index({ is_active: 1 })
 
-module.exports = mongoose.model("analytics_sessions", analytics_session_Schema);
+module.exports = mongoose.model("analytics_sessions", analytics_session_Schema)
 ```
 
 ---
@@ -149,42 +146,42 @@ module.exports = mongoose.model("analytics_sessions", analytics_session_Schema);
 **File to create:** `api_v3/controllers/analytics/events.js`
 
 ```javascript
-const asyncHandler = require("../../../helpers/async");
-const AnalyticsEvent = require("../../../models/analytics_events");
-const ErrorResponse = require("../../../helpers/ErrorResponse");
-const { getUserFromToken } = require("../../../helpers/auth");
+const asyncHandler = require("../../../helpers/async")
+const AnalyticsEvent = require("../../../models/analytics_events")
+const ErrorResponse = require("../../../helpers/ErrorResponse")
+const { getUserFromToken } = require("../../../helpers/auth")
 
 // @desc    Batch ingest analytics events
 // @route   POST /api/v3/analytics/events
 // @access  API Key required
 exports.ingestEvents = asyncHandler(async (req, res, next) => {
-  const { events } = req.body;
+  const { events } = req.body
 
   if (!events || !Array.isArray(events) || events.length === 0) {
-    return next(new ErrorResponse("Events array is required", 400));
+    return next(new ErrorResponse("Events array is required", 400))
   }
 
   if (events.length > 50) {
-    return next(new ErrorResponse("Maximum 50 events per batch", 400));
+    return next(new ErrorResponse("Maximum 50 events per batch", 400))
   }
 
   // Extract user context from JWT if available
-  let userContext = {};
+  let userContext = {}
   try {
-    const decoded = await getUserFromToken(req.headers);
+    const decoded = await getUserFromToken(req.headers)
     if (decoded && decoded.user) {
       userContext = {
         user_id: decoded.user._id,
         company_id: decoded.user.co_id,
         user_role: decoded.user.role,
-      };
+      }
     }
   } catch (e) {
     // Anonymous events are OK (pre-login screens)
   }
 
-  const now = new Date();
-  const timeIST = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" });
+  const now = new Date()
+  const timeIST = now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" })
 
   // Enrich each event
   const enrichedEvents = events.map((event) => ({
@@ -196,30 +193,30 @@ exports.ingestEvents = asyncHandler(async (req, res, next) => {
     user_role: event.user_role || userContext.user_role,
     server_timestamp: now,
     timeIST,
-  }));
+  }))
 
-  let accepted = 0;
-  let rejected = 0;
+  let accepted = 0
+  let rejected = 0
 
   try {
     const result = await AnalyticsEvent.insertMany(enrichedEvents, {
       ordered: false,
-    });
-    accepted = result.length;
+    })
+    accepted = result.length
   } catch (err) {
     if (err.insertedDocs) {
-      accepted = err.insertedDocs.length;
-      rejected = enrichedEvents.length - accepted;
+      accepted = err.insertedDocs.length
+      rejected = enrichedEvents.length - accepted
     } else {
-      return next(new ErrorResponse("Failed to ingest events", 500));
+      return next(new ErrorResponse("Failed to ingest events", 500))
     }
   }
 
   res.status(201).json({
     success: true,
     data: { accepted, rejected, total: events.length },
-  });
-});
+  })
+})
 ```
 
 ---
@@ -229,17 +226,17 @@ exports.ingestEvents = asyncHandler(async (req, res, next) => {
 **File to create:** `api_v3/controllers/analytics/sessions.js`
 
 ```javascript
-const asyncHandler = require("../../../helpers/async");
-const AnalyticsSession = require("../../../models/analytics_sessions");
-const ErrorResponse = require("../../../helpers/ErrorResponse");
+const asyncHandler = require("../../../helpers/async")
+const AnalyticsSession = require("../../../models/analytics_sessions")
+const ErrorResponse = require("../../../helpers/ErrorResponse")
 
 // @desc    Create or update analytics session
 // @route   POST /api/v3/analytics/session
 exports.upsertSession = asyncHandler(async (req, res, next) => {
-  const { session_id, action, ...sessionData } = req.body;
+  const { session_id, action, ...sessionData } = req.body
 
   if (!session_id) {
-    return next(new ErrorResponse("session_id is required", 400));
+    return next(new ErrorResponse("session_id is required", 400))
   }
 
   if (action === "start") {
@@ -254,8 +251,8 @@ exports.upsertSession = asyncHandler(async (req, res, next) => {
         },
       },
       { upsert: true, new: true },
-    );
-    return res.status(201).json({ success: true, data: session });
+    )
+    return res.status(201).json({ success: true, data: session })
   }
 
   if (action === "end") {
@@ -269,27 +266,23 @@ exports.upsertSession = asyncHandler(async (req, res, next) => {
         },
       },
       { new: true },
-    );
-    return res.status(200).json({ success: true, data: session });
+    )
+    return res.status(200).json({ success: true, data: session })
   }
 
   if (action === "update") {
-    const updateOps = { $inc: { event_count: 1 } };
+    const updateOps = { $inc: { event_count: 1 } }
     if (sessionData.screen_name) {
-      updateOps.$addToSet = { screens_visited: sessionData.screen_name };
+      updateOps.$addToSet = { screens_visited: sessionData.screen_name }
     }
-    const session = await AnalyticsSession.findOneAndUpdate(
-      { session_id },
-      updateOps,
-      { new: true },
-    );
-    return res.status(200).json({ success: true, data: session });
+    const session = await AnalyticsSession.findOneAndUpdate({ session_id }, updateOps, {
+      new: true,
+    })
+    return res.status(200).json({ success: true, data: session })
   }
 
-  return next(
-    new ErrorResponse("action must be 'start', 'end', or 'update'", 400),
-  );
-});
+  return next(new ErrorResponse("action must be 'start', 'end', or 'update'", 400))
+})
 ```
 
 ---
@@ -299,15 +292,15 @@ exports.upsertSession = asyncHandler(async (req, res, next) => {
 **File to create:** `api_v3/routes/analytics/index.js`
 
 ```javascript
-const express = require("express");
-const router = express.Router();
-const { ingestEvents } = require("../../controllers/analytics/events");
-const { upsertSession } = require("../../controllers/analytics/sessions");
+const express = require("express")
+const router = express.Router()
+const { ingestEvents } = require("../../controllers/analytics/events")
+const { upsertSession } = require("../../controllers/analytics/sessions")
 
-router.post("/events", ingestEvents);
-router.post("/session", upsertSession);
+router.post("/events", ingestEvents)
+router.post("/session", upsertSession)
 
-module.exports = router;
+module.exports = router
 ```
 
 ---
@@ -319,7 +312,7 @@ module.exports = router;
 Add **before** `check_user_company_status()` middleware:
 
 ```javascript
-router.use("/analytics", require("./../api_v3/routes/analytics"));
+router.use("/analytics", require("./../api_v3/routes/analytics"))
 ```
 
 **Why before company check?** We want to capture events even from users whose company status is in transition, and pre-login screen views from unauthenticated users. The API key middleware (`api_key_v3`) still applies for security.
