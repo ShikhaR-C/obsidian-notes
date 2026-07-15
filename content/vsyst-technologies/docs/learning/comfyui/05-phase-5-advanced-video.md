@@ -31,7 +31,7 @@ On the `UNETLoader`, change `weight_dtype`:
 
 ### Fix 2 — CausVid LoRA (20 steps → 4)
 
-You don't have this LoRA. It is 319 MB and it is the highest-leverage file you could put on this disk.
+**Update 2026-07-15: this LoRA is now on disk** (`loras/Wan21_CausVid_14B_T2V_lora_rank32.safetensors`, 319 MB) — and it is still the highest-leverage file on it. If you ever need to re-fetch:
 
 ```bash
 curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/loras/Wan21_CausVid_14B_T2V_lora_rank32.safetensors \

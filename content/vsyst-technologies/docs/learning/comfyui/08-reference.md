@@ -57,44 +57,108 @@
 
 ## 4. Recommended Downloads
 
-### Priority 1 — CausVid LoRA (319 MB) · biggest win available
+> Restructured **2026-07-15** after a web-verified research pass (files checked against Hugging Face and the ComfyUI docs; Mac/MPS status against issue trackers). The tier logic and summary tables live in [[00_README]] — this is the exact-files companion. **Nothing new is downloaded yet**; commands are staged for when you decide. If a curl 404s, the file moved inside its repo — open the repo page and adjust the path.
 
-Cuts VACE 14B from 20 steps to 4. See [[05-phase-5-advanced-video]] §1.
+### ✅ Done — CausVid LoRA (installed 2026-07-15)
+
+`loras/Wan21_CausVid_14B_T2V_lora_rank32.safetensors` (319 MB) is on disk. Strength **0.30** — 1.0 kills the motion. Wiring in [[05-phase-5-advanced-video]] §1.
+
+### Tier 1 — the content-studio core (~58 GB, staged)
+
+**SVI 2.0 Pro — storyline continuity** (2 × 1.23 GB → `loras/`). Chains unlimited 5-second segments on your existing WAN 2.2 I2V pair, with error-recycling so identity doesn't drift shot-to-shot.
 
 ```bash
-curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/loras/Wan21_CausVid_14B_T2V_lora_rank32.safetensors \
-  https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan21_CausVid_14B_T2V_lora_rank32.safetensors
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/loras/SVI_v2_PRO_Wan2.2-I2V-A14B_HIGH_lora_rank_128_fp16.safetensors \
+  "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/LoRAs/Stable-Video-Infinity/v2.0/SVI_v2_PRO_Wan2.2-I2V-A14B_HIGH_lora_rank_128_fp16.safetensors"
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/loras/SVI_v2_PRO_Wan2.2-I2V-A14B_LOW_lora_rank_128_fp16.safetensors \
+  "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/LoRAs/Stable-Video-Infinity/v2.0/SVI_v2_PRO_Wan2.2-I2V-A14B_LOW_lora_rank_128_fp16.safetensors"
 ```
 
-_(Verified: HTTP 200, 319 MB.)_ Use at **strength 0.30** — 1.0 kills the motion.
+**Qwen-Image-Edit-2509 — character consistency in stills** (20.4 GB → `diffusion_models/`). Takes 1–3 reference images per edit (character + product + scene). Reuses your existing `qwen_2.5_vl_7b` encoder and `qwen_image_vae`. Makes the shipped `Image Edit (Qwen 2509)` blueprint run unmodified — the [[03-phase-3-control-and-editing]] §3 workaround retires.
 
-### Priority 2 — CLIP-Vision (1.2 GB)
+```bash
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors \
+  https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors
+```
 
-Your `clip_vision/` folder is empty. Needed for WAN 2.1 I2V workflows and any IPAdapter-style reference work.
+**WAN 2.2 S2V 14B — the speaking presenter** (16.4 GB → `diffusion_models/`, plus a 0.63 GB audio encoder → `audio_encoders/`, a folder you'll create). Still image + voice track → lip-synced talking video. Native template since core 0.3.53; reuses umt5 and `wan_2.1_vae`. No published Apple-Silicon benchmark exists — your first run writes the first number.
+
+```bash
+mkdir -p ~/Documents/AI/ComfyUI/ComfyUI/models/audio_encoders
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/diffusion_models/wan2.2_s2v_14B_fp8_scaled.safetensors \
+  https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_s2v_14B_fp8_scaled.safetensors
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/audio_encoders/wav2vec2_large_english_fp16.safetensors \
+  https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/audio_encoders/wav2vec2_large_english_fp16.safetensors
+```
+
+If fp8 turns out to upcast on MPS (the [[00_README]] measurement), the fallback is `QuantStack/Wan2.2-S2V-14B-GGUF` (Q4_K_M, 13.9 GB) + the `ComfyUI-GGUF` custom node.
+
+**Chatterbox — voiceover + voice cloning** (~3.2 GB, MIT, official MPS support). No curl: install the `diodiogod/TTS-Audio-Suite` custom node and it fetches the `ResembleAI/chatterbox` weights on first use. The 23-language multilingual t3 is ~2.1 GB extra.
+
+**ACE-Step 1.5 turbo — music beds** (10.0 GB → `checkpoints/`). MIT, native template, and the upstream repo ships Mac/MLX launch scripts — expect roughly 3–10× slower than the CUDA numbers people quote.
+
+```bash
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/checkpoints/ace_step_1.5_turbo_aio.safetensors \
+  https://huggingface.co/Comfy-Org/ace_step_1.5_ComfyUI_files/resolve/main/checkpoints/ace_step_1.5_turbo_aio.safetensors
+```
+
+**Stable Audio 3 small_sfx — sound effects** (2.3 GB + 1.2 GB t5gemma text encoder). Commercially licensed and small enough to run on CPU — the lowest-risk audio model on this machine. Folders below are the template's expectation; if a dropdown can't see a file, §5 last row.
+
+```bash
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/diffusion_models/stable_audio_3_small_sfx.safetensors \
+  https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/stable_audio_3_small_sfx.safetensors
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/text_encoders/t5gemma_b_b_ul2.safetensors \
+  https://huggingface.co/Comfy-Org/stable-audio-3/resolve/main/t5gemma_b_b_ul2.safetensors
+```
+
+**CLIP-Vision H** (1.2 GB → `clip_vision/`, currently empty). Needed for WAN 2.1 I2V workflows, IPAdapter-style reference work, and WAN Animate in Tier 2.
 
 ```bash
 curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/clip_vision/clip_vision_h.safetensors \
   https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors
 ```
 
-### Priority 3 — WAN 2.2 T2V 14B (~28 GB) · only if you need native text→video
+**Ollama side (not ComfyUI disk):** `ollama pull gemma4:12b-mlx` (7.7 GB, vision QC) · `ollama pull qwen3.5:4b-mlx` (4.0 GB, batch prompt expansion) · custom node `stavsap/comfyui-ollama` to call them from inside graphs.
 
-Unblocks the `Text to Video (Wan 2.2)` blueprint. Honestly: **try FLUX-still → I2V 14B first** ([[04-phase-4-video]] §6). It's usually better _and_ cheaper, because you can iterate on the still in 30 s.
+### Tier 2 / Tier 3 — exact files (verified to exist 2026-07-15)
 
-Needs: `wan2.2_t2v_{high,low}_noise_14B_fp8_scaled.safetensors` + `wan2.2_t2v_lightx2v_4steps_lora_v1.1_{high,low}_noise.safetensors` (`Comfy-Org/Wan_2.2_ComfyUI_Repackaged`).
+Rationale per row in [[00_README]]. GGUF rows need the `ComfyUI-GGUF` custom node.
 
-### Priority 4 — nice to have
+| Capability                        | Repo → file                                                                                                                                                                                        | GB          | Folder                                        |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | --------------------------------------------- |
+| Character animate/replace (video) | `Kijai/WanVideo_comfy_fp8_scaled` → `Wan22Animate/Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors` + Comfy-Org `wan2.2_animate_14B_relight_lora_bf16` (avoid the `_KJ_v2` files — load issues) | 18.4 + 1.4  | `diffusion_models/`, `loras/`                 |
+| Multi-subject ref→video           | `Kijai/WanVideo_comfy` → `Phantom-Wan-14B_fp8_e4m3fn.safetensors` (draft: `Phantom-Wan-1_3B_fp16`, 2.9)                                                                                            | 15.0        | `diffusion_models/`                           |
+| Keyframe bridging (FLF, 2.2)      | `Comfy-Org/Wan_2.2_ComfyUI_Repackaged` → `split_files/diffusion_models/wan2.2_fun_inpaint_{high,low}_noise_14B_fp8_scaled.safetensors`                                                             | 14.3 × 2    | `diffusion_models/`                           |
+| Newest character-edit (stills)    | `Comfy-Org/Qwen-Image-Edit_ComfyUI` → `qwen_image_edit_2511_fp8mixed.safetensors`, or `unsloth/Qwen-Image-Edit-2511-GGUF` Q4_K_M                                                                   | 20.5 / 13.2 | `diffusion_models/` / `unet/`                 |
+| FLUX-family identity edit         | `QuantStack/FLUX.1-Kontext-dev-GGUF` → `flux1-kontext-dev-Q4_K_M.gguf` (reuses your FLUX TEs + VAE; ⚠ non-commercial weights)                                                                      | 6.9         | `unet/`                                       |
+| Apache multi-ref gen + edit       | `Comfy-Org/flux2-klein-4B` → `flux-2-klein-4b.safetensors` + `flux2-vae` (0.34); TE is `qwen_3_4b` — verify your existing file is accepted                                                         | 7.8         | `diffusion_models/`, `vae/`                   |
+| Talking head (Mac-verified)       | `LeonJoe13/Sonic` → `unet.pth` + `audio2token.pth` + `audio2bucket.pth`, via `smthemex/ComfyUI_Sonic`; base = your existing `svd_xt`                                                               | 6.7         | per node README                               |
+| Lip-sync existing footage         | `Nekochu/Wav2Lip` → `wav2lip_gan.pth`, via `ShmuelRonen/ComfyUI_wav2lip`                                                                                                                           | 0.4         | per node README                               |
+| TTS quality leader                | `Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice` (Apache-2.0; via TTS-Audio-Suite or `mlx-audio`)                                                                                                            | 4.5         | node-managed                                  |
+| LoRA-training base                | `Comfy-Org/z_image` → `z_image_bf16.safetensors` (undistilled; TE + VAE already on disk)                                                                                                           | 12.3        | `diffusion_models/`                           |
+| Native T2V (the old Priority 3)   | `Comfy-Org/Wan_2.2_ComfyUI_Repackaged` → `wan2.2_t2v_{high,low}_noise_14B_fp8_scaled` + `wan2.2_t2v_lightx2v_4steps_lora_v1.1_{high,low}_noise`                                                    | 27 + 2      | `diffusion_models/`, `loras/`                 |
+| VACE at 2.2 quality               | same repo → `wan2.2_fun_vace_{high,low}_noise_14B_fp8_scaled`                                                                                                                                      | 17.3 × 2    | `diffusion_models/`                           |
+| Second motion opinion             | `Comfy-Org/HunyuanVideo_1.5_repackaged` → `hunyuanvideo1.5_720p_i2v_cfg_distilled_fp8_scaled` + `byt5_small_glyphxl_fp16` + `hunyuanvideo15_vae_fp16` (reuses your `qwen_2.5_vl_7b` TE)            | ~10.4       | `diffusion_models/`, `text_encoders/`, `vae/` |
+| Unlimited dubbing                 | `MeiGen-AI/InfiniteTalk` → `comfyui/infinitetalk_single.safetensors` — needs the WAN 2.1 I2V 14B base (~16 GB) you don't have                                                                      | 2.7 (+16)   | `diffusion_models/`                           |
+| Long-form multi-speaker TTS       | `microsoft/VibeVoice-1.5B` (Large: official repo pulled — mirror `aoi-ot/VibeVoice-Large`)                                                                                                         | 5.4 / 18.4  | node-managed                                  |
 
-| Want                                                                         | Get                                     |
-| ---------------------------------------------------------------------------- | --------------------------------------- |
-| Qwen-Image **base** (text→image; you only have Edit)                         | `Comfy-Org/Qwen-Image_ComfyUI` (~20 GB) |
-| Qwen-Image-Edit **2509** (multi-reference; unlocks the blueprint as shipped) | `Comfy-Org/Qwen-Image-Edit_ComfyUI`     |
-| SAM3 (masking → VACE video inpainting)                                       | `sam3.1_multiplex_fp16.safetensors`     |
-| Anime/illustration upscale                                                   | `4x-AnimeSharp.pth`                     |
+For the old Priority-3 verdict: unchanged — **try FLUX-still → I2V 14B first** ([[04-phase-4-video]] §6); it's usually better _and_ cheaper, because you iterate on the still in 30 s.
+
+### Deliberately skipped (checked 2026-07-15)
+
+FLUX.2 dev · LTX-2.3 · Ovi · LatentSync-in-ComfyUI · MMAudio / HunyuanVideo-Foley · F5-TTS (CC-BY-NC) · PuLID / InstantID / FaceID · "open" WAN 2.5/2.6/2.7 (API-only) · kijai WanVideoWrapper on MPS. One-line reasons in [[00_README]].
+
+### Still nice to have (unchanged)
+
+| Want                                                 | Get                                     |
+| ----------------------------------------------------- | --------------------------------------- |
+| Qwen-Image **base** (text→image; you only have Edit) | `Comfy-Org/Qwen-Image_ComfyUI` (~20 GB) |
+| SAM3 (masking → VACE video inpainting)               | `sam3.1_multiplex_fp16.safetensors`     |
+| Anime/illustration upscale                           | `4x-AnimeSharp.pth`                     |
 
 ### Already installed 2026-07-15
 
-`RealESRGAN_x4plus` · `4x-UltraSharp` · `film_net_fp16` · `Z-Image-Turbo-Fun-Controlnet-Union` · `lotus-depth-d-v1-1` · `vae-ft-mse-840000-ema-pruned` · `sdpose_wholebody_fp16` · `rt_detr_v4-x-hgnet_fp16`
+`RealESRGAN_x4plus` · `4x-UltraSharp` · `film_net_fp16` · `Z-Image-Turbo-Fun-Controlnet-Union` · `lotus-depth-d-v1-1` · `vae-ft-mse-840000-ema-pruned` · `sdpose_wholebody_fp16` · `rt_detr_v4-x-hgnet_fp16` · `Wan21_CausVid_14B_T2V_lora_rank32`
 
 ## 5. Troubleshooting (Apple Silicon)
 
@@ -113,7 +177,7 @@ Needs: `wan2.2_t2v_{high,low}_noise_14B_fp8_scaled.safetensors` + `wan2.2_t2v_li
 
 ### Apple-Silicon specifics
 
-- **`fp8_e4m3fn_fast` gives no speedup here.** ComfyUI's `supports_fp8_compute()` returns `False` on any non-NVIDIA device, so the fast fp8 matmul path never engages. It's harmless but inert — use plain `fp8_e4m3fn`. You still get the **memory** halving, which is the thing that actually matters at 48 GB.
+- **`fp8_e4m3fn_fast` gives no speedup here.** ComfyUI's `supports_fp8_compute()` returns `False` on any non-NVIDIA device, so the fast fp8 matmul path never engages. It's harmless but inert — use plain `fp8_e4m3fn`. You still get the **memory** halving, which is the thing that actually matters at 48 GB. _Caveat 2026-07-15: whether the halving reaches **RAM** (not just disk) on MPS is disputed upstream — torch 2.10 has no native fp8 dtype on MPS, and none of this folder's fp8 timings are measured yet. One I2V-14B-fp8 run with Activity Monitor open settles it; if resident ≈ 2× file size, prefer the GGUF variants in §4._
 - **No xformers / flash-attention.** ComfyUI falls back to split or PyTorch attention on MPS. Expected; don't chase it.
 - **Unified memory doesn't hard-fail.** Unlike CUDA, you rarely see a clean OOM — you get swap and a 10× slowdown instead. **A mysteriously slow render is a memory problem until proven otherwise.**
 - **Close other apps for the big runs.** A 32 GB model on a 48 GB machine leaves very little headroom, and Chrome will happily eat it.

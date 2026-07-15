@@ -128,7 +128,7 @@ You did every step without looking up how. When that's true, you're done with th
 
 **Fill the gaps.** [[08-reference]] has the download list — CausVid first (biggest win), then a proper `clip_vision`, then WAN 2.2 T2V 14B if you want native text→video.
 
-**Train a LoRA.** The one thing this course doesn't cover. 20–30 images of a face, product, or style, and you get a model that knows it natively — stronger than any reference-image trick. `ComfyUI-FluxTrainer` via the Manager, or Kohya outside ComfyUI. This is the real answer to character consistency.
+**Train a LoRA.** The one thing this course doesn't cover, and the real answer to character consistency. Plan **70–80 images** for a quality character LoRA — 5–15 only proves the pipeline. On this Mac the paths that actually work (verified mid-2026): **Draw Things** (Metal-native app, on-device training for Z-Image / FLUX.2-klein / Qwen-Image — least pain), **AI-Toolkit** (experimental macOS script: quantization off, plain `adamw`, `num_workers 0`; a 3000-step Z-Image character LoRA ran ~21 h on an M4 Pro), or **mflux** (MLX-native, Z-Image). Kohya has no verified MPS path — skip it here. Z-Image **base** (undistilled, 12.3 GB) is the training foundation, staged in [[08-reference]] §4.
 
 **Custom nodes.** You currently have **zero** third-party nodes, which is a clean and enviable place to be. Add them one at a time, with a reason. The three worth knowing about:
 

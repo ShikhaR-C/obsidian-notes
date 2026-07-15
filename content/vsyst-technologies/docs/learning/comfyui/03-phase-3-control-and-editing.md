@@ -80,6 +80,8 @@ ControlNet controls _generation_. Qwen-Image-Edit controls _modification_: give 
 
 That last one is the non-obvious one. The `...Plus` node is built for 2509's multi-reference-image capability. Your original model uses the single-image `TextEncodeQwenImageEdit`. Swap the node, don't just swap the dropdowns.
 
+_(Planned exit from this workaround: the Tier-1 plan in [[00_README]] stages the 2509 model itself — once downloaded, the blueprint runs as shipped and this section becomes historical.)_
+
 ### The graph
 
 | Node                      | Setting                                                                |
