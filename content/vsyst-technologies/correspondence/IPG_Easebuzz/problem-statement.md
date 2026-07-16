@@ -7,8 +7,8 @@ Content for every topic is supplied by the user — nothing here is to be invent
 ## Status
 
 - [x] Topic 1 — Why we need an IPG — _drafted 2026-07-16; all flags and open questions resolved_
-- [x] Topic 2 — What kind of IPG servicing is required — _drafted 2026-07-16; 4 points flagged, dealer commission figure needed_
-- [ ] Topic 3 — The problem with the offer provided by the Bank — _awaiting content_
+- [x] Topic 2 — What kind of IPG servicing is required — _drafted 2026-07-16; 3 points open (pump price, FMCG wording, CBDC framing)_
+- [x] Topic 3 — The problem with the offer provided by the Bank — _drafted 2026-07-16; 4 points flagged. Volume projections for 10–15 dealers awaited._
 
 ---
 
@@ -65,16 +65,57 @@ _Scope note: UPI and RuPay debit already carry zero MDR by regulation, so this a
 
 - **Confirm the diesel pump price** behind the arithmetic above — ₹93/litre is a working assumption, not your number. The conclusion is robust either way: anywhere between ₹85 and ₹100 a litre, ₹2.2 lands between 2.2% and 2.6% of sale value, so MDR still eats 40–80% of the commission. But the table should carry the real price from your outlet.
 - **"FMCG" should not go in.** Fuel retail is not FMCG and a banker will notice. "Petroleum retail, on an OMC-regulated margin" is both accurate and the stronger claim, because it says the dealer is *structurally unable* to pass the cost on — not merely that margins are tight.
-- **Is a full waiver the only acceptable outcome, or is a flat per-transaction fee a fallback?** A percentage charge is what breaks the economics; a small flat fee on a ₹1 lakh transfer may not. Naming a fallback tends to get a yes — an all-or-nothing ask invites a no. Worth deciding before the ask is written.
+- **Waiver vs. flat fee — resolved 2026-07-16.** A minimal flat per-transaction charge is an acceptable fallback and §3 is written that way. A percentage is what breaks the economics; a flat fee does not — and it also happens to sit on the same axis as the Bank's own cost. See §3.
 - **CBDC framing.** Retail CBDC is still at pilot stage. Asking for it "as and when the Bank's CBDC rails are available" costs nothing and reads as RBI-aligned; asking for it as a live requirement invites a pointless objection.
 
 ---
 
 ## 3. The Problem with the Offer Provided by the Bank
 
-_Where the Bank's offer does not meet what Topic 2 requires — the gaps, limits, or conditions in it that leave the problem in Topic 1 unsolved._
+The Bank's offer has two parts, and each on its own leaves Topic 1 unsolved:
 
-_(content to be provided)_
+- **Net banking priced at 1.8% per transaction.**
+- **The program to start with UPI and RuPay debit only**, net banking to follow.
+
+### The charge is on the wrong axis — and so is the Bank's own cost
+
+Topic 2 settles what 1.8% does to the dealer: at ₹2.2 per litre he earns roughly 2.4% of the sale, so the charge takes about **76% of his gross commission**, and because commission and MDR both scale with litres, the ratio holds at ₹5,000 and at ₹5 lakh alike. This is not a rate to be negotiated down by a few points. **No percentage-based charge survives this business.**
+
+But the point that should matter to the Bank is that **its own cost is not a percentage either.** The Bank provides the IPG through Easebuzz, and Easebuzz charges **per transaction**. A net-banking payment is a fixed piece of work whatever it carries — an authorisation at the payer's bank, a settlement instruction, a T+1 payout. Nothing in it costs more because the amount is ₹1 lakh rather than ₹5,000: there is no interchange to fund and no credit being extended. **The Bank's cost scales with the number of transactions. The price the Bank has quoted scales with their value.** On a ₹1 lakh transfer, 1.8% is ₹1,800 charged against a cost measured in rupees.
+
+So our ask is not that the Bank absorb a loss. It is that the Bank **charge us on the axis it is charged on: a flat fee per net-banking transaction**, at whatever level covers the Easebuzz cost and the Bank's margin over it. That is cost-plus pricing, it grows with the volume that actually drives the Bank's cost, and it is payable at every ticket size — which a percentage is not, at any ticket size.
+
+### Net banking is the rail we need — and the safest one the Bank can give
+
+If the hesitation is risk rather than price, the offer is inverted. **Net banking carries no chargeback.** The payer authenticates inside their own bank and pushes the money; there is no reversal right to be exercised against the merchant afterwards. **Debit cards — the instrument the Bank proposes to start with — do carry chargeback exposure.** And the dispute itself barely exists here: the payment is made by an identified firm against a specific invoice, for fuel dispensed at a physical outlet into a vehicle that was present. There are no goods to return and no delivery to contest.
+
+The rail we are asking for is the lowest-risk instrument in the entire offer.
+
+### A UPI-and-RuPay start is a start that cannot start
+
+By Topic 2, UPI and RuPay debit are precisely the rails our customers will not use. Transport firms settle with fuel dealers by bank transfer — **₹1 lakh on average, reaching ₹5 lakh.** UPI is not built to carry that, and a firm does not pay another firm on a debit card.
+
+The consequence is not that we launch smaller. It is that we launch and nothing moves. The customers go on doing exactly what they do today — open their own net banking and transfer by hand, outside the platform — because the app cannot offer them the rail they pay on. The gateway records near-zero volume, and the program reads as having failed for want of demand when it was never given the rail its demand runs on. **A UPI-only start does not de-risk the pilot. It guarantees the pilot proves nothing.**
+
+It is also worth noticing what the two offered rails have in common: both carry zero MDR by regulation ⟨_verify current RBI/NPCI position — see the Topic 2 scope note_⟩. **The part of the offer the Bank has made unconditional is the part that costs the Bank nothing, and the one rail this business runs on is the one behind the charge.**
+
+### What we are asking, and what we will meet
+
+On net banking, in order of preference:
+
+1. **A waiver of the charge**, recorded in the terms and conditions rather than held as an informal concession.
+2. Failing that, **a flat fee per transaction** — any reasonable amount, so long as it is not a percentage of the transfer. The Bank sets the level; we ask only that it sit on the same axis as the Bank's own cost.
+
+**And if the waiver is governed by a threshold, we ask the Bank to state it.** If there is a minimum number of onboarded dealers, a committed monthly transaction count or value, or a balance to be maintained, we would far rather meet a stated condition than argue against a rate. Every dealer we bring onto this program is a current account with Union Bank of India, with the outlet's settlement and its float running through it — that is the side of the trade the waiver is priced against, and it is the side we can grow.
+
+To support the Bank's own calculation, we will provide **projected transaction volumes across 10–15 dealers**, built from observed throughput at the outlets. _(data to follow)_
+
+### ⚠ Points to settle before this reaches the Bank
+
+- **Find out what Easebuzz actually charges the Bank per net-banking transaction — flat or percentage.** This is the load-bearing fact of the "wrong axis" argument and the highest-value thing to learn before the meeting. If Easebuzz charges the Bank a flat per-transaction fee (the common convention for net banking, since issuing banks mostly bill the facility per event), the argument is airtight and 1.8% stands revealed as a rate card rather than a cost. If Easebuzz charges the Bank a percentage too, the argument does not die — it redirects one step upstream: the ask becomes that the Bank negotiate a flat rate with Easebuzz on the strength of the volume we are about to show them. Either way, **ask the Bank the question directly** — _"is the 1.8% a pass-through of the aggregator's charge, or the Bank's standard schedule?"_ It is a safe question and its answer picks the approach. Do not put the section in front of the Bank while the answer could be "our cost is 1.75% and we are adding five basis points."
+- **Find out *why* the Bank wants to start with UPI and RuPay only.** Do not argue against a position before knowing what holds it up. If it is **cost**, the counter is the flat fee. If it is **risk**, the counter is that net banking is the one instrument with no chargeback and debit cards are not. If it is **process** — a default instrument set for a new merchant, or a separate net-banking enablement at Easebuzz — then there is nothing to argue and it is only a timeline. All three are plausible, and the reply is different for each.
+- **Confirm the aggregator's net banking can actually carry these payments.** Two things to verify before we ask for a product: (1) whether a **₹5 lakh single transaction** completes through a net-banking redirect — the cap is usually set by the *customer's* issuing bank, not by Easebuzz; and (2) whether a transport firm's current account **with maker–checker** can complete a redirect at all, since the authoriser is not sitting in the payment session. That is the same firm-account constraint Topic 1 describes, and it would be awkward to have it resurface inside the solution. If either fails, the product that fits may be **bank-transfer collection over virtual accounts** — the customer pushes a real NEFT/RTGS from their own channel to a per-invoice virtual account, and the aggregator auto-matches it and confirms back to DZZLO. That carries any ticket size, works from a maker–checker account, and is typically priced flat per collection. It closes the ledger and removes reconciliation, but it keeps beneficiary management — so it is a partial answer to Topic 1, not a full one. **Worth deciding what we are actually asking for before we ask for it.**
+- **The volume data is a projection — write it as one.** A bank reads whatever number it is handed as a commitment, and a missed commitment is how a waiver gets withdrawn and a relationship sours. Show the basis (observed throughput per outlet, dealers signed vs. in pipeline), label it a projection, and offer a **review at 12 months against actuals** — a normal banking construct that reads as confidence rather than hedging. Also consider giving the Bank the number it actually prices against: not just transaction throughput, but the **dealer current accounts and the balances expected to sit in them**, since that is what pays for the waiver on the Bank's own P&L.
 
 ---
 
@@ -115,3 +156,11 @@ _Note: the QR/POS point is likely the bridge into Topic 3 — if the Bank's offe
 > dealer commission is ₹2.2 per litre on diesel
 
 _Worked into the Topic 2 charges table. Ratio to remember: ₹2.2/litre ≈ **2.4% of sale value** at ~₹93/litre, so a 1.8% net-banking MDR consumes **~76%** of the dealer's gross commission and a 1% MDR consumes **~42%**. Because commission and MDR both scale with litres, the ratio holds at every ticket size — the argument does not weaken at ₹5 lakh._
+
+**2026-07-16 — Topic 3 (verbatim):**
+
+> the offer provided by bank states netbanking to be changed 1.8% per transaction is the problem. we requested to waiver off or minimal amount charge per transcation for IPG netbanking. we understand that the bank provides IPG through a payment gateway aggregator easebuzz which would charge them per transactions. currenlty the bank insists to start IPG with only UPI and debit card rupay. but our topic 1 problem does not fulfill by UPI. we are a platorm that solves and automates tranactions between petrol pump dealers and their customers. the structure of payment would mostly we solved with RTGS, NEFT, IMPS, not UPI. understand whu not upi with topic 2. if the bank has some criteia of connecting with a minimum count of dealers so that they can wavier off the netbanking charges from IPG. next i will provide statistical data of potential transaction volume from 10-15 dealers for rough idea requried for their internal calculation through our promise / prediction
+
+_Drafted into §3. The load-bearing move: "Easebuzz charges them **per transaction**" turns the ask from a plea into a pricing argument — the Bank's cost is per-event, the quoted price is per-rupee, so a flat fee is cost-plus rather than a subsidy. **This depends on Easebuzz's charge to the Bank actually being flat — verify before use** (flagged). Second move: the two rails the Bank offers unconditionally are the two that cost it nothing under zero-MDR, and are also the two our customers do not use — so a UPI-only start produces no volume and then reads as failed demand. Third: net banking has **no chargeback**; RuPay debit does — so if the objection is risk, the offer is inverted._
+
+_The "minimum dealer count" question is written as an ask to the Bank to **state its threshold**, paired with what it is priced against (dealer current accounts, settlement, float) — "name your condition" beats "please waive". Volume projections awaited; see the flag on projection-vs-commitment before sending numbers._
