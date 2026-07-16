@@ -7,7 +7,7 @@ Content for every topic is supplied by the user — nothing here is to be invent
 ## Status
 
 - [x] Topic 1 — Why we need an IPG — _drafted 2026-07-16; all flags and open questions resolved_
-- [ ] Topic 2 — What kind of IPG servicing is required — _awaiting content_
+- [x] Topic 2 — What kind of IPG servicing is required — _drafted 2026-07-16; 4 points flagged, dealer commission figure needed_
 - [ ] Topic 3 — The problem with the offer provided by the Bank — _awaiting content_
 
 ---
@@ -34,9 +34,39 @@ Payment is the one leg of the loop that still sits outside DZZLO. The customer l
 
 ## 2. What Kind of IPG Servicing Is Required
 
-_The specific gateway capabilities the problem demands: how it must behave, what it must support, and what it must not do. The features without which the problem above stays unsolved even with an IPG in place._
+**Net banking is the core requirement — NEFT, RTGS and IMPS.** The customers ordering fuel on DZZLO are transport firms, and a firm paying a firm moves money by bank transfer. That is the rail this business actually runs on, and a gateway that does not carry it does not solve anything in Topic 1. The three rails map cleanly onto our ticket profile: IMPS and NEFT carry the everyday ₹5,000–₹2 lakh range, and RTGS carries ₹2 lakh and above, where our transfers reach ₹5 lakh.
 
-_(content to be provided)_
+**Also required, in support:** UPI, CBDC, debit card and credit card — so that no customer is turned away for want of a payment method they hold.
+
+**Why UPI cannot be the answer on its own.** Two separate reasons, and both matter. It does not fit the transaction: our bank-transfer tickets average ₹1 lakh and reach ₹5 lakh, past what UPI is built to carry, and firm-to-firm settlement is not what it was designed for. And it is not where a bank wins: **the UPI market is already captured by Paytm and PhonePe.** Net banking for firm-to-firm fuel payments is still an open rail — it is where Union Bank of India owns the relationship rather than renting it, and it is precisely the rail this platform brings.
+
+**QR codes and POS machines do not solve this.** They are not interconnected with DZZLO. A payment taken on a QR or a POS terminal is never acknowledged back to the platform, so the invoice stays open, the ledger does not close, and the credit limit does not free. That is the same disconnection Topic 1 describes: the money moves in one system while the business record sits in another, and a human has to bridge the two. **An integrated IPG is not a more convenient QR code — it is the only form that closes the loop.**
+
+**App and web, across every option.** DZZLO runs on Android, iOS and the web. Every payment option the gateway offers has to work on all of them.
+
+**The commercials: charges have to be waived.** Neither the dealer nor the customer can absorb IPG charges, and the reason is structural rather than a matter of preference. Pump prices are set by the oil marketing companies and the dealer's commission is a fixed amount per litre — **the dealer cannot raise his price to absorb a transaction charge** — and the customer will not pay a fee to settle a bill he already owes.
+
+The arithmetic settles it. Dealer commission on diesel is **₹2.2 per litre**, set by the OMC. At a pump price of about ⟨₹93/litre — _confirm_⟩ that is roughly **2.4% of the value of the sale**. On a ₹1,00,000 fuel order:
+
+| On a ₹1,00,000 diesel order                        |                                                    |
+| -------------------------------------------------- | -------------------------------------------------- |
+| Diesel dispensed                                   | ~1,075 litres                                      |
+| **Dealer's gross commission** (₹2.2/litre)         | **₹2,366**                                         |
+| IPG charge at 1.8% MDR (typical for net banking)   | ₹1,800 — **76% of the dealer's entire commission** |
+| IPG charge at 1% MDR                               | ₹1,000 — **42% of the dealer's entire commission** |
+
+At a typical net-banking MDR, the gateway takes roughly three-quarters of what the dealer earns for sourcing, storing and dispensing the fuel. Even at a generous 1%, it takes more than 40%. And ₹2.2 is *gross* commission, before the cost of operating the outlet — what the dealer actually retains is a fraction of it. **There is no percentage-based charge this business can carry**, and the problem gets worse, not better, as ticket sizes rise toward ₹5 lakh.
+
+We therefore request the Bank to **waive the charges on this program**, and to record that waiver in the **terms and conditions** rather than leave it as an informal concession.
+
+_Scope note: UPI and RuPay debit already carry zero MDR by regulation, so this ask concerns net banking and cards, where charges do apply. **Verify current RBI/NPCI position before submission.**_
+
+### ⚠ Points to settle before this reaches the Bank
+
+- **Confirm the diesel pump price** behind the arithmetic above — ₹93/litre is a working assumption, not your number. The conclusion is robust either way: anywhere between ₹85 and ₹100 a litre, ₹2.2 lands between 2.2% and 2.6% of sale value, so MDR still eats 40–80% of the commission. But the table should carry the real price from your outlet.
+- **"FMCG" should not go in.** Fuel retail is not FMCG and a banker will notice. "Petroleum retail, on an OMC-regulated margin" is both accurate and the stronger claim, because it says the dealer is *structurally unable* to pass the cost on — not merely that margins are tight.
+- **Is a full waiver the only acceptable outcome, or is a flat per-transaction fee a fallback?** A percentage charge is what breaks the economics; a small flat fee on a ₹1 lakh transfer may not. Naming a fallback tends to get a yes — an all-or-nothing ask invites a no. Worth deciding before the ask is written.
+- **CBDC framing.** Retail CBDC is still at pilot stage. Asking for it "as and when the Bank's CBDC rails are available" costs nothing and reads as RBI-aligned; asking for it as a live requirement invites a pointless objection.
 
 ---
 
@@ -73,3 +103,15 @@ _Key correction: the credit block lands at **order time**, not at the nozzle —
 > credit opens once payment gateway confirms payment not when amount is settled in bank account. so it works 24x7
 
 _Resolved: credit release is **T+0 on gateway confirmation**, not T+1 on settlement — this is what makes the round-the-clock loop close. Framing for the Bank: this is not extra dealer exposure, because at confirmation the customer's funds are already in the aggregator's RBI-authorised escrow. T+1 is a regulated settlement cycle, not counterparty risk — unlike today's release-against-a-screenshot._
+
+**2026-07-16 — Topic 2 (verbatim):**
+
+> we need Internet payment gateway for netbanking that supports NEFT, RTGS, IMPS. we could also require UPI, CBDC, debit card, credit card. as the customers of petrol pump are transport firm that order fuel through DZZLO would make firm to firm bank transfer they would need net banking. UPI market is already captured by paytm, phonepe. QR code or POS machine payment are not acknowledged to DZZLO as they are not interconnected. we need app and web support for all options of IPG. also the petrol pump dealer and their customer would not be able to bear charges of IPG due to heavy amounts per transaction and low comission in FMCG business. we request bank to waive off changes. we need terms and conditions accordingly.
+
+_Note: the QR/POS point is likely the bridge into Topic 3 — if the Bank's offer is a QR or POS-based acceptance product, "not interconnected with DZZLO" is exactly why it fails._
+
+**2026-07-16 — dealer commission (verbatim):**
+
+> dealer commission is ₹2.2 per litre on diesel
+
+_Worked into the Topic 2 charges table. Ratio to remember: ₹2.2/litre ≈ **2.4% of sale value** at ~₹93/litre, so a 1.8% net-banking MDR consumes **~76%** of the dealer's gross commission and a 1% MDR consumes **~42%**. Because commission and MDR both scale with litres, the ratio holds at every ticket size — the argument does not weaken at ₹5 lakh._
