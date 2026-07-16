@@ -100,7 +100,7 @@ Redeem FD with interest:          Dr Bank 2,04,000 / Cr FD 2,00,000 / Cr Interes
 
 | "Funds" as… | Means | Where it lives / covered in |
 | --- | --- | --- |
-| **Sources of funds** | Where the company's money *came from* — capital + loans | The whole right side of the Balance Sheet |
+| **Sources of funds** | Where the company's money *came from* — capital + loans | The whole Equity + Liabilities side of the Balance Sheet |
 | **Reserves / earmarked funds** | Profits set aside for a purpose (a "sinking fund" to repay a loan, etc.) | Reserves & Surplus (Note 4). Rare for startups |
 | **Mutual funds** | An *investment* vehicle for surplus cash | §5, Investments |
 | **Raising funds / "the fund"** | Getting investor money (VC); or a VC firm itself | **[[08-phase-8-fundraising-and-cap-table]]** |

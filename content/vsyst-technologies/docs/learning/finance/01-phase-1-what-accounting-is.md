@@ -104,8 +104,8 @@ Let's watch it hold across VSYST's first week. Each row is one transaction; ever
 | 2 | Buy laptop, ₹80,000 cash | Laptop (asset) 80,000 | Bank 80,000 |
 | 3 | Take ₹2,00,000 bank loan | Bank 2,00,000 | Bank Loan 2,00,000 |
 | 4 | Pay ₹40,000 salary | Salary (expense) 40,000 | Bank 40,000 |
-| 5 | Earn ₹60,000 DZZLO fee (on credit — not yet paid) | Accounts Receivable 60,000 | Subscription Income 60,000 |
-| 6 | Dealer pays that ₹60,000 | Bank 60,000 | Accounts Receivable 60,000 |
+| 5 | Earn ₹60,000 DZZLO fee (on credit — not yet paid) | Sundry Debtors 60,000 | Subscription Income 60,000 |
+| 6 | Dealer pays that ₹60,000 | Bank 60,000 | Sundry Debtors 60,000 |
 
 Read row 5 twice — it's the accrual concept in action: you recorded **income** and an **asset (a receivable — the dealer owes us)** the moment you *earned* it, with **no cash involved**. The cash shows up in row 6, clearing the receivable. Two clocks, exactly as the Founder's Survival Law warned. This single pattern — earn now, collect later — is most of what makes "profit ≠ cash".
 

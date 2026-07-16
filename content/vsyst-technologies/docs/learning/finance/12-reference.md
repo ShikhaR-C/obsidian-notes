@@ -73,8 +73,9 @@ Finance-specific additions:
 - **Sundry Debtors / Accounts Receivable (AR)** — people who owe you. **Sundry Creditors / Accounts Payable (AP)** — people you owe. [P2]
 - **Voucher** — a software transaction type: Payment, Receipt, Contra, Sales, Purchase, Journal. [P2]
 - **Bill-to-bill / bill-wise** — matching each payment to the specific invoice it clears. [P2]
-- **P&L / Income Statement** — are we making or losing money, over a period. [P3]
+- **P&L / Statement of Profit and Loss** (US name: Income Statement) — are we making or losing money, over a period. [P3]
 - **Balance Sheet** — what we own & owe, at a moment. [P3]
+- **Balance Sheet layout (Indian)** — Equity & Liabilities first, Assets second: left│right in the old horizontal form, top│bottom in today's Schedule III vertical form. American books mirror it (assets first) — same equation, same totals. [P3]
 - **Cash Flow Statement** — where actual cash went (Operating / Investing / Financing). [P3]
 - **Gross Profit / EBITDA / EBIT / PBT / PAT** — the P&L ladder from revenue down to net profit. [P3]
 

@@ -17,7 +17,7 @@ Schedule III has two "Divisions":
 
 Everything below is **Division I**, the format VSYST actually files. Two structural rules first:
 
-- The Balance Sheet is **"vertical"**: Equity & Liabilities on top, Assets below (not the side-by-side T of Phase 3 — that was for teaching).
+- The Balance Sheet is **"vertical"**: Equity & Liabilities on top, Assets below — the same Indian order as Phase 3's horizontal form, just stacked instead of side-by-side (the old two-column layout came from Schedule VI; the law dropped it in 2011).
 - Everything splits into **Non-current** (life > 12 months) vs **Current** (within 12 months). This split is the spine of the whole statement — a lender's first question is "how much do you owe *this year* vs *later*?"
 
 ## 2. The Balance Sheet Skeleton (memorise this table of contents)
