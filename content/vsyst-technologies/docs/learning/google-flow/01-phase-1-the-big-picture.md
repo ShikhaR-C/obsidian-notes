@@ -117,6 +117,53 @@ Watch what you get for 10 coins: a person, a voice, moving lips, ambient sound, 
 
 **6.4 — Start the archive habit.** Make a Drive folder `flow-content/`. Every clip you keep from now on gets saved there *with its prompt in the filename or a sidecar note*. Miss this and you'll re-earn the lesson the expensive way.
 
+## 7. Worked Answer — Exercise 6.3: The DZZLO Promo Plan
+
+> Try 6.3 yourself first, then compare. This plan is the reference the rest of the course builds on — by Phase 8 you'll fill it with real prompts.
+
+### What a promo actually is
+
+A promo is a short ad with exactly one job: make a specific viewer **feel a problem, see your product as the relief, and take one action** — all in 30 seconds. It is *not* a demo (no feature tour), not a tutorial, and not a brand film. The test of a good promo: if a stranger watches it once with the sound off, can they say *who it's for, what pain it kills, and what to do next?* For DZZLO the viewer is a petrol pump dealer, the pain is udhaar/khata chaos, and the action is "get the app."
+
+### What makes a good 4-shot structure
+
+Four 8-second shots ≈ 32 seconds, and the classic arc that fits it is **Problem → Agitate → Solution → Payoff + CTA**. Each shot has one job:
+
+- **Shot 1 — Hook.** Show the pain in the first 3 seconds (Instagram decides whether to keep scrolling that fast). No logo yet.
+- **Shot 2 — Agitate.** Make the pain cost something: money stuck, a fight, a risk.
+- **Shot 3 — Solution.** The product enters and visibly kills the pain. The latest it can appear is here.
+- **Shot 4 — Payoff + CTA.** The "after" feeling, then logo + one instruction.
+
+Alternatives exist (before/after split, day-in-the-life, testimonial), but problem-agitate-solve is the strongest default because it's a *story* — the weakest promos are feature parades with no story. Two platform rules regardless of structure: frame **9:16 vertical from the first draft** (§4's rule — don't render both), and assume **sound off** — captions get burned in at the Vids stage, not rendered by Veo.
+
+### The DZZLO promo, shot by shot
+
+**The story in one line:** a dealer drowning in disputed khata entries discovers every DZZLO order arrives verified and self-recorded — and his ledger finally reads like a bank statement.
+
+1. **"The 9 PM Register" (0–8s, Problem).** Night, pump office. Dealer hunched over fat paper registers, calculator, phone buzzing. Overheard half-argument: *"Kaun si gaadi thi? Kaun sa driver?"* Text overlay: **"Udhaar ka hisaab — har raat?"**
+2. **"The Dispute" (8–16s, Agitate).** Dealer on the phone — *"Payment ho gaya tha!"* — flipping pages that don't match, while an unfamiliar tanker and driver wait at the pump. Text: **"Ek galat entry = mahino ka jhagda."**
+3. **"The Verified Order" (16–24s, Solution).** Phone in hand: a DZZLO order arrives — Company ✓ Manager ✓ Driver ✓ Vehicle ✓ — ledger scrolls clean like a bank statement, credit limit visible. Dealer taps approve; the tanker fills. Text: **"Har order verified. Ek hi ledger."**
+4. **"Morning Chai" (24–32s, Payoff + CTA).** Next morning, same dealer relaxed with chai, one glance at the phone — sorted. Logo + tagline, CTA: **"DZZLO OMS — get the app."**
+
+Two planning notes that come straight from §5:
+
+- **Same dealer in shots 1, 2, and 4** means text-to-video will betray you — it invents a new face per clip. Plan to make one Imagen reference portrait of "the dealer" (plus a pump-office still) first, and start those shots from **Ingredients → Video** (Phase 5 skill — but the *budget* must assume it now).
+- **Shot 3 is the hardest and cheapest to get wrong**: AI renders of app screens produce garbled text. Draft it extra times on Lite, keep the screen glow/gesture in the video, and composite the *real* DZZLO screenshot in editing. Never pay Quality coins hoping Veo draws your UI.
+
+### The budget sheet
+
+| Shot | Lite drafts ⏣10 | Fast iterations ⏣20 | Quality lock ⏣100 | Coins |
+| ------------------- | --- | --- | ---------------- | ------- |
+| 1 — 9 PM Register   | 2   | 2   | 1                | 160     |
+| 2 — The Dispute     | 2   | 1   | 1                | 140     |
+| 3 — Verified Order  | 3   | 2   | 1                | 170     |
+| 4 — Morning Chai    | 1   | 2   | **lock at Fast** | 50      |
+| **Total**           | **8** | **7** | **3**          | **520** ✅ |
+
+That's 18 renders for 520 coins — under the 600 target with ~480 left in the monthly jar. The trick that gets you there: **shot 4 never needs a Quality render.** It's a simple, slow shot whose logo, tagline, and CTA are overlaid in Vids anyway — paying 100 coins for base footage that gets covered in graphics is amateur math. Shots 1–3 carry the story and the actor's face, so they each earn one Quality commitment ceremony.
+
+Copy the table into the Drive Sheet as-is — it's the skeleton you'll fill with real 7-part prompts by the end of Phase 8.
+
 ---
 
 **Next:** [[02-phase-2-prompting-basics]] — the 7 parts every good note has, and the word budget that keeps the crew from getting confused.
