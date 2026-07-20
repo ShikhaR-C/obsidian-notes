@@ -48,8 +48,8 @@ Payment is the one leg of the loop that still sits outside DZZLO. The customer l
 
 The services we are asking for, in order of need:
 
-| Verification        | What it settles on DZZLO                                                                                          |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Verification        | What it settles on DZZLO                                                                                           |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | **Bank account**    | That the settlement account a dealer names, and the account a customer pays from, genuinely belong to that entity. |
 | **PAN**             | That the firm or proprietor exists as named — established before any credit limit is opened.                       |
 | **GSTIN**           | That the business is registered and the GSTIN carried on its invoices is live and its own.                         |
@@ -186,10 +186,10 @@ This projection sits **alongside** the pilot offer above, not in place of it: th
 
 Where each point was placed:
 
-| #   | Point                                                                                    | Placed in                                                                                     |
-| --- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| 1   | Trial at one pump on net banking, charge waived, to read volume/cost/experience/response | §3 → new _What we propose instead: one pump, on net banking_                                  |
-| 2   | Start next with HPCL eDFS dealers at UBI; ask the Bank for the list                      | §3 → new _And then the Bank's own dealers: HPCL on eDFS_ — **list ask dropped 2026-07-19**; we ask for the Bank's channel only |
-| 3   | Bank to avail and negotiate Easebuzz verification API                                    | §2 → _Verification APIs alongside the payment rails_, six services **named 2026-07-19**; echoed as confirmation #5 in §3       |
-| 4   | Should VSYST aggregate and distribute settlements?                                       | §3 → new _A question we would like to put to the Bank_ — **asked as an open question only, 2026-07-19**                        |
+| #   | Point                                                                                    | Placed in                                                                                                                                     |
+| --- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Trial at one pump on net banking, charge waived, to read volume/cost/experience/response | §3 → new _What we propose instead: one pump, on net banking_                                                                                  |
+| 2   | Start next with HPCL eDFS dealers at UBI; ask the Bank for the list                      | §3 → new _And then the Bank's own dealers: HPCL on eDFS_ — **list ask dropped 2026-07-19**; we ask for the Bank's channel only                |
+| 3   | Bank to avail and negotiate Easebuzz verification API                                    | §2 → _Verification APIs alongside the payment rails_, six services **named 2026-07-19**; echoed as confirmation #5 in §3                      |
+| 4   | Should VSYST aggregate and distribute settlements?                                       | §3 → new _A question we would like to put to the Bank_ — **asked as an open question only, 2026-07-19**                                       |
 | 5   | Dealers to deposit; interest split between VSYST and the Bank                            | §3 → _What we are asking, and what we will meet_ — deposit only, **interest split dropped 2026-07-19**; deposit bullet in _Projected volumes_ |
