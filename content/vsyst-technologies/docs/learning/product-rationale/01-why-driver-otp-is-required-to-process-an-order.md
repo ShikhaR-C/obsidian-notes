@@ -19,10 +19,10 @@ Fuel distribution runs on trust between three parties who don't fully trust each
    The invoice is generated only on delivery confirmation, so an OTP-anchored delivery means every invoice provably corresponds to a real, acknowledged delivery — nobody can bill for fuel that was never delivered. The overview lists "bind a driver OTP to a delivery event so the invoice is unforgeable" as one of the seven moat capabilities generic ERPs can't do. ([00_OVERVIEW — moat list](../company/00_OVERVIEW.md))
 
 3. **It blocks fuel fraud at the fill point.**
-   Adulteration, short-filling, siphoning and diversion cost ~$6.5B/year nationally; a typical small fleet loses 5–12% of its diesel spend to fraud and leakage. The control is explicit: *"Driver authentication at fill (OTP) — attendant can't fill without verified driver."* ([Target Customer: Transporters — Pain 2](../marketing/transporters/04_Target_Customer_Transporters.md))
+   Adulteration, short-filling, siphoning and diversion cost ~$6.5B/year nationally; a typical small fleet loses 5–12% of its diesel spend to fraud and leakage. The control is explicit: _"Driver authentication at fill (OTP) — attendant can't fill without verified driver."_ ([Target Customer: Transporters — Pain 2](../marketing/transporters/04_Target_Customer_Transporters.md))
 
 4. **Driver phone and vehicle number alone can't be trusted as identity.**
-   The IOCL notes call this out directly: driver numbers and vehicles are shared across multiple companies, and *"by only vehicle number, error can occur, we must verify driver as well."* The OTP proves the specific driver on the specific order at that moment. (IOCL presentation notes — Jan 30 Design / Fleet Card design file)
+   The IOCL notes call this out directly: driver numbers and vehicles are shared across multiple companies, and _"by only vehicle number, error can occur, we must verify driver as well."_ The OTP proves the specific driver on the specific order at that moment. (IOCL presentation notes — Jan 30 Design / Fleet Card design file)
 
 5. **It replaces the disputed paper parchi with a signed digital record.**
    Every litre dispensed is logged digitally — timestamped, geo-tagged, and signed by the driver via OTP. Dealer and customer see a shared ledger with the same numbers on both sides, eliminating lost/soiled slips and the 10–15-day month-end reconciliation crunch. ([Target Customer: Transporters — Pain 1](../marketing/transporters/04_Target_Customer_Transporters.md))
@@ -35,6 +35,9 @@ Fuel distribution runs on trust between three parties who don't fully trust each
 
 8. **It is deliberately the lowest-friction strong check.**
    SMS OTP works on any phone with no app install, suits low-literacy/vernacular pump staff (the UX principle: minimum typing, OTP confirmations over typed input), and takes one second — which is also the scripted answer to the "driver won't cooperate" objection. ([01_IDEA_VALIDATION — UX caveat](../company/01_IDEA_VALIDATION.md), [Target Customer: Transporters — objection table](../marketing/transporters/04_Target_Customer_Transporters.md))
+
+9. **It enforces one vehicle, one message — no double processing.**
+   Each OTP is generated for one specific order and delivered as one message to the one driver/vehicle assigned to it. Because the OTP is single-use, the same order cannot be processed twice by human mistake — a dealer accidentally tapping "Process order" again, or two staff acting on the same dispatch, cannot produce a second delivery confirmation, duplicate invoice, or double ledger entry. The net effect is that invoicing becomes perfectly accurate and error-free: exactly one confirmed delivery yields exactly one invoice, every time.
 
 ---
 
