@@ -24,6 +24,7 @@ _Learning folder from a discussion on 2026-07-29: how Figma (and Netflix, Slack,
 | 8   | [[08-dzzlo-subscription-strategy]]    | Applying it all to DZZLO: decision, compliance FAQ, app-vs-web feature split, 6-phase implementation plan     |
 | 9   | [[09-driving-web-adoption-for-features]] | Feature steering is unrestricted — signposts, teasers, magic-link handoffs, GST-calendar moments, PWA         |
 | 10  | [[10-pricing-metric-decision]]        | What the subscription is ON: metric scoring, 3-layer model (flat tiers → payments take-rate → fleet slabs)    |
+| 11  | [[11-cost-model-worksheet]]           | Fill-in cost-to-serve boilerplate: F/V worksheets, break-even & target-profit formulas, data checklist        |
 
 ## Related elsewhere in the vault
 
