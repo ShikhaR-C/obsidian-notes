@@ -47,7 +47,7 @@ Second trap: declaring `CAMERA` **implicitly adds `android.hardware.camera` + `.
 
 **Option A (recommended) — intent-based capture, zero permissions.** `ACTION_IMAGE_CAPTURE` (what `launchCamera` does). No `CAMERA` declared. Users see **zero** permission dialogs for the entire feature.
 
-**Option B — in-app camera (`react-native-vision-camera`)** if you need live edge detection. Then `CAMERA` is unavoidable and the `uses-feature` guards become mandatory. Only if §Phase 3 §2.1 finds no healthy document-scanner wrapper.
+**Option B — in-app camera (`react-native-vision-camera`)** if you need live edge detection. Then `CAMERA` is unavoidable and the `uses-feature` guards become mandatory. Only if Phase 3 §2.1 finds no healthy document-scanner wrapper.
 
 ### 1.4 The manifest block (Option A)
 

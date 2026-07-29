@@ -123,8 +123,12 @@ Listed here rather than buried in phases, because three of them gate work.
 2. **How many slips per SO, and is a slip mandatory before invoicing?** The spec assumes 1..N optional. If it becomes mandatory, that's an invoice-time validation change with a migration story for existing un-slipped orders.
 3. **Who may delete a slip, and after invoicing?** Current assumption: `DPrimary`/`DAdmin` only, and never after `inv_id` is set (an invoiced SO's evidence is a GST record). Confirm.
 4. **Is the public share link in scope for v1?** It is the single largest compliance surface here and the only part that exposes third-party data. It could be deferred to v2 with no loss to the core feature. **Recommendation: defer it.**
-5. **Budget posture on OCR.** Raw OCR + a hand-written parser (~$1.50/1,000) versus a vision-LLM or a receipt API (~$10/1,000) is a 6.7× difference on a line item that will stay small in absolute terms for a long time. Phase 6 argues a position; the call is yours.
+5. **Is OCR (Phase 6) in scope at all, and on which provider posture?** Cost is *not* the fork it used to be — a mid-tier vision LLM now extracts structured fields for **~$0.27–0.66/1,000 slips**, *cheaper than raw OCR* ($1.50/1,000) and 10–15× cheaper than the purpose-built receipt APIs ($10/1,000), so even 50k slips/month is ~$33/month. The real decisions are (a) whether to build Phase 6 at all, and (b) India-resident processing (Vertex AI `asia-south1` / Bedrock `ap-south-1`) vs the marginally simpler US-routed first-party APIs. Phase 6 argues a position; the call is yours.
 
 ## 8. Sequencing note
 
 Phases 1 → 2 → 3 are strictly ordered. Phase 5 (compliance) should be worked **in parallel from day one**, not bolted on: the Android manifest shape and the iOS privacy manifest constrain which capture library is viable, and the consent-flow requirement changes the UI. Phase 4's web half only needs Phase 2. Phase 6 is genuinely optional and separable — the feature is complete and useful without it.
+
+## 9. Sources
+
+All external sources (pricing, policy, law, research papers, package health) with fetch dates and an explicit verification register of what was **not** confirmed: [[references|References & verification register]]. Prices and store policies drift — re-check the register's ⚠️ items before acting on a number.
