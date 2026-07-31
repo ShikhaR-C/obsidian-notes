@@ -3,12 +3,14 @@ title: "DZZLO × IOCL Discussion Document — References"
 ---
 
 <!--
-Source register for discussion-document.md — resynced 2026-08-01 after author edits.
+Source register for discussion-document.md — resynced 2026-08-01 after author edits;
+updated again after the 2026-08-01 polish pass (all points reframed short — nothing in the
+document is verbatim any more; tags below indicate ORIGIN, not current wording).
 - Numbering matches the points in discussion-document.md section by section.
 - Paths are relative to obsidian-notes/content/. Line numbers are approximate.
 - Legend:
-  [vault]         — verbatim quote from the source file
-  [vault, edited] — vault quote, edited by author on 2026-08-01 (no longer strictly verbatim)
+  [vault]         — point originates in this source (was quoted verbatim before the polish)
+  [vault, edited] — vault source, author-edited before the polish
   [author]        — author's own point (2026-07-31 → 2026-08-01), no vault source
 - Shorthand used below:
   [FigmaNotes] = vsyst-technologies/docs/learning/marketing/VSYST Technologies Pvt. Ltd./4_Resources/Figma Notes
@@ -63,7 +65,7 @@ Not used but related: HAS heritage story ([Mehta]/DZZLO-OMS-Design-Philosophy.md
 
 ## 3.5 Problem of IOCL with IOCL
 
-(Points numbered 1, 3, 4, 5 in the document — former points 1 and 2 were merged by the author.)
+(Former points 1 and 2 were merged by the author; numbering normalized to 1–4 in the polish pass.)
 
 1. [vault ×2, merged] [FigmaNotes]/VSYST Designs/Presentations/Dealer+Association/Problems & Benefits of Dealer Association.md:96-102 (systems not built for real-world load) + :180-183 (data not from original source, not real-time). Sub-bullet (not real time, complex system): [author]
 2. [vault, edited] [FigmaNotes]/VSYST Designs/Presentations/IOCL/Old PPT IOCL Design.md:1021-1027 — "cash amount is adjusted" → "cash sale manipulation"; the "can not track customer wise credit litre daily sale" line was removed here and inverted into a DZZLO capability in §4.3
@@ -78,7 +80,7 @@ Not used but related: HAS heritage story ([Mehta]/DZZLO-OMS-Design-Philosophy.md
 4. [vault, edited] [FigmaNotes]/VSYST Designs/Presentations/Dealer+Association/Problems & Benefits of Dealer Association.md:93-94 — "driver, manager, parties" → "driver, CA"
 5. [vault, edited] [FigmaNotes]/VSYST Designs/Presentations/IOCL/Old PPT IOCL Design.md:928 — trimmed to discount-to-attract-customers
 
-## 3.7 Problem of IOCL with transporters fleet card mishandling
+## 3.7 Problem of IOCL with transporters — fleet card mishandling
 
 (Heading extension "fleet card mishandling": [author].)
 
@@ -117,9 +119,8 @@ Dropped during author edit (sources no longer cited by this section): credential
 4. [vault] [FigmaNotes]/VSYST Designs/Presentations/Dealer+Association/Problems & Benefits of Dealer Association.md:46 — dealer's customers auto-connected to OMC; one platform
 5. [vault, edited] [FigmaNotes]/VSYST Designs/Presentations/IOCL/Jan 30 - Design.md:448 — "for this system" → "for the system"
 
-Unnumbered line (Can track customer wise credit litre daily sale): [author] — the ITPS limitation from Old PPT IOCL Design.md:1021-1027 inverted into a DZZLO capability (moved here from §3.5.3).
-
-6. [author] 300% sale increase at own RO (MS 30→80, HSD 125→400); 3-5% for IOCL as achievement; 33/33/33 attribution; 2-year pilot + 1 year adhoc + AI integration
+6. [author] customer-wise credit litres tracked daily — the ITPS limitation from Old PPT IOCL Design.md:1021-1027 inverted into a DZZLO capability (moved from §3.5; was an unnumbered line before the polish pass)
+7. [author] 300% sale increase at own RO (MS 30→80, HSD 125→400); 3-5% for IOCL as achievement; 33/33/33 attribution; 2-year pilot + 1 year adhoc + AI integration
 
 ## 5. USP of DZZLO
 
@@ -129,7 +130,7 @@ Unnumbered line (Can track customer wise credit litre daily sale): [author] — 
 4. [vault, edited] vsyst-technologies/docs/learning/company/00_OVERVIEW.md:123 — "These seven are the moat" dropped
 5. [vault, edited] [transporters]/07_Positioning_and_Messaging.md:49 — "lives in Hindi on WhatsApp" dropped
 6. [author] how to catch customer — advance instead of credit + in-app ledgering/accounting
-7. [author] how to retail (retain?) customer — cutting-edge facilities; services that bond relations
+7. [author] how to keep a customer — cutting-edge facilities; services that bond relations (dictated as "how to retail customer?"; polished as "keep" — flag if "retail" was meant)
 
 ## 6. Possibilities Unlocked with DZZLO
 
@@ -141,7 +142,7 @@ Unnumbered line (Can track customer wise credit litre daily sale): [author] — 
 6. [vault] vsyst-technologies/docs/learning/company/00_OVERVIEW.md:180 — two-sided platform opens embedded finance
 7. [vault] vsyst-technologies/docs/learning/ai-features/02-discriminative-ai-features.md:177 — verified-connection recommendations; network-effects play
 8. [vault] vsyst-technologies/docs/learning/marketing/VSYST Technologies Pvt. Ltd./2_Projects/What is e-ERP ?.md:42 — Ayushman Bharat driver-health tie-in via OMC
-9. [author] promising platform for retail fuel transactions + enhancements a–e (delivery ACK; camera clips; showroom Xtrapower generation with 5L free + instant XtraRewards; DU driver welcome with mother-tongue AI; one-app consolidation analogy)
+9. [author] promising platform for retail fuel transactions + enhancements a–e (delivery ACK; camera clips; showroom Xtrapower generation with 5L free + instant XtraRewards; DU driver welcome with mother-tongue AI; one-app consolidation analogy). Polish note: sub-point d compressed to its novel element (mother tongue) — the recognise/escort/OTP scene it repeated is carried by points 1–2; say the word to restore the full version.
 
 ## Search notes
 
