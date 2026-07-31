@@ -146,6 +146,10 @@ DRAFT — 2026-07-31
 
 Can track customer wise credit litre daily sale
 
+6. we saw 300% sale (ms 30 to 80, HSD 125 to 400) increase at our RO. only if 3-5% sale is increased of IOCL we can call it an achievement. sale increase by Dzzlo's transparency, accuracy, efficiency, trust.
+   - 33% sale of 300% is of dealer hardwork, other 33% is facilities provided by IOCL. next 33% is full use of facilities provided by IOCL and facilities of DZZLO.
+   - started with pilot project for 2 years. ran adhoc for 1 year now integrating with efficiency of AI.
+
 ## 5. USP of DZZLO
 
 1. "What makes Dzzlo different from any other app :-
@@ -156,6 +160,8 @@ Can track customer wise credit litre daily sale
 3. "dealer and customer share **one common ledger, maintained like a corporate system**, and once a record is escalated it **cannot be deleted — by either side**."
 4. "A generic OMS (Zoho, Tally, Busy, a regional petrol pump billing tool) can issue an invoice and track a ledger. It **cannot**: [...] Bind a **driver OTP** to a delivery event so the invoice is unforgeable."
 5. "**DZZLO** sits between dealer and transporter, and is the only platform both sides actively use."
+6. how to catch customer? by credit system but instead of providing credit we take advance and provide ledgering and accounting facilities in app.
+7. how to retail customer? by providing cutting edge facilities and features that they can not get anywhere else. Services that bond relation not stuck in reconciliations.
 
 ## 6. Possibilities Unlocked with DZZLO
 
@@ -167,3 +173,9 @@ Can track customer wise credit litre daily sale
 6. "The platform is **two-sided**, which opens embedded finance (lending to customers against dealer invoice data, factoring dealer receivables) well beyond SaaS ARPU."
 7. "Recommends new verified connections: transporters whose routes/geo cluster near a dealer [...] this is the network-effects play for DZZLO growth."
 8. "Integrate Driver health card to provide benefits from Aayushmaan Bharat with collaboration by OMC"
+9. DZZLO OMS will prove as a promising platform for retail fuel transaction many further enhancment can be made on top of it like
+   - a. delivery confirmation ACK to customer company.
+   - b. camera clips to ensure correct delivery.
+   - c. automatic xtrapower customer generation with 1st time 5 litre free for customer buying new car at showroom in collaboration with IOCL. also provide xtrarewards points immediately.
+   - d. RO recognise driver with vehicle no. welcome him and escort him with his name and photo to bar number. DU displaying his order, ask OTP for confirmation, greet. AI speaks in driver's mother tongue for relation familiarity.
+   - e. we used to have many devices like calculator, maps, contact book, lens etc which are replaced by one device mobile phones. similarily many things like fleet card, ledger books, paper slips, reconciliations are removed by DZZLO OMS APP.
