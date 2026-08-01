@@ -167,4 +167,52 @@ Total pixels drive time and memory, so 1024×1024 ≈ 1216×832 in cost. Useful 
 
 ---
 
+## 6. Lab Notes — Seed, Steps, CFG, and the Dead Negative, Proven
+
+_All exercises above were run on this machine (2026-08-02), Z-Image Turbo bf16 at 1024×1024, via the local API. These are the results — and what each one actually means._
+
+> Note: on this install the server runs at `http://127.0.0.1:8188`, not `:8000`. Outputs from this session are in `output/phase1/`, and the graph is saved in Workflows as `01-zimage-base`.
+
+### Seed — the starting noise, and why it makes renders reproducible
+
+Generation starts from a canvas of random noise, and the seed is the number that generates that noise. Same seed → same starting noise → same denoising path → **the same image, down to the last pixel**. The prompt is a _distribution_ of possible images; the seed picks one sample from it.
+
+**Proven:** seed 42 rendered twice — with four other seeds rendered in between so the second run couldn't come from ComfyUI's cache — produced pixel-identical files (hash `30e880cf…` both times). The four in-between seeds (7111, 82634, 555001, 30928) each gave a different compass from the same prompt.
+
+**Why it matters:** the seed is your control variable. Fix it while tuning a prompt and any change you see came from the prompt, not luck. Randomize to explore; fix to refine.
+
+### Steps — denoising iterations, and where the floor is
+
+Each step removes a slice of noise. Time scales linearly with steps, so this is the cost dial — and past the model's tuned range, extra steps change the image without improving it.
+
+**Proven** (fixed seed 42):
+
+| Steps | Time | Result                                                                  |
+| ----- | ---- | ----------------------------------------------------------------------- |
+| 2     | 6 s  | Recognisable compass — distillation at work — but soft, less map detail |
+| 4     | 10 s | Close to final quality                                                  |
+| 8     | 18 s | The tuned sweet spot. This is the keeper.                               |
+| 16    | 34 s | Different, not better                                                   |
+| 30    | 60 s | **3.3× the time** of 8 steps for a slightly different image             |
+
+The floor is 8, exactly as the distillation promises. Paying for 30 buys you nothing but wait.
+
+### CFG — guidance strength, and what "fried" really looks like
+
+CFG pushes the image toward the positive prompt and away from the negative, and each step at cfg > 1 costs **two** model passes instead of one (the cfg 6 render took 36 s vs 18 s at cfg 1). Distilled models like Z-Image Turbo are trained to run at exactly cfg 1 — guidance off.
+
+**Proven** (fixed seed 42): cfg 3 and 6 progressively over-commit, and at **cfg 10 the image is not "over-saturated" — it is destroyed**: clipped orange-and-white bands, no compass, no map, pure abstract wreckage. On a distilled model, raising CFG doesn't gradually fry the image; it obliterates it. If you ever see that look, check your CFG before anything else.
+
+The rule stands: **distilled → cfg 1; full model → cfg 5–7.**
+
+### The dead negative — why negative prompts do nothing here
+
+The CFG math at each step is: `output = negative_prediction + cfg × (positive_prediction − negative_prediction)`. Set cfg = 1 and the negative terms cancel exactly — the negative prompt contributes zero, whatever you write in it.
+
+**Proven:** replacing `ConditioningZeroOut` with a real encoded negative (`"blurry, ugly, watermark, deformed"`) at cfg 1 produced a **pixel-identical image** to the zeroed-out version — same hash, bit for bit. Not "similar": identical.
+
+**Why it matters:** every "essential negative prompt list" you'll find online is a no-op on Z-Image Turbo, FLUX-dev, and anything running Lightning at cfg 1. `ConditioningZeroOut` isn't a trick — it's just honesty about the math, plus a saved text-encoder pass.
+
+---
+
 **Next:** [[02-phase-2-image-quality]] — FLUX, img2img, LoRAs, and turning 1024² into a clean 4096².
