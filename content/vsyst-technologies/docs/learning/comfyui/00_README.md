@@ -10,19 +10,19 @@ Read the phases in order. Each one ends with an exercise that produces a file yo
 
 ## The Machine (measured)
 
-|                    |                                                                   |
-| ------------------ | ----------------------------------------------------------------- |
-| **Chip**           | Apple M5 Max — 18 CPU cores, **40 GPU cores**                     |
-| **Memory**         | **48 GB unified** (CPU and GPU share one pool — no separate VRAM) |
-| **Disk**           | 1.5 TB free                                                       |
-| **OS**             | macOS 26.5.2                                                      |
-| **ComfyUI**        | **0.27.1** (Desktop app 1.0.28)                                   |
-| **Python / Torch** | 3.13.12 / **torch 2.10.0**, MPS backend active                    |
-| **Install root**   | `~/Documents/AI/ComfyUI/ComfyUI`                                  |
+|                    |                                                                           |
+| ------------------ | ------------------------------------------------------------------------- |
+| **Chip**           | Apple M5 Max — 18 CPU cores, **40 GPU cores**                             |
+| **Memory**         | **48 GB unified** (CPU and GPU share one pool — no separate VRAM)         |
+| **Disk**           | 1.5 TB free                                                               |
+| **OS**             | macOS 26.5.2                                                              |
+| **ComfyUI**        | **0.29.2** (observed live 2026-08-01; course text written against 0.27.1) |
+| **Python / Torch** | 3.13.12 / **torch 2.10.0**, MPS backend active                            |
+| **Install root**   | `~/Documents/AI/ComfyUI/ComfyUI`                                          |
 
 **Unified memory is the single fact that governs everything else in this course.** On an NVIDIA box, a model must fit in VRAM or it does not run. Here, a model that "doesn't fit" doesn't fail — it silently spills into swap and the render takes 80 minutes instead of 8. Most of the performance advice in Phase 5 is really memory advice.
 
-## What's Installed (193 GB)
+## What's Installed (~255 GB)
 
 ### Image
 
@@ -71,6 +71,23 @@ These filled the gaps that were blocking blueprints already shipping in 0.27.1:
 
 Two things worth knowing, because guessing gets both wrong: the Z-Image ControlNet goes in **`model_patches/`**, not `controlnet/`. And 0.27.1's frame interpolation is **FILM** (`FrameInterpolationModelLoader`, a core node), not RIFE.
 
+### Added 2026-08-01 — Tier 1 + Sonic (~62 GB)
+
+The Download Plan below was executed: all of **Tier 1** plus **Sonic** from Tier 2. Rationale per model in the tier tables; exact files and URLs in [[08-reference]] §4; how these map to Google Flow capabilities in [[09-google-flow-parity]].
+
+| Model                                      | Folder                                 | Unlocks                                                                             |
+| ------------------------------------------ | -------------------------------------- | ----------------------------------------------------------------------------------- |
+| SVI 2.0 Pro LoRA pair                      | `loras/`                               | Scene extension / storyline continuity                                              |
+| Qwen-Image-Edit 2509 fp8                   | `diffusion_models/`                    | Multi-ref character consistency; fixes item 3 below                                 |
+| WAN 2.2 S2V 14B fp8 + wav2vec2             | `diffusion_models/`, `audio_encoders/` | Speaking presenter (voice → lip-synced video)                                       |
+| ACE-Step 1.5 turbo AIO                     | `checkpoints/`                         | Music beds                                                                          |
+| Stable Audio 3 small_sfx + t5gemma         | `checkpoints/`, `text_encoders/`       | SFX ≤ 2 min (repo moved these into subfolders — paths fixed in [[08-reference]] §4) |
+| clip_vision_h                              | `clip_vision/`                         | WAN 2.1 I2V flows, WAN Animate prereq                                               |
+| Sonic full set (incl. whisper-tiny, RIFE)  | `sonic/`                               | Talking head from a portrait, on existing `svd_xt`                                  |
+| Ollama `gemma4:12b-mlx` + `qwen3.5:4b-mlx` | (Ollama)                               | Vision QC + batch prompt expansion                                                  |
+
+Still manual: **Chatterbox** — install the `diodiogod/TTS-Audio-Suite` custom node; it fetches the weights on first use.
+
 ## Four Things Wrong With This Install (found while writing this)
 
 These are read off your actual files. Fix them before you start.
@@ -79,7 +96,7 @@ These are read off your actual files. Fix them before you start.
 
 2. **The "Text to Video (Wan 2.2)" blueprint cannot run here.** It wants `wan2.2_t2v_{high,low}_noise_14B` — you have the **I2V** 14B pair, not T2V. Use TI2V 5B for text→video instead ([[04-phase-4-video]]).
 
-3. **The "Image Edit (Qwen 2509)" blueprint won't load your files.** It expects `qwen_image_edit_2509_*`; you have the original `qwen_image_edit_*`. Two dropdowns to change — details in [[03-phase-3-control-and-editing]].
+3. ~~The "Image Edit (Qwen 2509)" blueprint won't load your files.~~ **Fixed 2026-08-01.** `qwen_image_edit_2509_fp8_e4m3fn.safetensors` is now in `diffusion_models/` — the shipped blueprint runs unmodified. The [[03-phase-3-control-and-editing]] workaround is only needed for the old v1 file.
 
 4. ~~You have no CausVid LoRA.~~ **Fixed 2026-07-15.** `Wan21_CausVid_14B_T2V_lora_rank32.safetensors` (319 MB) is now in `loras/`. Wire it at strength **0.30** per [[05-phase-5-advanced-video]] §1 — and remember the 80-minute fix also needs the fp8 `weight_dtype` change from item 1.
 
@@ -102,7 +119,7 @@ Measured from your own `comfyui.log` files unless marked _(est.)_.
 
 ## The Download Plan — Filling the Content-Studio Gaps
 
-> Researched and web-verified **2026-07-15**. **Nothing below is downloaded yet** — this is the plan. Exact files, repos, and staged commands live in [[08-reference]] §4. Sizes are Hugging Face decimal GB.
+> Researched and web-verified **2026-07-15**. **Status 2026-08-01: Tier 1 (plus Sonic from Tier 2) is downloaded** — only Chatterbox's node install remains manual. Tier 2/3 rows are still plan-only. Exact files, repos, and staged commands live in [[08-reference]] §4; the Google-Flow-parity view of these gaps is [[09-google-flow-parity]]. Sizes are Hugging Face decimal GB.
 
 The install above makes stills and silent video. Producing tutorial and marketing content for an app or website needs six capabilities it doesn't have yet — and each has a specific fix:
 
@@ -117,7 +134,7 @@ The install above makes stills and silent video. Producing tutorial and marketin
 
 One licensing sentence, because this is marketing output: everything in Tier 1 is Apache-2.0 / MIT / commercially licensed; FLUX-dev-family weights (including Kontext) are non-commercial and flagged where they appear.
 
-### Tier 1 — the core (~58 GB in ComfyUI, ~12 GB in Ollama)
+### Tier 1 — the core (~58 GB in ComfyUI, ~12 GB in Ollama) — ✅ downloaded 2026-08-01
 
 | Model                                  | Size GB | Use                                                                                                                        | Note                                                                            |
 | -------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
@@ -133,27 +150,27 @@ One licensing sentence, because this is marketing output: everything in Tier 1 i
 
 | Ollama tag                  | Size GB   | Use                                                                               | Note                                                                |
 | --------------------------- | --------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `gemma4:12b-mlx`            | 7.7       | Vision QC: look at rendered frames, catch character drift, caption assets         | Small enough to sit beside a 14B render                             |
-| `qwen3.5:4b-mlx`            | 4.0       | Batch prompt expansion: one storyline → thirty shot prompts                       | —                                                                   |
+| `gemma4:12b-mlx` ✅ pulled  | 7.7       | Vision QC: look at rendered frames, catch character drift, caption assets         | Small enough to sit beside a 14B render                             |
+| `qwen3.5:4b-mlx` ✅ pulled  | 4.0       | Batch prompt expansion: one storyline → thirty shot prompts                       | —                                                                   |
 | `qwen3.6:35b-mlx` ✅ pulled | 21 (have) | The writer: scripts, shot lists, scene-by-scene prompts. Vision-capable, 256K ctx | Too big to coexist with a render — `keep_alive: 0` before rendering |
 
 Glue: the `stavsap/comfyui-ollama` custom node calls these from inside a graph. And to settle the ollama.com question directly: it hosts LLMs/VLMs only, plus two **experimental Mac-only text-to-image** models added Jan 2026 (`x/z-image-turbo`, `x/flux2-klein`) and **zero video models** — you already run better than both in ComfyUI. Ollama's job in this stack is words, not pixels.
 
 ### Tier 2 — pull when a project demands one (~118 GB if you took it all; you won't)
 
-| Model                                      | Size GB              | Use                                                                                                        | Note                                                                                                     |
-| ------------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Qwen-Image-Edit 2511**                   | 13.2 GGUF / 20.5 fp8 | Successor to 2509 — changelog is literally "Improved Character Consistency," "Mitigate Image Drift"        | Its template needs a ComfyUI app update; GGUF path needs `ComfyUI-GGUF`                                  |
-| **FLUX.1 Kontext dev**                     | 6.9 (GGUF Q4)        | Identity-preserving edits in the FLUX family; reuses your FLUX encoders + VAE                              | ⚠ weights non-commercial                                                                                 |
-| **FLUX.2 klein 4B**                        | 7.8                  | Multi-reference generate **and** edit in one small model                                                   | Apache-2.0; its TE is `qwen_3_4b` — already on your disk                                                 |
-| **WAN 2.2 Animate 14B** fp8 + relight LoRA | 19.8                 | Your character performs a reference video's motion; replace a person in existing footage                   | Native template; zero published Mac runs — you'd write the first numbers                                 |
-| **Phantom-WAN 14B** fp8                    | 15.0                 | Multi-subject reference→video: mascot + product together in one shot, from 1–4 stills                      | Native node; frozen at WAN 2.1 but still the only tool that does this                                    |
-| Phantom-WAN 1.3B                           | 2.9                  | Draft-speed Phantom for iterating composition                                                              | —                                                                                                        |
-| **WAN 2.2 Fun-InP** pair                   | 28.6                 | Keyframe→keyframe bridging (first/last frame) at 2.2 quality — the storyboard pipeline's connective tissue | Native template                                                                                          |
-| **Sonic**                                  | 6.7                  | Talking head from a portrait photo                                                                         | The only avatar model with a confirmed Mac fix; runs on your `svd_xt` — the first real reason to keep it |
-| **Qwen3-TTS 1.7B**                         | 4.5                  | 2026 TTS quality leader; 3-second voice clone                                                              | Apache-2.0; verified in `mlx-audio`                                                                      |
-| **Wav2Lip**                                | 0.4                  | Quick lip-sync onto existing footage (screen-recorded presenter)                                           | 96-px mouth region — utility, not hero shots                                                             |
-| **Z-Image base** (non-turbo)               | 12.3                 | The LoRA-training foundation: train your mascot/presenter once, use it natively everywhere                 | Apache-2.0; TE + VAE already on disk; training notes in [[07-capstones]]                                 |
+| Model                                      | Size GB              | Use                                                                                                        | Note                                                                                                                                                                                      |
+| ------------------------------------------ | -------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Qwen-Image-Edit 2511**                   | 13.2 GGUF / 20.5 fp8 | Successor to 2509 — changelog is literally "Improved Character Consistency," "Mitigate Image Drift"        | Its template needs a ComfyUI app update; GGUF path needs `ComfyUI-GGUF`                                                                                                                   |
+| **FLUX.1 Kontext dev**                     | 6.9 (GGUF Q4)        | Identity-preserving edits in the FLUX family; reuses your FLUX encoders + VAE                              | ⚠ weights non-commercial                                                                                                                                                                  |
+| **FLUX.2 klein 4B**                        | 7.8                  | Multi-reference generate **and** edit in one small model                                                   | Apache-2.0; its TE is `qwen_3_4b` — already on your disk                                                                                                                                  |
+| **WAN 2.2 Animate 14B** fp8 + relight LoRA | 19.8                 | Your character performs a reference video's motion; replace a person in existing footage                   | Native template; zero published Mac runs — you'd write the first numbers                                                                                                                  |
+| **Phantom-WAN 14B** fp8                    | 15.0                 | Multi-subject reference→video: mascot + product together in one shot, from 1–4 stills                      | Native node; frozen at WAN 2.1 but still the only tool that does this                                                                                                                     |
+| Phantom-WAN 1.3B                           | 2.9                  | Draft-speed Phantom for iterating composition                                                              | —                                                                                                                                                                                         |
+| **WAN 2.2 Fun-InP** pair                   | 28.6                 | Keyframe→keyframe bridging (first/last frame) at 2.2 quality — the storyboard pipeline's connective tissue | Demoted 2026-08-01: core now ships a native **FLF2V** template that runs on the I2V 14B pair already on disk — pull Fun-InP only if FLF2V quality disappoints ([[09-google-flow-parity]]) |
+| **Sonic** ✅ pulled 2026-08-01             | 6.7                  | Talking head from a portrait photo                                                                         | The only avatar model with a confirmed Mac fix; runs on your `svd_xt` — the first real reason to keep it                                                                                  |
+| **Qwen3-TTS 1.7B**                         | 4.5                  | 2026 TTS quality leader; 3-second voice clone                                                              | Apache-2.0; verified in `mlx-audio`                                                                                                                                                       |
+| **Wav2Lip**                                | 0.4                  | Quick lip-sync onto existing footage (screen-recorded presenter)                                           | 96-px mouth region — utility, not hero shots                                                                                                                                              |
+| **Z-Image base** (non-turbo)               | 12.3                 | The LoRA-training foundation: train your mascot/presenter once, use it natively everywhere                 | Apache-2.0; TE + VAE already on disk; training notes in [[07-capstones]]                                                                                                                  |
 
 ### Tier 3 — heavy options, only with a concrete need
 
@@ -202,9 +219,13 @@ QC ────── gemma4 vision via comfyui-ollama:        (T1)
 
 Three custom nodes earn a slot for this (you currently run zero — [[07-capstones]] explains why that's been a feature): `ComfyUI-GGUF` (quantized model loading), `comfyui-ollama` (the LLM layer), `TTS-Audio-Suite` (speech). Add them one at a time, with a reason, as ever.
 
-### One measurement before the big pulls
+### ~~One measurement before the big pulls~~ — MEASURED 2026-08-01, and the answer is worse than either hypothesis
 
-Phase 5 and [[08-reference]] assume `fp8_e4m3fn` halves **RAM**. Mid-2026 upstream sources dispute that for Apple Silicon: torch 2.10 still has no native fp8 dtype on MPS, so ComfyUI may be upcasting fp8 weights at load — disk savings only. What your logs prove: fp8*scaled files *run* (the umt5 encoder behind every measured WAN render is one). What nobody has measured: their resident size — every fp8 timing in these docs is still *(est.)\_. **Before pulling the 20-GB fp8 files above, run the WAN 2.2 I2V 14B blueprint once and watch memory** (ComfyUI log's `loaded` lines, or Activity Monitor). RAM ≈ file size → fp8 is real here; proceed as planned. RAM ≈ 2× file size → take the GGUF variants listed in [[08-reference]] §4 instead — `ComfyUI-GGUF` keeps weights quantized in memory.
+The question was "does fp8 halve RAM or only disk?" The measured answer on ComfyUI **0.29.2**: **fp8_scaled diffusion models do not run on MPS at all.** A WAN 2.2 I2V 14B fp8 render (512², 33 frames, 4 steps, via the API) loaded the UNet at its true fp8 size — log: `loaded completely; 13631.42 MB loaded, full load: True`, so no upcast, the memory saving is real — then crashed in the sampler: `TypeError: Trying to convert Float8_e4m3fn to the MPS backend` from comfy-kitchen's `dequantize_fp8` (upstream issue #8785; torch 2.10 has no MPS fp8 dtype). Reproduced with and without the LightX2V LoRAs, so it's the dequant path itself, not LoRA patching.
+
+What this means for this disk: the WAN 2.2 **I2V 14B pair**, **S2V 14B**, and both **Qwen-Edit fp8** files are currently unrunnable as-is — which retroactively explains why every fp8 timing in these docs was _(est.)_: none had ever actually run. **Text encoders are unaffected** (umt5 fp8 encoded fine in the same run — its path handles fp8 differently). fp16/bf16 models are untouched by any of this.
+
+Two exits, detailed in [[09-google-flow-parity]]: **(a) GGUF variants** via the `ComfyUI-GGUF` node — verified to exist for all three casualties (I2V pair Q5 10.8 GB ×2, S2V Q5 15.0 GB, Qwen-Edit-2509 Q5 14.9 GB); **(b)** the community fp8-on-MPS patch (Comfy-Org discussion #13273 — bounces dequant through CPU; must be reapplied after every update).
 
 ## The Phases
 
@@ -218,5 +239,6 @@ Phase 5 and [[08-reference]] assume `fp8_e4m3fn` halves **RAM**. Mid-2026 upstre
 | 6     | [[06-phase-6-automation-api-mcp]] — the HTTP API and driving ComfyUI from Claude    | Advanced            |
 | 7     | [[07-capstones]] — three end-to-end projects                                        | Capstone            |
 | —     | [[08-reference]] — model↔encoder↔VAE matrix, troubleshooting, downloads             | Reference           |
+| —     | [[09-google-flow-parity]] — Flow/Veo 3.1 capability map → local stack + gap plan    | Reference           |
 
 Start with [[01-phase-1-foundations]].
