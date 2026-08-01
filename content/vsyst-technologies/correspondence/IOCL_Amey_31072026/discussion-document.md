@@ -37,10 +37,10 @@ DRAFT — polish pass 2026-08-01
 
 ### 3.2 Problem of dealer with IOCL
 
-1. **Forced adjustments.** Limited upload windows, card limits on receiving payment, OTPs sent to absent owners, no late-night or holiday support — so dealers adjust transactions by hand, and manual entries cannot be relied on.
-2. **Help missing when it matters.** When uploads fail or payments stall, support does not come — the dealer cannot serve his transporters, and cannot even track which DU slip went to which customer.
-3. **Congestion punishes the best.** The highest-selling, highest-credit pumps are exactly the ones that cannot upload their many small transactions inside the limited window.
-4. **ITPS strains the relationship.** Inaccurate data, irregular payments, and small sales left un-uploaded disturb the dealer's own customers.
+1. **Dealers placing manual entries are not reliable.** Limited upload windows, card limits on receiving payment, OTPs sent to absent owners, no late-night or holiday support.
+2. **Dealer are helpless to support transporters in many ways.** When uploads fail or payments stall, support does not come — System avaliablility, officers etc.
+3. **ITPS is time taking.** The highest-selling, highest-credit pumps are exactly the ones that cannot upload their many small transactions inside the limited window.
+4. **ITPS distrubs the relationship.** Inaccurate data, irregular payments, and small sales left un-uploaded disturb the dealer's own customers.
 5. **The machine is the dealer's burden.** Availability, APK updates, maintenance, cost, network — all of it lands on the pump.
 
 ### 3.3 Problem of transporters with dealers
@@ -53,15 +53,15 @@ DRAFT — polish pass 2026-08-01
 
 ### 3.4 Problem of transporter with IOCL
 
-1. **The card is the weak link.** Lost cards, sold vehicles, unreachable OTP numbers, limits nobody can see — and the card, which is money, sits with the CA or the driver instead of the dealer. Fraud follows.
+1. **The card is the weak link.** physical mishandling of card, which is money, sits with the CA or the driver instead of the owner. Fraud follows.
 2. **Limits choke the flow.** When a customer's off-take grows past the monthly limit, the dealer simply cannot receive payment — often through nothing more than poor card handling and know-how.
 3. **Partial coverage.** XtraPower covers diesel and petrol but keeps no ledger or records for lubes.
 4. **XtraRewards needs XtraEffort.** Redemption is slow — and not in the app.
-5. **No product for the transporter.** Transporter-specific solutions such as LRMS are not something IOCL can facilitate.
+5. **More Transporter-specific solutions** such as LRMS are not something IOCL can facilitate.
 
 ### 3.5 Problem of IOCL with IOCL
 
-1. **Built for less than reality.** Connectivity drops, website outages, no web app, servers overloaded by dealers and customers surfing in circles — data that is never real-time and never from the original source, in a system too complex to meet its own data needs without XtraEffort and XtraTime.
+1. **Not real time data** data that not from the original source, in a system too complex to meet its own data should be without XtraEffort and XtraTime.
 2. **ITPS blind spots.** Maintenance troubles, cash-sale manipulation, discount features dealers do not know exist, training forever required.
 3. **Loyalty on unloyal data.** XtraPower rewards customers — but customers are not bound to be loyal, and neither is the data behind the programme.
 4. **Everyone overworked.** Dealer, customer, and IOC officials all carry manual load — and manual work breeds human error.
@@ -69,29 +69,29 @@ DRAFT — polish pass 2026-08-01
 ### 3.6 Problem of IOCL with dealers
 
 1. **Unresolved tickets teach workarounds.** When even a centralised system cannot resolve issues raised to HO, dealers manipulate for instant resolution.
-2. **Dealers will not promote XtraPower.** It costs them extra money and extra time — upload the transaction, then wait for the payment after the sale.
+2. **Dealers does not promote XtraPower.** It costs them extra money and extra time — upload the transaction, then wait for the payment after the sale.
 3. **The invisible credit book.** Of roughly 60% credit sale, only about 20% flows through XtraPower — the rest lives in ledgers IOCL never sees. Does IOCL not want that data?
 4. **Collusion at the outlet.** Manipulation between driver and CA is possible, and 100% conversion stays out of reach.
 5. **Off-book discounts.** Dealers already give discounts to attract customers — those records never reach IOCL.
 
 ### 3.7 Problem of IOCL with transporters — fleet card mishandling
 
-1. **Cards gathering dust.** Almost all cards lie at the RO — some blacklisted, some hotlisted, some without limits — and the dealer does not even know.
-2. **Matching the wrong number.** A Maharatna company reconciles diesel off-take against customer payments — it should match quantity, not amount.
+1. **Cards at RO.** Almost all cards lie at the RO — some blacklisted, some hotlisted, some without limits — and the dealer does not even know.
+2. **Matching the wrong number.** IOCL reconciles diesel off-take against customer payments — it should match quantity, not amount. (discounts, TDS, advances)
 3. **Dispatch on trust.** No certainty that the same vehicle received the same quantity.
 4. **A vehicle is not an identity.** Vehicle records alone can never be perfect; adding the driver makes verification authentic.
 5. **What the customer actually wants.** Quantity assurance.
-6. **Wrong lane.** Dealer–transporter account transactions are their business — IOCL should not have to police them.
+6. **Wrong lane.** IOCL should not bother dealer and transporters accounts transactions.
 7. **The data is ready anyway.** Whatever data IOCL needs, DZZLO-OMS manages perfectly and can share — far more than existing systems provide.
 
 ## 4. What DZZLO Brings
 
 ### 4.1 Facilities to dealer with solution to their problems with DZZLO-OMS
 
-1. **A credit limit the system enforces.** The dealer sets a limit per customer; once crossed, no new order until the credit is paid.
+1. **A credit limit system.** The dealer sets a limit per customer; once crossed, no new order until the credit is paid.
 2. **Fraud loses its cover.** Contact and order details of every transaction are traceable in DZZLO-OMS — and in no other software.
 3. **No account discrepancy.** Confirmed orders, no billing mistakes, acknowledged payments, an automatic common ledger, no suspense accounts — transparency that builds trust and business relations.
-4. **The dealer makes no entries.** The customer places the order and pays dealer- and invoice-wise; ordering and billing are automated, so billing disputes simply do not arise.
+4. **The dealer makes no entries.** The customer places the order and pays dealer-wise and invoice-wise; ordering and billing are automated, so billing disputes simply do not arise.
 5. **An ERP at a pump's price.** The fastest accounting and invoicing speed up fund movement and cut investment; taxation is handled; the dealer works like a corporate — and is freed for sales promotion.
 
 ### 4.2 Facilities to transporters with solution to their problems with DZZLO
@@ -105,7 +105,7 @@ DRAFT — polish pass 2026-08-01
 
 ### 4.3 Facilities to IOCL with solution to their problems with DZZLO
 
-1. **Real-time off-take, both books.** Live records of fuel upliftment from dealers — credit and cash customers alike.
+1. **Real-time off-take** Live records of fuel upliftment from dealers — credit and cash customers alike.
 2. **Cleaner programme data.** Cash discounts traceable, higher XtraPower conversion, instant customer IDs, no physical fleet card, verified vehicles, a driver database — data accuracy throughout.
 3. **Plug into the portal.** Customers created in DZZLO flow automatically to IOCL's portal — up to 95% of enterprises on fleet-card rails without fraud, tunable towards 99% accuracy.
 4. **The dealer's network becomes IOCL's.** Every dealer's customers connect to the OMC automatically — one customer, one reward, one platform.
@@ -118,7 +118,7 @@ DRAFT — polish pass 2026-08-01
 1. **Accuracy. Transparency. Efficiency.** Only the transporter places the order — data is entered once. The same data is visible to all. Workload and reconciliation shrink. The result is TRUST.
 2. **One entry.** The purchase order is the single source of accounting — and it cannot be manipulated.
 3. **A ledger neither side can rewrite.** Dealer and customer share one common ledger, maintained like a corporate system; once a record is escalated, neither side can delete it.
-4. **What generic software cannot do.** Zoho, Tally, Busy, or a pump-billing tool can issue an invoice — none can bind a driver OTP to a delivery so the invoice is unforgeable.
+4. **What generic software cannot do.** Zoho, Tally, Busy, or a pump-billing tool can issue an invoice — none can bind with common ledger or verify driver OTP to a delivery so the invoice is unforgeable.
 5. **The only platform both sides use.** DZZLO sits between dealer and transporter — and both actively live on it.
 6. **How we catch a customer.** Through the credit system — but instead of giving credit, we take advance, and give ledgering and accounting in the app.
 7. **How we keep a customer.** Cutting-edge facilities they cannot get anywhere else — services that bond the relationship instead of drowning it in reconciliation.
@@ -128,14 +128,14 @@ DRAFT — polish pass 2026-08-01
 1. **The pump knows who is coming.** The DU screen reads the vehicle number and welcomes the driver by name and photo — then escorts him to his bay, showing the attendant's name and photo too.
 2. **Delivery that runs itself.** The DU knows the vehicle's requirement, authenticates by OTP, presets the quantity, and assures the fuel-tank delivery — and if the nozzle stops or moves, the app clips that moment for the transporter, skipping straight to the second the AI flags.
 3. **Milestones worth celebrating.** Birthdays, kilometres reached, tyre changes, order counts at the RO — the dealer picks a scheme and rewards his customers, building the long relationship.
-4. **Drivers join without an app.** They receive the OTP and order details, and send back the odometer photo and the dispensed-quantity slip — over WhatsApp.
-5. **The ledger becomes a credit score.** Twelve clean months of fuel history can qualify a transporter for 30-day credit at 1.2–1.8%/month through an NBFC partner.
-6. **Embedded finance.** A two-sided platform opens lending against invoice data and factoring of dealer receivables — well beyond software revenue.
-7. **The network recommends itself.** Verified transporters whose routes cluster near a dealer are introduced automatically — network effects as a growth engine.
-8. **Health for the man behind the wheel.** Driver health cards integrated with Ayushman Bharat benefits, in collaboration with the OMC.
-9. **A platform to build on.** DZZLO OMS is the base for the retail-fuel enhancements to come:
+4. **A platform to build on.** DZZLO OMS is the base for the retail-fuel enhancements to come:
    - a. Delivery-confirmation ACK sent to the customer's company.
    - b. Camera clips that prove correct delivery.
    - c. XtraPower enrolment at the car showroom — a new-car buyer gets 5 litres free and XtraRewards credited instantly, in collaboration with IOCL.
    - d. The DU welcome of point 1, spoken in the driver's mother tongue — familiarity that builds relation.
    - e. One phone replaced the calculator, the map, the contact book, the lens; one app now retires the fleet card, ledger books, paper slips, and reconciliations.
+5. **Drivers join without an app.** They receive the OTP and order details, and send back the odometer photo and the dispensed-quantity slip — over WhatsApp.
+6. **The ledger becomes a credit score.** Twelve clean months of fuel history can qualify a transporter for 30-day credit at 1.2–1.8%/month through an NBFC partner.
+7. **Embedded finance.** A two-sided platform opens lending against invoice data and factoring of dealer receivables — well beyond software revenue.
+8. **The network recommends itself.** Verified transporters whose routes cluster near a dealer are introduced automatically — network effects as a growth engine.
+9. **Health for the man behind the wheel.** Driver health cards integrated with Ayushman Bharat benefits, in collaboration with the OMC.
