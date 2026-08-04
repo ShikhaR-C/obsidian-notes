@@ -31,6 +31,7 @@ IndiaMART crossed its first 1,000 paid subscribers by 2001 and survived the dot-
 ### 1.6 Practical DZZLO takeaway
 
 The arithmetic of the first ₹1 lakh in revenue:
+
 - 50 customers × ₹1,999/month = ₹99,950
 - 100 customers × ₹999/month = ₹99,900
 
@@ -40,13 +41,13 @@ Either is achievable between day 60 and day 75 of the 90-day acquisition playboo
 
 ## 2. Five revenue models with pros/cons/unit economics
 
-| Model | Price | Pros | Cons | Unit Economics |
-|-------|-------|------|------|----------------|
-| Pure SaaS subscription | ₹999–4,999/mo | Predictable MRR; forecast easy; clean valuation | Long sales cycle; price-sensitive | GM 75–85%; ARPU ₹24–60k/yr |
-| Freemium + paid | Free → ₹1,499/mo | Viral; CAC ~60% lower ([PayProGlobal](https://payproglobal.com/answers/what-is-saas-freemium-pricing/)) | Free-to-paid 2–5% vs trial 15–20% ([Maxio — Freemium](https://www.maxio.com/blog/freemium-model)); support cost on free | CAC must stay <₹1,500 |
-| Transaction take-rate | 0.3–0.8% of GMV | Aligns with dealer growth; scales with tenant | Requires payment/fintech license | Only works with embedded payments |
-| Hybrid: sub + fintech | ₹499/mo + 1.5–2.5% lending/discount | Highest LTV — B2B embedded 2–5% take ([FinTechtris](https://www.fintechtris.com/blog/embedded-finance-b2b-next-frontier-fintech)) | Regulatory; NBFC partner required (Indifi/Kinara/Aye) | LTV 3–5x base SaaS |
-| Lifetime deal | ₹29–50k one-time | Upfront cash; early-stage funding substitute | Kills recurring; damages valuation | Launch tactic only for first 100 |
+| Model                  | Price                               | Pros                                                                                                                              | Cons                                                                                                                    | Unit Economics                    |
+| ---------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| Pure SaaS subscription | ₹999–4,999/mo                       | Predictable MRR; forecast easy; clean valuation                                                                                   | Long sales cycle; price-sensitive                                                                                       | GM 75–85%; ARPU ₹24–60k/yr        |
+| Freemium + paid        | Free → ₹1,499/mo                    | Viral; CAC ~60% lower ([PayProGlobal](https://payproglobal.com/answers/what-is-saas-freemium-pricing/))                           | Free-to-paid 2–5% vs trial 15–20% ([Maxio — Freemium](https://www.maxio.com/blog/freemium-model)); support cost on free | CAC must stay <₹1,500             |
+| Transaction take-rate  | 0.3–0.8% of GMV                     | Aligns with dealer growth; scales with tenant                                                                                     | Requires payment/fintech license                                                                                        | Only works with embedded payments |
+| Hybrid: sub + fintech  | ₹499/mo + 1.5–2.5% lending/discount | Highest LTV — B2B embedded 2–5% take ([FinTechtris](https://www.fintechtris.com/blog/embedded-finance-b2b-next-frontier-fintech)) | Regulatory; NBFC partner required (Indifi/Kinara/Aye)                                                                   | LTV 3–5x base SaaS                |
+| Lifetime deal          | ₹29–50k one-time                    | Upfront cash; early-stage funding substitute                                                                                      | Kills recurring; damages valuation                                                                                      | Launch tactic only for first 100  |
 
 ### 2.1 Expanded notes on each model
 
@@ -117,13 +118,13 @@ The market and the benchmarks every DZZLO founder should memorise:
 
 ## 5. Pricing ladder progression
 
-| Tier | Target | Monthly | Annual | Inside |
-|------|--------|---------|--------|--------|
-| Free / 15-day trial | Everyone | ₹0 | ₹0 | Core billing, GST invoice, basic stock |
-| Starter ("Chhota Pump") | 1-outlet | ₹999 | ₹9,999 | + Reconciliation, compliance alerts, WhatsApp bills |
-| Pro ("Badi Pump") | 1–3 outlets | ₹2,499 | ₹24,999 | + Density/variance, credit book, multi-user, SMS, analytics |
-| Chain | 4+ outlets | ₹7,499 | ₹74,999 | + Multi-site dashboard, API, custom reports, priority support |
-| Enterprise | 20+ outlets / COCO | ₹25,000+ | ₹2.5L+ | + SLA, dedicated CSM, custom OMC API integrations |
+| Tier                    | Target             | Monthly  | Annual  | Inside                                                        |
+| ----------------------- | ------------------ | -------- | ------- | ------------------------------------------------------------- |
+| Free / 15-day trial     | Everyone           | ₹0       | ₹0      | Core billing, GST invoice, basic stock                        |
+| Starter ("Chhota Pump") | 1-outlet           | ₹999     | ₹9,999  | + Reconciliation, compliance alerts, WhatsApp bills           |
+| Pro ("Badi Pump")       | 1–3 outlets        | ₹2,499   | ₹24,999 | + Density/variance, credit book, multi-user, SMS, analytics   |
+| Chain                   | 4+ outlets         | ₹7,499   | ₹74,999 | + Multi-site dashboard, API, custom reports, priority support |
+| Enterprise              | 20+ outlets / COCO | ₹25,000+ | ₹2.5L+  | + SLA, dedicated CSM, custom OMC API integrations             |
 
 **Reference anchors**: Vyapar Silver ₹366/month, Zoho Books Blue plan ₹416/month, Petrosoft India ₹15,000 one-time license ([Software Suggest — Petrosoft India](https://www.softwaresuggest.com/petrosoft-india)). DZZLO Pro is positioned at a premium to Vyapar because of vertical depth (DIP tank, density, OMC workflows) and the fintech attach. See [02_PRICING_STRATEGY.md](./02_PRICING_STRATEGY.md) for full tier design.
 
@@ -196,6 +197,7 @@ Series A readiness in 2026 requires not just topline but quality of revenue: low
 Sources → [RESEARCH_SOURCES.md](./RESEARCH_SOURCES.md)
 
 Cross-references:
+
 - [02_PRICING_STRATEGY.md](./02_PRICING_STRATEGY.md) — tier design and anchoring
 - [10_AFFORDABILITY_PROBLEM.md](./10_AFFORDABILITY_PROBLEM.md) — low-buying-power monetization stack
 - [12_OWNER_ACQUISITION.md](./12_OWNER_ACQUISITION.md) — persona, channels, 90-day playbook

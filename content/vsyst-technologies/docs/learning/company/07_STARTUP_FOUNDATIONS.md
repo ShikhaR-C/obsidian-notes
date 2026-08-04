@@ -36,7 +36,7 @@ Eric Ries's build-measure-learn loop reframes product work as scientific experim
 
 The trap: optimising a product no one wants. More iterations of a bad MVP will not manufacture PMF. Identify the single leap-of-faith hypothesis (the assumption your entire business depends on) and design the cheapest possible test — often a WhatsApp concierge, a landing page, or a manual ops flow — before you build.
 
-- Read: Eric Ries, *The Lean Startup*
+- Read: Eric Ries, _The Lean Startup_
 - Do: Write down your one leap-of-faith hypothesis and design the cheapest test that can disprove it in 2 weeks.
 
 ## 4. Lean Canvas / Business Model Canvas
@@ -87,7 +87,7 @@ For DZZLO OMS, the competitive alternative is often not another SaaS — it is E
 
 Donald Miller's framework: the customer is the hero of the story, not your product. You are the guide (Gandalf, not Frodo). Clarify the problem they face, paint the picture of life after purchase, and give them a simple plan to get there. If the customer has to do cognitive work to understand why they should care, you lose.
 
-- Read: Donald Miller, *Building a StoryBrand*
+- Read: Donald Miller, _Building a StoryBrand_
 - Do: Rewrite your landing page headline in the format "We help [who] do [what] so that [outcome]" — no adjectives.
 
 ## 10. Sales Fundamentals (SPIN / MEDDIC / Challenger)
@@ -103,16 +103,16 @@ Top-performing teams combine all three — SPIN for the first call, Challenger f
 
 Dave McClure's AARRR — Acquisition, Activation, Retention, Referral, Revenue — is the minimum viable instrumentation for any product. Each stage has its own conversion rate, its own leaks, and its own optimisation levers.
 
-Pair with Weinberg & Mares's Bullseye framework from *Traction*: brainstorm all 19 channels, rank into an outer (plausible), middle (promising) and inner (current focus) ring, and run cheap tests across the middle ring to find your one dominant channel.
+Pair with Weinberg & Mares's Bullseye framework from _Traction_: brainstorm all 19 channels, rank into an outer (plausible), middle (promising) and inner (current focus) ring, and run cheap tests across the middle ring to find your one dominant channel.
 
 - Read: [Amplitude — AARRR](https://amplitude.com/blog/pirate-metrics-framework); [PostHog — AARRR pirate funnel](https://posthog.com/product-engineers/aarrr-pirate-funnel); [99signals — Traction book](https://www.99signals.com/marketing-lessons-traction-weinberg-mares/); [Brian Balfour — Bullseye framework](https://brianbalfour.com/essays/traction-the-bullseye-framework)
 - Do: Sketch the AARRR funnel on paper with your current numbers (even if most are zero) — the act of drawing reveals the next instrumentation gap.
 
 ## 12. Product Management (Marty Cagan + Teresa Torres)
 
-Cagan's *Inspired* defines modern product work: empowered teams of a PM, designer, and engineer owning outcomes not outputs, running continuous discovery alongside delivery. Torres's *Continuous Discovery Habits* adds the mechanics — weekly customer touchpoints, opportunity-solution trees, and assumption tests built into the cadence.
+Cagan's _Inspired_ defines modern product work: empowered teams of a PM, designer, and engineer owning outcomes not outputs, running continuous discovery alongside delivery. Torres's _Continuous Discovery Habits_ adds the mechanics — weekly customer touchpoints, opportunity-solution trees, and assumption tests built into the cadence.
 
-For an early founder, you *are* the triad. The non-negotiable is the weekly customer conversation — not monthly, not "when we have time."
+For an early founder, you _are_ the triad. The non-negotiable is the weekly customer conversation — not monthly, not "when we have time."
 
 - Read: [SVPG — INSPIRED 2nd ed.](https://www.svpg.com/books/inspired-how-to-create-tech-products-customers-love-2nd-edition/); [Product Talk — Teresa Torres](https://www.producttalk.org/)
 - Do: Book 3 customer touchpoints every week, starting this week. Put them on the calendar before planning features.
@@ -161,7 +161,7 @@ Exercise price and taxation: ESOPs taxed at exercise (as perquisite) and again a
 
 ## 18. Leadership & Founder Psychology
 
-Ben Horowitz in *The Hard Thing About Hard Things*: "the toughest challenges of leadership aren't strategic; they're psychological." The cold sweats, sleepless nights, and imposter-syndrome spirals are not signs you are failing — they are the job. Paul Graham's research on YC founders consistently points to determination, not intelligence, as the top predictor of outcome. Michael Seibel's advice boils down to: ship, talk to users, ignore everyone else, and keep going longer than is reasonable.
+Ben Horowitz in _The Hard Thing About Hard Things_: "the toughest challenges of leadership aren't strategic; they're psychological." The cold sweats, sleepless nights, and imposter-syndrome spirals are not signs you are failing — they are the job. Paul Graham's research on YC founders consistently points to determination, not intelligence, as the top predictor of outcome. Michael Seibel's advice boils down to: ship, talk to users, ignore everyone else, and keep going longer than is reasonable.
 
 You will be wrong about most things. The moat is staying in the game long enough to learn and correct.
 
@@ -174,13 +174,13 @@ You will be wrong about most things. The moat is staying in the game long enough
 
 You cannot learn 18 domains in a quarter, and you do not need to. Five dominate the outcome for a first-time founder in months 1–3. The rest can be learned as you hit them.
 
-| Rank | Domain | Why it comes first |
-|------|--------|-------------------|
-| 1 | Customer Discovery / The Mom Test / JTBD (§1) | Every other decision — product, pricing, GTM, positioning — is downstream of whether you correctly understand the problem. Get this wrong and nothing else matters. |
-| 2 | Unit Economics (§5) | Low-ARPU Indian SME SaaS fails on CAC payback, not product quality. If the math does not work at 10 customers, it does not work at 10,000. |
-| 3 | Positioning (§8) | You will be asked "what do you do?" 50 times in month 1. A weak answer kills every conversation. Dunford's framework compresses weeks of struggle into days. |
-| 4 | GTM / Sales Mechanics (§7 + §10) | You are the first AE. Founder-led sales through the first 10–20 customers is non-delegable. SPIN + Challenger are learnable in a weekend. |
-| 5 | Founder Psychology (§18) | Everything above presumes you are still in the chair 12 months from now. The single highest-leverage investment is your own resilience. |
+| Rank | Domain                                        | Why it comes first                                                                                                                                                  |
+| ---- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Customer Discovery / The Mom Test / JTBD (§1) | Every other decision — product, pricing, GTM, positioning — is downstream of whether you correctly understand the problem. Get this wrong and nothing else matters. |
+| 2    | Unit Economics (§5)                           | Low-ARPU Indian SME SaaS fails on CAC payback, not product quality. If the math does not work at 10 customers, it does not work at 10,000.                          |
+| 3    | Positioning (§8)                              | You will be asked "what do you do?" 50 times in month 1. A weak answer kills every conversation. Dunford's framework compresses weeks of struggle into days.        |
+| 4    | GTM / Sales Mechanics (§7 + §10)              | You are the first AE. Founder-led sales through the first 10–20 customers is non-delegable. SPIN + Challenger are learnable in a weekend.                           |
+| 5    | Founder Psychology (§18)                      | Everything above presumes you are still in the chair 12 months from now. The single highest-leverage investment is your own resilience.                             |
 
 Everything else — Lean Canvas, fundraising, GST, ESOP, design, PM — is load-bearing but second-order. Learn them when you hit the corresponding moment: design when you sketch v0, fundraising when you start writing the deck, GST when you are about to cross ₹20 lakh.
 

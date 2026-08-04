@@ -10,14 +10,14 @@ Pricing is the single highest-leverage lever a SaaS founder controls: McKinsey's
 
 Before you pick a number, separate two questions that founders routinely conflate:
 
-- **Willingness-to-pay (WTP)** — what a dealer *would* pay if he understood the value clearly and had no friction.
-- **Ability-to-pay (ATP)** — what cash a dealer *can actually spare* this month, given margins, receivables cycles, working capital, and existing SaaS spend.
+- **Willingness-to-pay (WTP)** — what a dealer _would_ pay if he understood the value clearly and had no friction.
+- **Ability-to-pay (ATP)** — what cash a dealer _can actually spare_ this month, given margins, receivables cycles, working capital, and existing SaaS spend.
 
 For Indian fuel dealers these two diverge sharply. A typical pump generates ₹8–15 lakh/month in gross revenue but nets only ₹30k–₹80k in operating profit after OMC commissions and labour; recovering even ₹2–3 lakh of stuck credit/month has enormous WTP, yet ATP for software is anchored to Tally/Zoho bills (₹500–₹1,500/month range). Your tiers need to respect both.
 
 **Cost-plus vs value-based.** [Monetizely's 2025 benchmarks](https://www.getmonetizely.com/articles/van-westendorp-vs-gabor-granger-for-saas-which-pricing-methodology-to-choose) show **68% of high-growth SaaS companies use value-based pricing**, and cost-plus is now a minority pattern. Value-based means: anchor price to the economic outcome you create (credit recovered, reconciliation hours saved, OMC deviations caught), not to your cloud bill plus a margin. Cost-plus locks you to commoditised pricing; value-based is how you escape it.
 
-The rest of this document assumes value-based pricing and focuses on how to *measure* WTP credibly.
+The rest of this document assumes value-based pricing and focuses on how to _measure_ WTP credibly.
 
 ---
 
@@ -44,7 +44,7 @@ Test an ordered ladder of specific prices and measure demand at each. Produces a
 
 ### 2.3 Conjoint Analysis
 
-Forces buyers to trade features against price across simulated product bundles. Produces part-worth utilities per feature and a proper demand model. Heaviest to run (n ≥ 200 typically) but the only method that properly informs *tier composition* and *what to gate*.
+Forces buyers to trade features against price across simulated product bundles. Produces part-worth utilities per feature and a proper demand model. Heaviest to run (n ≥ 200 typically) but the only method that properly informs _tier composition_ and _what to gate_.
 
 ### 2.4 Qualitative + Paid Pilots
 
@@ -90,12 +90,12 @@ Default the billing toggle to **annual** with a **15–20% discount**. [925studi
 
 ## 4. Pricing Model Choice for DZZLO
 
-Per-user pricing creates a well-known failure mode in **low-digital-maturity SMB segments**: buyers share logins to avoid paying per seat. Fuel dealers will absolutely do this — a pump owner, his son, the manager, and the counter clerk will all log in from one account unless the system forces otherwise, and *forcing otherwise* (concurrent session limits, device lockouts) actively hurts adoption in a pen-and-paper-to-software transition.
+Per-user pricing creates a well-known failure mode in **low-digital-maturity SMB segments**: buyers share logins to avoid paying per seat. Fuel dealers will absolutely do this — a pump owner, his son, the manager, and the counter clerk will all log in from one account unless the system forces otherwise, and _forcing otherwise_ (concurrent session limits, device lockouts) actively hurts adoption in a pen-and-paper-to-software transition.
 
 **Recommended model: per-tenant flat pricing (per dealership) with usage caps.**
 
 - One subscription per dealership (GSTIN-bound).
-- Caps on the *usage dimensions that correlate with value*: transactions/month, WhatsApp sends, customer-app logins, branches.
+- Caps on the _usage dimensions that correlate with value_: transactions/month, WhatsApp sends, customer-app logins, branches.
 - Users included generously (2 / 10 / unlimited across tiers) — remove login-sharing friction.
 
 The **archetype is Basecamp's $349/month unlimited-users plan**: a single flat fee regardless of team size, with value captured on the work itself. Basecamp's model works precisely because it aligns price to the customer's mental model of "my company" rather than "each staff member".
@@ -108,12 +108,12 @@ For DZZLO, the equivalent is: price per dealership, gate on transactions and cha
 
 Before designing the free-to-paid funnel, calibrate against industry benchmarks:
 
-| Mechanism | Median conversion | Top quartile | Notes |
-|---|---|---|---|
-| Opt-in free trial (no card) | ~18% | 35–45% | Default for self-serve SaaS |
-| Credit-card-required trial | ~48% | 60%+ | ~5x better than opt-in; filters non-buyers |
-| Freemium | 3–5% | 8–12% | Organic avg 2.6%; heavy top-of-funnel needed |
-| Reverse trial | 4–12% | — | Only ~7% of SaaS use it; outperforms freemium on LTV |
+| Mechanism                   | Median conversion | Top quartile | Notes                                                |
+| --------------------------- | ----------------- | ------------ | ---------------------------------------------------- |
+| Opt-in free trial (no card) | ~18%              | 35–45%       | Default for self-serve SaaS                          |
+| Credit-card-required trial  | ~48%              | 60%+         | ~5x better than opt-in; filters non-buyers           |
+| Freemium                    | 3–5%              | 8–12%        | Organic avg 2.6%; heavy top-of-funnel needed         |
+| Reverse trial               | 4–12%             | —            | Only ~7% of SaaS use it; outperforms freemium on LTV |
 
 Sources: [1Capture free-trial benchmarks 2025](https://www.1capture.io/blog/free-trial-conversion-benchmarks-2025), [ChartMogul SaaS Conversion Report](https://chartmogul.com/reports/saas-conversion-report/).
 
@@ -125,14 +125,14 @@ For DZZLO specifically, credit-card-required trials are culturally mismatched (I
 
 You are not pricing in a vacuum. Indian SMB buyers have sharp reference prices:
 
-| Product | Indian price | Role in the landscape |
-|---|---|---|
-| Zoho Books Standard | ₹899/mo ex-GST | The default SMB accounting anchor |
-| Zoho Books Professional | ₹1,499/mo ex-GST | The "serious SMB" anchor |
-| Vyapar Silver | ~₹4,399/yr (~₹366/mo) | Downmarket GST billing |
-| Tally Prime | ₹18,000 perpetual + AMC | The accounting incumbent |
-| PetroSoft India | ₹15,000 one-time | Legacy DOS-era POS |
-| SOFTGUN | ~₹21,600/user via Techjockey | Fuel-specific SaaS, high seat cost |
+| Product                 | Indian price                 | Role in the landscape              |
+| ----------------------- | ---------------------------- | ---------------------------------- |
+| Zoho Books Standard     | ₹899/mo ex-GST               | The default SMB accounting anchor  |
+| Zoho Books Professional | ₹1,499/mo ex-GST             | The "serious SMB" anchor           |
+| Vyapar Silver           | ~₹4,399/yr (~₹366/mo)        | Downmarket GST billing             |
+| Tally Prime             | ₹18,000 perpetual + AMC      | The accounting incumbent           |
+| PetroSoft India         | ₹15,000 one-time             | Legacy DOS-era POS                 |
+| SOFTGUN                 | ~₹21,600/user via Techjockey | Fuel-specific SaaS, high seat cost |
 
 Source for accounting: [Patron Accounting's Zoho Books India pricing breakdown](https://www.patronaccounting.com/blog/zoho-books-pricing-india-2026), [Vyapar pricing](https://vyaparapp.in/pricing).
 
@@ -155,19 +155,19 @@ Source for accounting: [Patron Accounting's Zoho Books India pricing breakdown](
 
 Sort every feature into one of four Kano categories:
 
-| Kano category | What it is | DZZLO examples | Gating rule |
-|---|---|---|---|
-| **Table stakes / basic** | Expected; absent = dead deal | GST invoice, customer ledger, customer list, shift book, daily sales entry | **Never gate.** Available on Starter. |
-| **Performance** | More is better; linear satisfaction | Transactions/month, WhatsApp sends, user seats, branches | **Usage-gate.** Quotas rise by tier. |
-| **Delighters / excitement** | Unexpected, wows when present | WhatsApp automation, payment-reminder bots, deep analytics, dashboards, SMS branded sender | **Feature-gate** into Growth/Pro. |
-| **Game-changers** | Category-redefining | Public API, multi-branch, OMC reconciliation, embedded lending | **Anchor tier.** Pro/Enterprise only. |
+| Kano category               | What it is                          | DZZLO examples                                                                             | Gating rule                           |
+| --------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------- |
+| **Table stakes / basic**    | Expected; absent = dead deal        | GST invoice, customer ledger, customer list, shift book, daily sales entry                 | **Never gate.** Available on Starter. |
+| **Performance**             | More is better; linear satisfaction | Transactions/month, WhatsApp sends, user seats, branches                                   | **Usage-gate.** Quotas rise by tier.  |
+| **Delighters / excitement** | Unexpected, wows when present       | WhatsApp automation, payment-reminder bots, deep analytics, dashboards, SMS branded sender | **Feature-gate** into Growth/Pro.     |
+| **Game-changers**           | Category-redefining                 | Public API, multi-branch, OMC reconciliation, embedded lending                             | **Anchor tier.** Pro/Enterprise only. |
 
 Sources: [Orb on feature gating](https://www.withorb.com/blog/feature-gating-saas), [Pace Pricing](https://www.pacepricing.com/post/feature-gating-strategy), [Demogo](https://demogo.com/blog/saas-feature-gating).
 
 ### 7.2 The Gate-Scale-Low, Gate-Power-High Principle
 
-- **Low tiers** — gate *scale* (volume caps). Keep the feature surface wide so Starter still "feels like the product", just with a ceiling.
-- **High tiers** — gate *power* (advanced features). Pro should feel like a categorically different product, not just more quota.
+- **Low tiers** — gate _scale_ (volume caps). Keep the feature surface wide so Starter still "feels like the product", just with a ceiling.
+- **High tiers** — gate _power_ (advanced features). Pro should feel like a categorically different product, not just more quota.
 
 ### 7.3 Avoid Punitive UX
 
@@ -177,15 +177,15 @@ Never show a locked button with a lock icon and "Upgrade to Pro" mid-flow. It po
 
 ## 8. Recommended DZZLO Tier Structure
 
-| | **Starter** (decoy) | **Growth** (hero, 60–70% target) | **Pro** (anchor) | **Enterprise** |
-|---|---|---|---|---|
-| Monthly | ₹599 | ₹1,799 | ₹4,999 | Contact us |
-| Annual (~17% off) | ₹499/mo (₹5,988/yr) | ₹1,499/mo (₹17,988/yr) | ₹3,999/mo (₹47,988/yr) | custom |
-| Transactions/mo | 500 | 5,000 | Unlimited | Unlimited |
-| Customer app logins | 50 | 500 | Unlimited | Unlimited |
-| WhatsApp sends/mo | 200 | 2,000 | 10,000 | custom |
-| Staff users | 2 | 10 | Unlimited | Unlimited |
-| Branches | 1 | 3 | Unlimited | Unlimited |
+|                     | **Starter** (decoy) | **Growth** (hero, 60–70% target) | **Pro** (anchor)       | **Enterprise** |
+| ------------------- | ------------------- | -------------------------------- | ---------------------- | -------------- |
+| Monthly             | ₹599                | ₹1,799                           | ₹4,999                 | Contact us     |
+| Annual (~17% off)   | ₹499/mo (₹5,988/yr) | ₹1,499/mo (₹17,988/yr)           | ₹3,999/mo (₹47,988/yr) | custom         |
+| Transactions/mo     | 500                 | 5,000                            | Unlimited              | Unlimited      |
+| Customer app logins | 50                  | 500                              | Unlimited              | Unlimited      |
+| WhatsApp sends/mo   | 200                 | 2,000                            | 10,000                 | custom         |
+| Staff users         | 2                   | 10                               | Unlimited              | Unlimited      |
+| Branches            | 1                   | 3                                | Unlimited              | Unlimited      |
 
 All prices are ex-GST. +18% GST (SAC 998434) applies.
 
@@ -193,7 +193,7 @@ All prices are ex-GST. +18% GST (SAC 998434) applies.
 
 - **₹1,499/mo annual on Growth** deliberately matches **Zoho Books Professional**. Every Indian SME accountant recognises that number; landing on it removes a cognitive barrier and positions DZZLO as "the Zoho-priced fuel-native tool".
 - **3x jumps** (₹599 → ₹1,799 → ₹4,999) sit cleanly inside the [Artisan Strategies 2–3x rule](https://www.artisanstrategies.com/insights/saas-pricing-tier-gap).
-- **Starter at ₹599 with 500 transactions/month** is deliberately decoy-calibrated. A typical single-pump dealer does 300–500 *fuel sale* transactions per day, let alone per month; Starter blows out within hours. It exists to anchor Growth, not to sustain real operations.
+- **Starter at ₹599 with 500 transactions/month** is deliberately decoy-calibrated. A typical single-pump dealer does 300–500 _fuel sale_ transactions per day, let alone per month; Starter blows out within hours. It exists to anchor Growth, not to sustain real operations.
 - **Pro at ₹4,999** anchors the page. Most of its value is categorical (unlimited + multi-branch + API), not quantitative.
 - **Enterprise** is quote-based, target multi-location chains and OMC-led deals.
 
@@ -228,13 +228,13 @@ This aligns revenue to customer outcome (they only pay meaningful amounts when t
 
 ### Placement rules (where each type goes)
 
-| Surface | What belongs there | Why |
-|---|---|---|
-| **Hero** | One crisp stat ("Trusted by 500+ fuel dealers") OR a logo strip | First fold, 3-second attention. |
-| **Pricing page, adjacent to each tier** | One testimonial per matching customer size | [The Good's pricing-page research](https://thegood.com/insights/pricing-page-best-practices/) — tier-adjacent social proof lifts conversion materially. |
-| **Checkout / signup** | Security badges + reassurance microcopy ("Cancel anytime", "No credit card") | [Baymard's checkout research](https://baymard.com/research) — trust signals at payment step lift 15–30%. |
-| **Login screen** | Rotating dealer quotes in vernacular | Highest-return-on-pixel surface; most founders miss it. Returning users see positive reinforcement every day. |
-| **Below-fold landing** | Case-study snippets with outcome numbers ("Recovered ₹3.2L in stuck credit in 90 days") | Depth, not first-impression. |
+| Surface                                 | What belongs there                                                                      | Why                                                                                                                                                     |
+| --------------------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hero**                                | One crisp stat ("Trusted by 500+ fuel dealers") OR a logo strip                         | First fold, 3-second attention.                                                                                                                         |
+| **Pricing page, adjacent to each tier** | One testimonial per matching customer size                                              | [The Good's pricing-page research](https://thegood.com/insights/pricing-page-best-practices/) — tier-adjacent social proof lifts conversion materially. |
+| **Checkout / signup**                   | Security badges + reassurance microcopy ("Cancel anytime", "No credit card")            | [Baymard's checkout research](https://baymard.com/research) — trust signals at payment step lift 15–30%.                                                |
+| **Login screen**                        | Rotating dealer quotes in vernacular                                                    | Highest-return-on-pixel surface; most founders miss it. Returning users see positive reinforcement every day.                                           |
+| **Below-fold landing**                  | Case-study snippets with outcome numbers ("Recovered ₹3.2L in stuck credit in 90 days") | Depth, not first-impression.                                                                                                                            |
 
 ### Quantity rule
 

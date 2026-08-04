@@ -23,7 +23,7 @@ The economics of a petrol pump in India are brutally compressed:
 - A mid-volume pump selling 200 KL/month grosses roughly ₹1.5–2 crore in topline but takes home only ₹1.5–4 lakh in operating profit — before owner drawings, staff bonuses, tanker-breakdown surprises, and shortage write-offs.
 - Every additional fixed monthly expense competes directly with visible costs: salaries, electricity, OMC security deposits, AMC for DUs.
 
-In this world, a ₹2,999/month SaaS subscription is not just "expensive" — it's a 1–2% hit on operating profit *before* the software has proven it does anything. The dealer's mental arithmetic is: "one month of this app = three extra staff-hours of shortage reconciliation." ATP, not WTP, is the binding constraint.
+In this world, a ₹2,999/month SaaS subscription is not just "expensive" — it's a 1–2% hit on operating profit _before_ the software has proven it does anything. The dealer's mental arithmetic is: "one month of this app = three extra staff-hours of shortage reconciliation." ATP, not WTP, is the binding constraint.
 
 **The implication:** cutting the price from ₹2,999 to ₹1,999 does not fix the problem. It just moves you slightly up the same failing ladder. You need to **redesign the transaction** so the dealer's wallet is not the source of revenue.
 
@@ -31,14 +31,14 @@ In this world, a ₹2,999/month SaaS subscription is not just "expensive" — it
 
 ## 2. Six monetization models — pros, cons, unit economics
 
-| Model | Price | Pros | Cons |
-|---|---|---|---|
-| Pure SaaS subscription | ₹999–4,999/mo | Predictable MRR; clean cohort math; familiar to investors | Long sales cycle; price-sensitive; churn in downturns |
-| Freemium + paid | Free → ₹1,499/mo | Viral distribution; low acquisition friction | 2–5% free→paid vs 15–20% for credit-card trials; heavy support cost on free tier ([Maxio](https://www.maxio.com/blog/freemium-model)) |
-| Take-rate / transaction fee | 0.3–0.8% GMV | Aligns revenue with dealer growth; no "price" conversation | Requires payment rails or fintech licensing |
-| Hybrid: low sub + fintech | ₹499/mo + 1.5–2.5% on loans / invoice discounting | Highest LTV; stickiest relationship | Regulatory complexity; NBFC partnership required |
-| Lifetime deal (LTD) | ₹29–50k one-time | Upfront cash; solves immediate runway | Kills recurring revenue; hard to upsell later |
-| Usage-based | ₹0.50/invoice, ₹0.10/SMS | Scales naturally with dealer activity | Unpredictable billing stresses dealer cash flow |
+| Model                       | Price                                             | Pros                                                       | Cons                                                                                                                                  |
+| --------------------------- | ------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| Pure SaaS subscription      | ₹999–4,999/mo                                     | Predictable MRR; clean cohort math; familiar to investors  | Long sales cycle; price-sensitive; churn in downturns                                                                                 |
+| Freemium + paid             | Free → ₹1,499/mo                                  | Viral distribution; low acquisition friction               | 2–5% free→paid vs 15–20% for credit-card trials; heavy support cost on free tier ([Maxio](https://www.maxio.com/blog/freemium-model)) |
+| Take-rate / transaction fee | 0.3–0.8% GMV                                      | Aligns revenue with dealer growth; no "price" conversation | Requires payment rails or fintech licensing                                                                                           |
+| Hybrid: low sub + fintech   | ₹499/mo + 1.5–2.5% on loans / invoice discounting | Highest LTV; stickiest relationship                        | Regulatory complexity; NBFC partnership required                                                                                      |
+| Lifetime deal (LTD)         | ₹29–50k one-time                                  | Upfront cash; solves immediate runway                      | Kills recurring revenue; hard to upsell later                                                                                         |
+| Usage-based                 | ₹0.50/invoice, ₹0.10/SMS                          | Scales naturally with dealer activity                      | Unpredictable billing stresses dealer cash flow                                                                                       |
 
 ### 2.1 Pure SaaS subscription — ₹999–4,999/mo
 
@@ -94,13 +94,13 @@ Unpredictable billing is the main objection — Indian SMEs strongly prefer flat
 
 Plan with real numbers. The funnel math decides whether a freemium motion is even viable.
 
-| Stage | Benchmark (2026) | Notes |
-|---|---|---|
-| Visitor → free signup | 5–15% | Freemium funnels; depends on landing page quality |
-| Freemium → paid | 3–5% broadly | Generic SaaS average ([First Page Sage](https://firstpagesage.com/seo-blog/saas-freemium-conversion-rates/)) |
-| Freemium → paid (SMB B2B) | 6–10% | Vertical SaaS with clear paid-tier value ([SaaS Hero 2026](https://www.saashero.net/content/2026-b2b-saas-conversion-benchmarks/)) |
-| Freemium → paid (AI-augmented) | 15–20% | AI features command stronger pull ([Prospeo](https://prospeo.io/s/b2b-conversion-rates)) |
-| Credit-card-required trial → paid | 25–35% | Much higher conversion, much narrower top of funnel |
+| Stage                             | Benchmark (2026) | Notes                                                                                                                              |
+| --------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Visitor → free signup             | 5–15%            | Freemium funnels; depends on landing page quality                                                                                  |
+| Freemium → paid                   | 3–5% broadly     | Generic SaaS average ([First Page Sage](https://firstpagesage.com/seo-blog/saas-freemium-conversion-rates/))                       |
+| Freemium → paid (SMB B2B)         | 6–10%            | Vertical SaaS with clear paid-tier value ([SaaS Hero 2026](https://www.saashero.net/content/2026-b2b-saas-conversion-benchmarks/)) |
+| Freemium → paid (AI-augmented)    | 15–20%           | AI features command stronger pull ([Prospeo](https://prospeo.io/s/b2b-conversion-rates))                                           |
+| Credit-card-required trial → paid | 25–35%           | Much higher conversion, much narrower top of funnel                                                                                |
 
 **Planning rule for DZZLO:** if you assume a 6% free→paid conversion rate at an SMB-B2B benchmark, acquiring 10,000 free dealers yields 600 paying accounts. At ₹1,499/mo ARPA, that's ₹10.8 lakh MRR from a cohort of 10,000. The model works only if cost-to-serve on the 9,400 free accounts is near zero, which is why the WhatsApp + self-serve onboarding + minimal-support architecture matters so much.
 
@@ -122,7 +122,7 @@ Plan with real numbers. The funnel math decides whether a freemium motion is eve
 - Strategy: extreme affordability combined with deep GST, invoicing, inventory, and accounting tooling that creates ecosystem lock-in.
 - Silver tier at ₹4,399/year (~₹366/month) is the sweet spot ([Vyapar Pricing](https://vyaparapp.in/pricing)).
 
-**Takeaway for DZZLO:** if you must charge a subscription, don't charge more — charge less and go *wider*. More tooling at the same price makes the subscription feel inevitable rather than optional.
+**Takeaway for DZZLO:** if you must charge a subscription, don't charge more — charge less and go _wider_. More tooling at the same price makes the subscription feel inevitable rather than optional.
 
 ### 4.3 OkCredit — the horizontal wallet-stack play
 
@@ -275,14 +275,14 @@ Oil marketing companies (IOCL, BPCL, HPCL) or large enterprise fleets (Blue Dart
 
 If the monetization architecture in Section 6 is working, the numbers should move as follows:
 
-| Metric | 12-month target | 18-month target |
-|---|---|---|
-| Free-to-paid conversion | 5% | 8% |
-| ARPA (per active account) | ₹500 | ₹3,000 (fintech cross-sell lift) |
-| Gross margin | 75% | 80–85% (India SaaS benchmark) |
-| Fintech attach rate | 10% | 20–30% |
-| Net revenue retention (NRR) | 100% | 105–115% |
-| CAC payback | 14 months | 8 months |
+| Metric                      | 12-month target | 18-month target                  |
+| --------------------------- | --------------- | -------------------------------- |
+| Free-to-paid conversion     | 5%              | 8%                               |
+| ARPA (per active account)   | ₹500            | ₹3,000 (fintech cross-sell lift) |
+| Gross margin                | 75%             | 80–85% (India SaaS benchmark)    |
+| Fintech attach rate         | 10%             | 20–30%                           |
+| Net revenue retention (NRR) | 100%            | 105–115%                         |
+| CAC payback                 | 14 months       | 8 months                         |
 
 The ARPA trajectory from ₹500 to ₹3,000 is the single most important line. It tells you the embedded-finance layer is actually monetizing, not just adding noise.
 

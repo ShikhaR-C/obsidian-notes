@@ -19,13 +19,13 @@ Two practical consequences for DZZLO:
 
 ## 2. Types of referral programs
 
-| Type | Mechanics | Best-fit | Example |
-|---|---|---|---|
-| Double-sided | Both referrer and referee get rewarded | Default B2B SaaS — both sides have skin in the game | Dropbox (extra space to both) |
-| Milestone | Rewards unlock at 1, 3, 5, 10 referrals | Building streaks, cumulative engagement | Tesla (wheels → trips → Roadster) |
-| Tiered | Commission % rises with referral volume | Power users and super-referrers | HubSpot affiliates |
-| Gamified | Leaderboards, badges, public rankings | WhatsApp-native markets, community-driven | PayPal early program; Airbnb travel credits |
-| Partner / affiliate | Professional referrers (CAs, consultants, OMC reps) with formal contracts | Channel-partner territory | PartnerStack-powered SaaS programs |
+| Type                | Mechanics                                                                 | Best-fit                                            | Example                                     |
+| ------------------- | ------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------- |
+| Double-sided        | Both referrer and referee get rewarded                                    | Default B2B SaaS — both sides have skin in the game | Dropbox (extra space to both)               |
+| Milestone           | Rewards unlock at 1, 3, 5, 10 referrals                                   | Building streaks, cumulative engagement             | Tesla (wheels → trips → Roadster)           |
+| Tiered              | Commission % rises with referral volume                                   | Power users and super-referrers                     | HubSpot affiliates                          |
+| Gamified            | Leaderboards, badges, public rankings                                     | WhatsApp-native markets, community-driven           | PayPal early program; Airbnb travel credits |
+| Partner / affiliate | Professional referrers (CAs, consultants, OMC reps) with formal contracts | Channel-partner territory                           | PartnerStack-powered SaaS programs          |
 
 ### Guidance per type
 
@@ -44,24 +44,31 @@ Two practical consequences for DZZLO:
 ## 3. B2B SaaS referral economics
 
 ### Commission ranges
+
 Enterprise B2B SaaS norms ([SaaStr — typical commission ranges for referral partners](https://www.saastr.com/what-are-typical-commission-ranges-for-referral-partners-for-enterprise-b2b-saas/)):
+
 - **5-10%** of first-year ACV for a warm lead (no qualification).
 - **10-20%** for a qualified opportunity.
 - **25-40%** for a closed-won deal.
 
 ### Example: DZZLO unit economics
+
 At DZZLO's target ARPA of ₹2,500/month (₹30,000/year per dealer-outlet), a 10%-of-first-year-ACV referrer payout is **₹3,000** per closed-won referral — a useful, round, WhatsApp-shareable number.
 
 ### Recurring vs one-time
+
 Recurring commissions (e.g., **15%/month capped at $500/deal**) align referrer incentives with retention — the referrer only keeps earning if the referred dealer keeps paying. This also naturally prevents signup-fraud because low-quality referrals churn and stop paying out ([Expando — referral commission structure guide](https://www.expando.ai/blogs/guide-to-referral-commission-structure)).
 
 ### Cash vs credit
+
 B2B strongly favors **cash or gift cards** over in-product credit because the referrer is typically an individual (the owner, the accountant) not the company — and individuals prefer cash ([Viral Loops — SaaS referral program](https://viral-loops.com/blog/saas-referral-program-2/)). For dealers specifically, **UPI transfer** is the cleanest.
 
 ### Fixed ₹ vs percentage
+
 For SMB audiences, **fixed rupee amounts outperform percentages** because the math is legible. "₹2,000 when your friend signs up" beats "10% of first-year ACV" every time with dealers. Percentages are for partner-tier affiliates who understand MRR and LTV.
 
 ### Gross-margin floor
+
 SaaS gross margin sits around 80%. To protect LTV:CAC, cap total referral commission at **≤30% of first-year ACV** — any higher and the cohort becomes unprofitable in year one. DZZLO's program below sits at 16.7% for the core dealer loop, well within the ceiling.
 
 ---
@@ -87,6 +94,7 @@ The Dropbox referral program is the single most-studied B2B/prosumer referral pr
 - **[Friendbuy](https://www.friendbuy.com/blog/saas-referral-program)** / **Viral Loops** — viral-loop mechanics, built-in A/B testing; more consumer-leaning.
 
 **DZZLO recommendation:**
+
 - **Launch phase (0–₹50 L ARR):** Tolt or Rewardful + Razorpay for INR payouts.
 - **Scale phase (₹50L–₹5 Cr ARR):** Stay on Tolt/Rewardful; add a Google Sheet-based partner layer for CAs and OMC reps.
 - **Enterprise phase (₹5 Cr+ ARR):** Migrate to PartnerStack for multi-tier partner management.
@@ -110,16 +118,18 @@ What actually moves the needle with a 40–55 year-old dealer in Tier-2/3 India:
 
 ### Reward structure
 
-| Action | Referrer gets | New customer gets |
-|---|---|---|
-| Friend signs up + onboards (1 outlet live) | ₹2,000 UPI | First 2 months free |
-| Friend starts paying (month 3) | Additional ₹3,000 UPI | — |
-| Referrer reaches 3 paid referrals | ₹5,000 bonus + "Dealer Dost Gold" badge | — |
-| Referrer reaches 5 paid referrals | Free Samsung tablet (~₹15,000) + profile feature on DZZLO site + FIPI event invite | — |
-| Referrer reaches 10 paid referrals | ₹50,000 bonus + "State Ambassador" title + annual trip invite | — |
+| Action                                     | Referrer gets                                                                      | New customer gets   |
+| ------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------- |
+| Friend signs up + onboards (1 outlet live) | ₹2,000 UPI                                                                         | First 2 months free |
+| Friend starts paying (month 3)             | Additional ₹3,000 UPI                                                              | —                   |
+| Referrer reaches 3 paid referrals          | ₹5,000 bonus + "Dealer Dost Gold" badge                                            | —                   |
+| Referrer reaches 5 paid referrals          | Free Samsung tablet (~₹15,000) + profile feature on DZZLO site + FIPI event invite | —                   |
+| Referrer reaches 10 paid referrals         | ₹50,000 bonus + "State Ambassador" title + annual trip invite                      | —                   |
 
 ### Economic sanity check
+
 At DZZLO ARPA of ₹2,500/month (₹30,000/year):
+
 - 3 paid referrals = ₹90,000 new annual ARR.
 - Referrer payout at that tier = ₹2,000 + ₹3,000 per paid referral = ₹15,000 across 3 (plus ₹5,000 milestone bonus = ₹20,000 all-in).
 - **₹20,000 / ₹90,000 = 22.2%** of year-1 ACV — within the 25% ceiling for SaaS unit economics and well-covered by DZZLO's 80% gross margin.
@@ -130,7 +140,7 @@ The 5-referral tier (free tablet, ₹15k value) and 10-referral tier (₹50k cas
 
 - **Unique referral link** auto-generated on Day 1 of paid subscription and surfaced on the main dashboard.
 - **One-tap WhatsApp share** with pre-populated Hindi copy:
-  > *"Namaste bhai, main DZZLO use kar raha hoon apne pump pe. Shortage aur GST ka tension khatam. 2 mahine free milega aapko is link se — [link]. Try karo."*
+  > _"Namaste bhai, main DZZLO use kar raha hoon apne pump pe. Shortage aur GST ka tension khatam. 2 mahine free milega aapko is link se — [link]. Try karo."_
 - **Unique coupon codes per referrer** (e.g., `RAJESH25`) — so offline referrals at dealer meets and association events still attribute correctly.
 - **Tracking:** Rewardful (or Tolt) + Razorpay for INR payouts. Every payout logged with a GSTIN-compliant receipt.
 
@@ -153,21 +163,21 @@ Fraud in referral programs is well-understood. The following patterns are mandat
 
 The referral CTA has to show up at moments of felt value. For DZZLO:
 
-- **Day 7 post-activation** — dashboard card: *"₹2,000 for each dealer friend. Share now →"*.
-- **Day 30 (after the first successful GST filing)** — popup: *"You just saved 2 hours on GST. Tell a friend — earn ₹2,000."*
+- **Day 7 post-activation** — dashboard card: _"₹2,000 for each dealer friend. Share now →"_.
+- **Day 30 (after the first successful GST filing)** — popup: _"You just saved 2 hours on GST. Tell a friend — earn ₹2,000."_
 - **Day 60 (after the first month with a visible shortage-reduction win on the dashboard)** — dashboard card with the dealer's own shortage % reduction as a shareable stat card.
-- **Monthly WhatsApp nudge on the 1st** — *"Rajesh ji, 3 dealer friends ko DZZLO share karo, ₹15,000 tak earn karo. Aapka link: [link]"*.
+- **Monthly WhatsApp nudge on the 1st** — _"Rajesh ji, 3 dealer friends ko DZZLO share karo, ₹15,000 tak earn karo. Aapka link: [link]"_.
 - **Event triggers** — after onboarding a second outlet, after touching a new feature milestone, after a dealer support win (high-NPS survey response).
 
 ---
 
 ## 10. Target metrics (launch benchmarks)
 
-| Milestone | Metric |
-|---|---|
-| Month 3 | ≥15% of active customers submit at least 1 referral |
-| Month 6 | ≥25% of new customers are referral-attributed; K-factor ≥0.3 |
-| Month 12 | K-factor ≥0.6 (Dropbox peak was ~0.9 — that is the outlier ceiling, not the target) |
+| Milestone | Metric                                                                              |
+| --------- | ----------------------------------------------------------------------------------- |
+| Month 3   | ≥15% of active customers submit at least 1 referral                                 |
+| Month 6   | ≥25% of new customers are referral-attributed; K-factor ≥0.3                        |
+| Month 12  | K-factor ≥0.6 (Dropbox peak was ~0.9 — that is the outlier ceiling, not the target) |
 
 K-factor = (invitations sent per user) × (conversion rate per invitation). A K-factor of 1.0 is pure organic doubling; anything above 0.5 is exceptional for B2B SaaS.
 
@@ -184,11 +194,14 @@ Once the dealer-to-dealer loop is proven, add a professional partner layer. This
 - **Gilbarco / pump-hardware engineers** — on-site when new dispensers are installed; perfectly placed to recommend OMS software. Commission: **₹1,000–₹2,500 per booked demo**.
 
 ### Dealer associations
+
 - **AIPDA** (All India Petroleum Dealers Association), **FAIPT** (Federation of All India Petroleum Traders), and state-level bodies.
 - Structure: annual sponsorship + endorsement revenue-share (e.g., 5% of members-only signups) in exchange for newsletter features, conference slots, and member-benefit listing.
 
 ### Formalization
+
 Every partner layer needs:
+
 - A written Referral Partner Agreement signed before any payout.
 - GSTIN collection and TDS compliance.
 - A dedicated partner portal (Tolt → PartnerStack path) with login, dashboard, payout history.

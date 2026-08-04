@@ -23,15 +23,15 @@ Only if the answers are Yes / Yes / Yes / Yes / No / Tailwind does "build" becom
 
 Indian fuel dealers operate on thin physical margins and survive on reconciliation discipline. The daily pain stack, verified from operator interviews and industry reporting:
 
-| Pain point | Financial exposure | Frequency |
-|------------|-------------------|-----------|
-| **Stock & density variance** | 0.5–1% of turnover lost to dip mis-reads, evaporation, temperature-density errors | Daily |
-| **Shift-change reconciliation** | 2–3 shifts/day, each a potential cash-vs-system mismatch | Daily |
-| **Credit customer aging** | 30–90 day receivables with no systematic aging view | Monthly (bites at month-end) |
-| **GST e-invoicing compliance** | Mandatory above ₹5Cr turnover; non-compliance voids ITC ([ClearTax](https://cleartax.in/s/e-invoicing-under-gst)) | Per invoice |
-| **Legal Metrology audits** | Sealed meters, calibration certificates; surprise audits with fines | Quarterly / annual |
-| **OMC rep reconciliation** | Weekly/monthly rep visit with reconciliation sheets — mismatch = stuck payments | Weekly |
-| **Paper DSR + Tally + WhatsApp stack** | Data lives in 4 places; no single source of truth | Continuous |
+| Pain point                             | Financial exposure                                                                                                | Frequency                    |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ---------------------------- |
+| **Stock & density variance**           | 0.5–1% of turnover lost to dip mis-reads, evaporation, temperature-density errors                                 | Daily                        |
+| **Shift-change reconciliation**        | 2–3 shifts/day, each a potential cash-vs-system mismatch                                                          | Daily                        |
+| **Credit customer aging**              | 30–90 day receivables with no systematic aging view                                                               | Monthly (bites at month-end) |
+| **GST e-invoicing compliance**         | Mandatory above ₹5Cr turnover; non-compliance voids ITC ([ClearTax](https://cleartax.in/s/e-invoicing-under-gst)) | Per invoice                  |
+| **Legal Metrology audits**             | Sealed meters, calibration certificates; surprise audits with fines                                               | Quarterly / annual           |
+| **OMC rep reconciliation**             | Weekly/monthly rep visit with reconciliation sheets — mismatch = stuck payments                                   | Weekly                       |
+| **Paper DSR + Tally + WhatsApp stack** | Data lives in 4 places; no single source of truth                                                                 | Continuous                   |
 
 All seven are **real, recurring, expensive, and measurable**. The first check passes.
 
@@ -49,12 +49,12 @@ All seven are **real, recurring, expensive, and measurable**. The first check pa
 
 The addressable paying universe in India, by segment:
 
-| Segment | Count | Source |
-|---------|-------|--------|
-| Petrol pumps (retail outlets) | **~100,000** — India is the 3rd largest retail fuel network globally | [Business Standard](https://www.business-standard.com/) |
-| Lubricant sale points | **~100,000** | IndianOil SERVO distributor network |
-| Bulk diesel operators / doorstep delivery | Few thousand | PESO licensing data |
-| Industrial diesel / DG set base | USD **1.17B → 2.33B** market | [P&S Market Research](https://www.psmarketresearch.com/) |
+| Segment                                   | Count                                                                | Source                                                   |
+| ----------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------------- |
+| Petrol pumps (retail outlets)             | **~100,000** — India is the 3rd largest retail fuel network globally | [Business Standard](https://www.business-standard.com/)  |
+| Lubricant sale points                     | **~100,000**                                                         | IndianOil SERVO distributor network                      |
+| Bulk diesel operators / doorstep delivery | Few thousand                                                         | PESO licensing data                                      |
+| Industrial diesel / DG set base           | USD **1.17B → 2.33B** market                                         | [P&S Market Research](https://www.psmarketresearch.com/) |
 
 ### SOM — paying software universe
 
@@ -68,13 +68,13 @@ The software-only SOM looks modest; it is a deliberate floor. The real thesis is
 
 ## 4. Competition — global
 
-| Player | Positioning | Relevant to India SME? |
-|--------|-------------|------------------------|
+| Player                                           | Positioning                                    | Relevant to India SME?        |
+| ------------------------------------------------ | ---------------------------------------------- | ----------------------------- |
 | [PDI Technologies](https://pditechnologies.com/) | Enterprise ERP used by 250+ marketers globally | No — enterprise, US/EU-priced |
-| [Titan Cloud](https://titancloud.com/) | Tank monitoring + fuel logistics | No — US-first |
-| [FuelCloud](https://www.fuelcloud.com/) | Fleet fuel management | No — US-first |
-| [Petrosoft US](https://petrosoftinc.com/) | C-store + fuel back office | No — US-only |
-| [Gilbarco Passport](https://www.gilbarco.com/) | Forecourt POS hardware+software | Hardware-locked, US/EU |
+| [Titan Cloud](https://titancloud.com/)           | Tank monitoring + fuel logistics               | No — US-first                 |
+| [FuelCloud](https://www.fuelcloud.com/)          | Fleet fuel management                          | No — US-first                 |
+| [Petrosoft US](https://petrosoftinc.com/)        | C-store + fuel back office                     | No — US-only                  |
+| [Gilbarco Passport](https://www.gilbarco.com/)   | Forecourt POS hardware+software                | Hardware-locked, US/EU        |
 
 **Read:** the global competitive set is enterprise-priced, hardware-integrated, and has no India-specific GST/TCS/DPDP compliance layer. The India SME dealer is effectively unserved by global players. No meaningful direct competition from this side.
 
@@ -84,17 +84,17 @@ The software-only SOM looks modest; it is a deliberate floor. The real thesis is
 
 The India-native competitive set is real but structurally weak on one axis: **none of them have moved to cloud-native monthly SaaS**.
 
-| Player | Model | Price | Notes |
-|--------|-------|-------|-------|
-| Petrosoft India / [petrolbunksoftware.com](https://petrolbunksoftware.com/) | Desktop + AMC | ₹10–25k one-time | De-facto legacy choice |
-| PumpOne | Desktop | Similar | Regional |
-| PetroByte | Desktop | Similar | Regional |
-| Partum Softwares | Desktop | **~₹18,000 one-time** | [Partum](https://partumsoftwares.com/) |
-| MMI OILEX | Desktop | **~₹15,000** | |
-| AK Softwares | Desktop | Low | Regional |
-| Keshav Solutions | Desktop | Low | Regional |
-| SOFTGUN (via Techjockey) | Desktop | **₹21,600/user** | [Techjockey](https://www.techjockey.com/) |
-| Indhan Bill | SaaS | **₹1/transaction** | Rare usage-based pricing — directional signal |
+| Player                                                                      | Model         | Price                 | Notes                                         |
+| --------------------------------------------------------------------------- | ------------- | --------------------- | --------------------------------------------- |
+| Petrosoft India / [petrolbunksoftware.com](https://petrolbunksoftware.com/) | Desktop + AMC | ₹10–25k one-time      | De-facto legacy choice                        |
+| PumpOne                                                                     | Desktop       | Similar               | Regional                                      |
+| PetroByte                                                                   | Desktop       | Similar               | Regional                                      |
+| Partum Softwares                                                            | Desktop       | **~₹18,000 one-time** | [Partum](https://partumsoftwares.com/)        |
+| MMI OILEX                                                                   | Desktop       | **~₹15,000**          |                                               |
+| AK Softwares                                                                | Desktop       | Low                   | Regional                                      |
+| Keshav Solutions                                                            | Desktop       | Low                   | Regional                                      |
+| SOFTGUN (via Techjockey)                                                    | Desktop       | **₹21,600/user**      | [Techjockey](https://www.techjockey.com/)     |
+| Indhan Bill                                                                 | SaaS          | **₹1/transaction**    | Rare usage-based pricing — directional signal |
 
 Generic ERPs that eat some of the market:
 
@@ -155,13 +155,13 @@ The India market is not one market. Three segments are demonstrably underserved 
 
 The digital substrate for a cloud-native OMS now exists in India at sufficient density:
 
-| Metric | Value | Source |
-|--------|-------|--------|
-| Smartphone users (India) | **660M+** | [Hyperleap](https://hyperleap.in/) |
-| WhatsApp MAU (India) | **550M+** | WhatsApp disclosures |
-| Indian SMBs on WhatsApp Business | **78%** | [Trengo](https://trengo.com/blog/whatsapp-business-statistics) |
-| WhatsApp Business (India) | **15M+** | Meta disclosures |
-| MSME digital intent | **~60%** | Industry surveys |
+| Metric                           | Value                              | Source                                                               |
+| -------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| Smartphone users (India)         | **660M+**                          | [Hyperleap](https://hyperleap.in/)                                   |
+| WhatsApp MAU (India)             | **550M+**                          | WhatsApp disclosures                                                 |
+| Indian SMBs on WhatsApp Business | **78%**                            | [Trengo](https://trengo.com/blog/whatsapp-business-statistics)       |
+| WhatsApp Business (India)        | **15M+**                           | Meta disclosures                                                     |
+| MSME digital intent              | **~60%**                           | Industry surveys                                                     |
 | India accounting software market | **USD 640M → 1,417M at 9.2% CAGR** | [IMARC](https://www.imarcgroup.com/india-accounting-software-market) |
 
 **Caveat:** rural digital payment adoption is still at **3–7% baseline** per [ITU data](https://www.itu.int/). Pump staff often have language barriers. The product UX must be: minimum typing, vernacular (Hindi/regional), heavy use of voice and OTP confirmations over typed input.
@@ -180,7 +180,7 @@ This is the strongest tailwind, and the one that flips "nice-to-have" to "must-h
 - **PESO licensing + IoT flow meters** for bulk diesel movement.
 - **DPDP Act 2023** adds data-privacy compliance — a burden for desktop-era incumbents, a check-box for cloud-native.
 
-**The implication:** by end-2026, **>80% of DZZLO's target customers must be on *some* digital system** to remain GST-compliant. The live question is not "will they digitise" — they must. The live question is "who wins." The winner will be the **fuel-native** system that handles GST + TCS + IRP + DPDP natively, not the generic ERP that bolts it on. This is the single most important sentence in this doc.
+**The implication:** by end-2026, **>80% of DZZLO's target customers must be on _some_ digital system** to remain GST-compliant. The live question is not "will they digitise" — they must. The live question is "who wins." The winner will be the **fuel-native** system that handles GST + TCS + IRP + DPDP natively, not the generic ERP that bolts it on. This is the single most important sentence in this doc.
 
 ---
 
@@ -198,14 +198,14 @@ This is the strongest tailwind, and the one that flips "nice-to-have" to "must-h
 
 Every risk gets a mitigation or a kill-switch:
 
-| Risk | Severity | Mitigation |
-|------|---------|-----------|
-| **EV transition** | Tail risk post-2030 | ~10% of pumps already offer EV charging — add EV as an SKU, not a disruption. Diesel demand continues to 2045. |
-| **Low WTP baseline** | Medium | Incumbents priced at ₹15–25k one-time set a mental ceiling. Counter with monthly SaaS + embedded finance revenue. |
-| **OMC-provided free tools** | Low today, monitor | OMC portals handle stock reconciliation but not credit/invoice/dispatch. Not a direct competitor yet. |
-| **Dealer consolidation** | Medium | If chains (Reliance-bp, Nayara, Shell) eat independents, TAM shrinks. Target chains as a different SKU. |
-| **Crowded regional vendor field (15+ ISVs)** | Medium | Weak on cloud/mobile. Win on structural axis (cloud + mobile + compliance). |
-| **DPDP Act 2023 compliance burden** | Low | Cloud-native architecture handles it; incumbents struggle. |
+| Risk                                         | Severity            | Mitigation                                                                                                        |
+| -------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **EV transition**                            | Tail risk post-2030 | ~10% of pumps already offer EV charging — add EV as an SKU, not a disruption. Diesel demand continues to 2045.    |
+| **Low WTP baseline**                         | Medium              | Incumbents priced at ₹15–25k one-time set a mental ceiling. Counter with monthly SaaS + embedded finance revenue. |
+| **OMC-provided free tools**                  | Low today, monitor  | OMC portals handle stock reconciliation but not credit/invoice/dispatch. Not a direct competitor yet.             |
+| **Dealer consolidation**                     | Medium              | If chains (Reliance-bp, Nayara, Shell) eat independents, TAM shrinks. Target chains as a different SKU.           |
+| **Crowded regional vendor field (15+ ISVs)** | Medium              | Weak on cloud/mobile. Win on structural axis (cloud + mobile + compliance).                                       |
+| **DPDP Act 2023 compliance burden**          | Low                 | Cloud-native architecture handles it; incumbents struggle.                                                        |
 
 ---
 
@@ -239,14 +239,14 @@ Three scenarios that invalidate the build thesis, in descending order of probabi
 
 ## 14. Decision framework
 
-| First-principles check | Answer | Notes |
-|------------------------|--------|-------|
-| Does the problem exist? | **Yes** | 7 documented, recurring pain points with financial exposure. |
-| Is it frequent? | **Yes** | Daily (rates, orders, shift reconciliation) → monthly (GST filing). |
-| Is it expensive? | **Yes** | 0.5–1% turnover variance; GST ITC loss on non-compliance; credit aging losses. |
-| Do buyers have money? | **Yes** | Average Indian petrol pump does ₹5–20 Cr/year turnover. ₹1,000–5,000/month software spend is trivial. |
-| Is there a cheaper alternative that's good enough? | **No** | Paper + Tally + WhatsApp fails on the compliance, credit, and reconciliation axes. Desktop incumbents fail on the mobile axis. |
-| Is timing a tailwind? | **Yes — strong** | GST e-invoicing forcing function + second-gen dealer turnover + cloud/mobile maturity. |
+| First-principles check                             | Answer           | Notes                                                                                                                          |
+| -------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Does the problem exist?                            | **Yes**          | 7 documented, recurring pain points with financial exposure.                                                                   |
+| Is it frequent?                                    | **Yes**          | Daily (rates, orders, shift reconciliation) → monthly (GST filing).                                                            |
+| Is it expensive?                                   | **Yes**          | 0.5–1% turnover variance; GST ITC loss on non-compliance; credit aging losses.                                                 |
+| Do buyers have money?                              | **Yes**          | Average Indian petrol pump does ₹5–20 Cr/year turnover. ₹1,000–5,000/month software spend is trivial.                          |
+| Is there a cheaper alternative that's good enough? | **No**           | Paper + Tally + WhatsApp fails on the compliance, credit, and reconciliation axes. Desktop incumbents fail on the mobile axis. |
+| Is timing a tailwind?                              | **Yes — strong** | GST e-invoicing forcing function + second-gen dealer turnover + cloud/mobile maturity.                                         |
 
 **All six: Yes.** Build.
 

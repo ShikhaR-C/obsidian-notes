@@ -26,10 +26,10 @@ It is not "another petrol pump billing app." It is a two-sided transaction platf
 
 DZZLO OMS has **two distinct user worlds** connected by a junction entity.
 
-| Role | Who they are | What they do in the app | Pays the bill? |
-|------|--------------|-------------------------|----------------|
-| **Dealer** | Petrol pump owner, lubricant distributor, bulk diesel operator | Owns the tenant. Sets rates, receives orders, invoices, records payments, manages fleet and drivers. | **Yes — primary buyer.** |
-| **Customer** | Dealer's B2B customer (transport fleet, factory, hospital, contractor) | Places orders against a pre-approved credit line, tracks ledger, settles invoices. | No — rides on the dealer's tenant. |
+| Role         | Who they are                                                           | What they do in the app                                                                              | Pays the bill?                     |
+| ------------ | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| **Dealer**   | Petrol pump owner, lubricant distributor, bulk diesel operator         | Owns the tenant. Sets rates, receives orders, invoices, records payments, manages fleet and drivers. | **Yes — primary buyer.**           |
+| **Customer** | Dealer's B2B customer (transport fleet, factory, hospital, contractor) | Places orders against a pre-approved credit line, tracks ledger, settles invoices.                   | No — rides on the dealer's tenant. |
 
 **Scope model (see `models/users.js`):** each user sits in a scope — `CPrimary`, `CAdmin`, `COrder`, `CAccount`, `CView` on the customer side; `D*` variants on the dealer side; `SAdmin` for the platform operator. This mirrors the reality that a customer's admin, order-placer, and accountant are often three different people in the same firm.
 
@@ -92,29 +92,29 @@ Grouped by the role that uses them.
 
 ## 5. Core entities (plain English)
 
-| Model | What it is |
-|-------|-----------|
-| `cust_msts` | Customer firm master — one row per B2B customer, PAN/GSTIN/address. |
-| `dealer_msts` | Dealer (tenant) master — one row per paying dealer. |
+| Model          | What it is                                                                               |
+| -------------- | ---------------------------------------------------------------------------------------- |
+| `cust_msts`    | Customer firm master — one row per B2B customer, PAN/GSTIN/address.                      |
+| `dealer_msts`  | Dealer (tenant) master — one row per paying dealer.                                      |
 | `dealer_custs` | Junction: which dealer sells to which customer, with credit limit, terms, and TCS flags. |
-| `order_msts` | Customer order — intent to buy at a confirmed rate. |
-| `so_msts` | Sales order — dealer's accepted, allocated version of the order. |
-| `invs` | Invoice — PRODUCT / CASH_REIMBURSE / GST subtypes. |
-| `voc_msts` | Voucher — payment instrument (NEFT/RTGS/cheque/card/fleetcard/cash). |
-| `pay_trns` | Payment transaction — links vouchers to invoices. |
-| `veh_msts` | Vehicle master — truck/bowser/tanker with Indian registration. |
-| `veh_trns` | Vehicle transaction — movement/dispatch event. |
-| `veh_reqs` | Vehicle request — customer-side request for a specific vehicle. |
-| `dvr_msts` | Driver master — name, licence, linked phone for OTP. |
-| `psocs` | Product supplier catalog — Petrol / Diesel / Lubes / Grease categories. |
-| `prod_msts` | Product master — dealer-specific SKUs. |
-| `rate_msts` | Rate master — daily per-customer per-product pricing with confirmation state. |
-| `month_crdrs` | Monthly credit/debit roll-up per customer. |
-| `invites` | Phone-OTP invitation flow for onboarding. |
-| `users` | User accounts with scope enum (CPrimary/CAdmin/COrder/CAccount/CView + D* + SAdmin). |
-| `meter_reads` | DIP: periodic tank meter readings. |
-| `insps` | DIP: inspection log (Legal Metrology-style). |
-| `decants` | DIP: decanting event — fuel received into tank. |
+| `order_msts`   | Customer order — intent to buy at a confirmed rate.                                      |
+| `so_msts`      | Sales order — dealer's accepted, allocated version of the order.                         |
+| `invs`         | Invoice — PRODUCT / CASH_REIMBURSE / GST subtypes.                                       |
+| `voc_msts`     | Voucher — payment instrument (NEFT/RTGS/cheque/card/fleetcard/cash).                     |
+| `pay_trns`     | Payment transaction — links vouchers to invoices.                                        |
+| `veh_msts`     | Vehicle master — truck/bowser/tanker with Indian registration.                           |
+| `veh_trns`     | Vehicle transaction — movement/dispatch event.                                           |
+| `veh_reqs`     | Vehicle request — customer-side request for a specific vehicle.                          |
+| `dvr_msts`     | Driver master — name, licence, linked phone for OTP.                                     |
+| `psocs`        | Product supplier catalog — Petrol / Diesel / Lubes / Grease categories.                  |
+| `prod_msts`    | Product master — dealer-specific SKUs.                                                   |
+| `rate_msts`    | Rate master — daily per-customer per-product pricing with confirmation state.            |
+| `month_crdrs`  | Monthly credit/debit roll-up per customer.                                               |
+| `invites`      | Phone-OTP invitation flow for onboarding.                                                |
+| `users`        | User accounts with scope enum (CPrimary/CAdmin/COrder/CAccount/CView + D\* + SAdmin).    |
+| `meter_reads`  | DIP: periodic tank meter readings.                                                       |
+| `insps`        | DIP: inspection log (Legal Metrology-style).                                             |
+| `decants`      | DIP: decanting event — fuel received into tank.                                          |
 
 ---
 
@@ -136,17 +136,17 @@ These seven are the moat, not features to be copied by a generic player in a spr
 
 ## 7. Tech & quality signals
 
-| Signal | Status |
-|--------|--------|
-| Backend | Node.js / Express / MongoDB |
-| Mobile | React Native (one codebase, dealer + customer apps) |
-| API versioning | `api_v1`, `api_v2`, `api_v3` — versioned route trees, not `?v=` params |
-| Tests | 121+ automated tests (unit + integration) |
-| Deploy | PM2 process manager, zero-downtime reload |
-| Notifications | OneSignal (push) + 2Factor.in (SMS/OTP) |
-| Security | Middleware stack for auth, rate-limiting, scope enforcement |
-| Multi-tenancy | Tenant = dealer; all queries scoped by `dealer_id`. No shared-customer data leakage. |
-| Production readiness | MVP in production with paying tenants |
+| Signal               | Status                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Backend              | Node.js / Express / MongoDB                                                          |
+| Mobile               | React Native (one codebase, dealer + customer apps)                                  |
+| API versioning       | `api_v1`, `api_v2`, `api_v3` — versioned route trees, not `?v=` params               |
+| Tests                | 121+ automated tests (unit + integration)                                            |
+| Deploy               | PM2 process manager, zero-downtime reload                                            |
+| Notifications        | OneSignal (push) + 2Factor.in (SMS/OTP)                                              |
+| Security             | Middleware stack for auth, rate-limiting, scope enforcement                          |
+| Multi-tenancy        | Tenant = dealer; all queries scoped by `dealer_id`. No shared-customer data leakage. |
+| Production readiness | MVP in production with paying tenants                                                |
 
 The code quality is above the category average. Regional petrol pump software is usually a single-version Windows desktop binary with an AMC-based upgrade model. DZZLO's versioned, tested, containerised stack is a structural advantage for enterprise and fintech conversations.
 
@@ -156,16 +156,16 @@ The code quality is above the category average. Regional petrol pump software is
 
 DZZLO OMS is **India-only by design**, not by accident. Baking India into the schema is a moat, not a limitation.
 
-| Vector | DZZLO's stance |
-|--------|---------------|
-| Currency | INR only. |
-| Phone | 10-digit Indian mobile, OTP via 2Factor.in. |
-| Tax IDs | GSTIN, PAN, TAN validated at schema level. |
-| Vehicle registration | Indian RTO format (`MH-12-AB-1234`). |
-| GST compliance | CGST/SGST/IGST split, HSN codes, invoice numbering rules. |
-| TCS | Auto-trigger at ₹50L per customer per FY. |
-| TDS | Handled at voucher level for applicable customers. |
-| e-Invoicing (IRP) | Architected for IRP push (mandatory >₹5Cr turnover; >₹10Cr must push within 30 days as of Apr 2025). |
+| Vector               | DZZLO's stance                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------- |
+| Currency             | INR only.                                                                                            |
+| Phone                | 10-digit Indian mobile, OTP via 2Factor.in.                                                          |
+| Tax IDs              | GSTIN, PAN, TAN validated at schema level.                                                           |
+| Vehicle registration | Indian RTO format (`MH-12-AB-1234`).                                                                 |
+| GST compliance       | CGST/SGST/IGST split, HSN codes, invoice numbering rules.                                            |
+| TCS                  | Auto-trigger at ₹50L per customer per FY.                                                            |
+| TDS                  | Handled at voucher level for applicable customers.                                                   |
+| e-Invoicing (IRP)    | Architected for IRP push (mandatory >₹5Cr turnover; >₹10Cr must push within 30 days as of Apr 2025). |
 
 Internationalising would mean re-doing half the data model. Competitors that start global and try to localise India always ship a thin GST veneer on top of a US/EU schema; DZZLO is the inverse.
 

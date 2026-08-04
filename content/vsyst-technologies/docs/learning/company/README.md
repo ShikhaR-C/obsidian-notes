@@ -41,23 +41,23 @@ MOAT      → Multi-tenant network effects + embedded fintech +
 
 ## Document index
 
-| # | File | What it covers | Read when |
-|---|------|----------------|-----------|
-| 00 | [00_OVERVIEW.md](./00_OVERVIEW.md) | Product, users, features, tech, geography | First |
-| 01 | [01_IDEA_VALIDATION.md](./01_IDEA_VALIDATION.md) | First-principles analysis, TAM/SAM/SOM, competition, build/no-build | Deciding to build |
-| 02 | [02_PRICING_STRATEGY.md](./02_PRICING_STRATEGY.md) | Tier design, feature gating, social proof, Van Westendorp | Setting prices |
-| 03 | [03_LAUNCH_CHECKLIST.md](./03_LAUNCH_CHECKLIST.md) | 90-day pre-launch, launch week, post-launch playbook | Launching |
-| 04 | [04_LEAD_MAGNETS.md](./04_LEAD_MAGNETS.md) | All lead magnet types + 10 DZZLO-specific ideas | Running marketing |
-| 05 | [05_COLD_EMAIL_SEQUENCE.md](./05_COLD_EMAIL_SEQUENCE.md) | 6-email outbound sequence + deliverability infra | Building outbound |
-| 06 | [06_REFERRAL_PROGRAM.md](./06_REFERRAL_PROGRAM.md) | "Dealer Dost" double-sided program design | Scaling via word-of-mouth |
-| 07 | [07_STARTUP_FOUNDATIONS.md](./07_STARTUP_FOUNDATIONS.md) | 18-domain founder knowledge map | Before anything else |
-| 08 | [08_LEARNING_TUTORIAL.md](./08_LEARNING_TUTORIAL.md) | 12-week week-by-week self-study plan | First 90 days |
-| 09 | [09_PRODUCT_VS_SALES.md](./09_PRODUCT_VS_SALES.md) | Problem-first vs distribution-first decision framework | Choosing GTM |
-| 10 | [10_AFFORDABILITY_PROBLEM.md](./10_AFFORDABILITY_PROBLEM.md) | Low-buying-power monetization stack | Pricing + business model |
-| 11 | [11_EDUCATION_GAP.md](./11_EDUCATION_GAP.md) | Two-sided cold start, B2B2C, WhatsApp customer layer | Designing customer-side flow |
-| 12 | [12_OWNER_ACQUISITION.md](./12_OWNER_ACQUISITION.md) | Owner persona, psychology, channel rank, 90-day playbook | Acquiring first 100 |
-| 13 | [13_REVENUE_GENERATION.md](./13_REVENUE_GENERATION.md) | First rupee to Series A; benchmarks; sales hiring; downturn | Revenue planning |
-| — | [RESEARCH_SOURCES.md](./RESEARCH_SOURCES.md) | Every external source consulted, organized by topic | Citation/deep-dive |
+| #   | File                                                         | What it covers                                                      | Read when                    |
+| --- | ------------------------------------------------------------ | ------------------------------------------------------------------- | ---------------------------- |
+| 00  | [00_OVERVIEW.md](./00_OVERVIEW.md)                           | Product, users, features, tech, geography                           | First                        |
+| 01  | [01_IDEA_VALIDATION.md](./01_IDEA_VALIDATION.md)             | First-principles analysis, TAM/SAM/SOM, competition, build/no-build | Deciding to build            |
+| 02  | [02_PRICING_STRATEGY.md](./02_PRICING_STRATEGY.md)           | Tier design, feature gating, social proof, Van Westendorp           | Setting prices               |
+| 03  | [03_LAUNCH_CHECKLIST.md](./03_LAUNCH_CHECKLIST.md)           | 90-day pre-launch, launch week, post-launch playbook                | Launching                    |
+| 04  | [04_LEAD_MAGNETS.md](./04_LEAD_MAGNETS.md)                   | All lead magnet types + 10 DZZLO-specific ideas                     | Running marketing            |
+| 05  | [05_COLD_EMAIL_SEQUENCE.md](./05_COLD_EMAIL_SEQUENCE.md)     | 6-email outbound sequence + deliverability infra                    | Building outbound            |
+| 06  | [06_REFERRAL_PROGRAM.md](./06_REFERRAL_PROGRAM.md)           | "Dealer Dost" double-sided program design                           | Scaling via word-of-mouth    |
+| 07  | [07_STARTUP_FOUNDATIONS.md](./07_STARTUP_FOUNDATIONS.md)     | 18-domain founder knowledge map                                     | Before anything else         |
+| 08  | [08_LEARNING_TUTORIAL.md](./08_LEARNING_TUTORIAL.md)         | 12-week week-by-week self-study plan                                | First 90 days                |
+| 09  | [09_PRODUCT_VS_SALES.md](./09_PRODUCT_VS_SALES.md)           | Problem-first vs distribution-first decision framework              | Choosing GTM                 |
+| 10  | [10_AFFORDABILITY_PROBLEM.md](./10_AFFORDABILITY_PROBLEM.md) | Low-buying-power monetization stack                                 | Pricing + business model     |
+| 11  | [11_EDUCATION_GAP.md](./11_EDUCATION_GAP.md)                 | Two-sided cold start, B2B2C, WhatsApp customer layer                | Designing customer-side flow |
+| 12  | [12_OWNER_ACQUISITION.md](./12_OWNER_ACQUISITION.md)         | Owner persona, psychology, channel rank, 90-day playbook            | Acquiring first 100          |
+| 13  | [13_REVENUE_GENERATION.md](./13_REVENUE_GENERATION.md)       | First rupee to Series A; benchmarks; sales hiring; downturn         | Revenue planning             |
+| —   | [RESEARCH_SOURCES.md](./RESEARCH_SOURCES.md)                 | Every external source consulted, organized by topic                 | Citation/deep-dive           |
 
 ---
 

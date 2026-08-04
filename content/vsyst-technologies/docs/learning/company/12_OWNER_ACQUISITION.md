@@ -89,7 +89,7 @@ Every district-level association chapter has a WhatsApp group, an office-bearer 
 ### 3.3 Digital hangouts
 
 - **Facebook** — "All India Petrol Pump Dealers Association" group with tens of thousands of members. Fathers live here more than sons.
-- **X (Twitter)** — AIPDA's official handle [@_AIPDA](https://x.com/_AIPDA) and individual association leaders.
+- **X (Twitter)** — AIPDA's official handle [@\_AIPDA](https://x.com/_AIPDA) and individual association leaders.
 - **State-specific WhatsApp groups** — many segmented by OMC (IOCL Maharashtra, HPCL Gujarat, etc.). Entry is by invite; invites come from existing members.
 - **LinkedIn** — second-generation owners concentrate here. Thought-leadership content in English on operational analytics and fintech performs well.
 
@@ -176,23 +176,23 @@ Public leaderboards, an annual awards night, a branded plaque at the pump entran
 
 Indian B2B benchmarks give the baseline: 2.23% cold conversion rates are typical, with sales cycles ranging from 30 days transactional to 12–18 months for enterprise ([Zeliq — B2B Conversion Rates by Industry](https://www.zeliq.com/blog/b2b-conversion-rates-by-industry); [Rajesh R Nair — B2B Sales in India](https://rajeshrnair.com/blog/business/business-strategy/b2b-sales-in-india-how-to-sell-to-businesses-and-close-bigger-deals)). Against that baseline, the DZZLO channel stack ranks as follows:
 
-| Rank | Channel | CAC est (INR) | Conversion | Why it works |
-|------|---------|---------------|------------|--------------|
-| 1 | Referral from existing dealers | ₹500–2,000 bounty | 25–40% | Owner trusts owner. See [06_REFERRAL_PROGRAM.md](./06_REFERRAL_PROGRAM.md). |
-| 2 | OMC rep / Territory Manager channel | ₹1,500–4,000 | 15–25% | Monthly pump visit carries authority. |
-| 3 | Association sponsorship (AIPDA, FAIPT, state) | ₹2,000–6,000 warm | 10–20% | ₹25k–2L sponsorship reaches 200–500 owners plus authority halo. |
-| 4 | Hardware-vendor bundle (Gilbarco engineers) | ₹3,000–7,000 | 8–15% | Pay ₹1k–2.5k per demo booked by a service engineer. |
-| 5 | Field sales / feet-on-street | ₹4,000–10,000 | 5–12% cold, 25%+ warm | Cluster routing in a 30 km radius; Indian field meetings cost ₹800–2,500 each ([Cleverly — Cost Per Sales Meeting](https://www.cleverly.co/blog/cost-per-sales-meeting); [SalesHive — Cost Per Meeting](https://saleshive.com/glossary/cost-per-meeting/)). |
-| 6 | WhatsApp community + broadcast | ₹200–800 | 3–8% | 500M+ users in India; SMEs close on WhatsApp. |
-| 7 | CA / tax-consultant channel | ₹2,000–5,000 | 10–20% | A single CA manages 10–30 pumps; offer 10–15% revenue share. |
-| 8 | Events & city roadshows | ₹3,000–8,000 | 10–15% | "DZZLO Dealer Day" with free snacks and a CA on stage. |
-| 9 | Content / SEO (Hindi + English) | ₹100–800 | 1–3% | Slow burn; compounds over 12–18 months. |
-| 10 | Google Search Ads | ₹600–2,500/click, ₹5–15k CAC | 2–5% | Only transactional queries ("petrol pump software India"). |
-| 11 | Meta (FB/Instagram) lead ads | ₹1,500–5,000/MQL | 1–3% | Older owners on FB; second-gen on Reels in vernacular. |
-| 12 | LinkedIn | ₹5,000–15,000/lead | <2% | Second-generation and chain owners only. |
-| 13 | IndiaMART / TradeIndia listings | ₹9–30k/mo + ₹1k/lead | 2–4% | SME buyers browse here ([IndiaMART — Lead Generation Service](https://dir.indiamart.com/impcat/lead-generation-service.html)). |
-| 14 | Cold email | ₹100–500/send, 0.5–2% reply | <1% closed | Useful only for educated second-gen; see [05_COLD_EMAIL_SEQUENCE.md](./05_COLD_EMAIL_SEQUENCE.md). |
-| 15 | Cold calling | ₹400–800/qualified mtg | 2–4% | Use to book field visits, not to close. |
+| Rank | Channel                                       | CAC est (INR)                | Conversion            | Why it works                                                                                                                                                                                                                                                |
+| ---- | --------------------------------------------- | ---------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Referral from existing dealers                | ₹500–2,000 bounty            | 25–40%                | Owner trusts owner. See [06_REFERRAL_PROGRAM.md](./06_REFERRAL_PROGRAM.md).                                                                                                                                                                                 |
+| 2    | OMC rep / Territory Manager channel           | ₹1,500–4,000                 | 15–25%                | Monthly pump visit carries authority.                                                                                                                                                                                                                       |
+| 3    | Association sponsorship (AIPDA, FAIPT, state) | ₹2,000–6,000 warm            | 10–20%                | ₹25k–2L sponsorship reaches 200–500 owners plus authority halo.                                                                                                                                                                                             |
+| 4    | Hardware-vendor bundle (Gilbarco engineers)   | ₹3,000–7,000                 | 8–15%                 | Pay ₹1k–2.5k per demo booked by a service engineer.                                                                                                                                                                                                         |
+| 5    | Field sales / feet-on-street                  | ₹4,000–10,000                | 5–12% cold, 25%+ warm | Cluster routing in a 30 km radius; Indian field meetings cost ₹800–2,500 each ([Cleverly — Cost Per Sales Meeting](https://www.cleverly.co/blog/cost-per-sales-meeting); [SalesHive — Cost Per Meeting](https://saleshive.com/glossary/cost-per-meeting/)). |
+| 6    | WhatsApp community + broadcast                | ₹200–800                     | 3–8%                  | 500M+ users in India; SMEs close on WhatsApp.                                                                                                                                                                                                               |
+| 7    | CA / tax-consultant channel                   | ₹2,000–5,000                 | 10–20%                | A single CA manages 10–30 pumps; offer 10–15% revenue share.                                                                                                                                                                                                |
+| 8    | Events & city roadshows                       | ₹3,000–8,000                 | 10–15%                | "DZZLO Dealer Day" with free snacks and a CA on stage.                                                                                                                                                                                                      |
+| 9    | Content / SEO (Hindi + English)               | ₹100–800                     | 1–3%                  | Slow burn; compounds over 12–18 months.                                                                                                                                                                                                                     |
+| 10   | Google Search Ads                             | ₹600–2,500/click, ₹5–15k CAC | 2–5%                  | Only transactional queries ("petrol pump software India").                                                                                                                                                                                                  |
+| 11   | Meta (FB/Instagram) lead ads                  | ₹1,500–5,000/MQL             | 1–3%                  | Older owners on FB; second-gen on Reels in vernacular.                                                                                                                                                                                                      |
+| 12   | LinkedIn                                      | ₹5,000–15,000/lead           | <2%                   | Second-generation and chain owners only.                                                                                                                                                                                                                    |
+| 13   | IndiaMART / TradeIndia listings               | ₹9–30k/mo + ₹1k/lead         | 2–4%                  | SME buyers browse here ([IndiaMART — Lead Generation Service](https://dir.indiamart.com/impcat/lead-generation-service.html)).                                                                                                                              |
+| 14   | Cold email                                    | ₹100–500/send, 0.5–2% reply  | <1% closed            | Useful only for educated second-gen; see [05_COLD_EMAIL_SEQUENCE.md](./05_COLD_EMAIL_SEQUENCE.md).                                                                                                                                                          |
+| 15   | Cold calling                                  | ₹400–800/qualified mtg       | 2–4%                  | Use to book field visits, not to close.                                                                                                                                                                                                                     |
 
 **Headline takeaway**: channels 1–6 (warm, human, vernacular) drive roughly 80% of early-stage growth. Channels 9–14 only scale after the brand has association badges, OMC references, and 200+ referenceable customers. Do not invert this order.
 
@@ -266,6 +266,7 @@ Every marketing asset should select one lever and hit it hard. Mixing levers dil
 Sources → [RESEARCH_SOURCES.md](./RESEARCH_SOURCES.md)
 
 Cross-references:
+
 - [06_REFERRAL_PROGRAM.md](./06_REFERRAL_PROGRAM.md) — double-sided referral mechanics
 - [02_PRICING_STRATEGY.md](./02_PRICING_STRATEGY.md) — tier design and founder seat pricing
 - [05_COLD_EMAIL_SEQUENCE.md](./05_COLD_EMAIL_SEQUENCE.md) — outbound sequence for second-generation owners

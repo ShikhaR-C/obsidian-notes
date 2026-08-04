@@ -21,7 +21,7 @@ But the product is designed, sold, and optimized for **owners (dealers)**. The c
 
 ## 2. Andrew Chen's Cold Start Problem framework
 
-Andrew Chen's *The Cold Start Problem* — written from a decade of observing marketplaces and networks inside Andreessen Horowitz and Uber — provides the cleanest framework for this class of problem ([a16z](https://a16z.com/books/the-cold-start-problem/); [Brian's Notes](https://www.briansnotes.io/book/the-cold-start-problem/); [Francesca Cortesi's takeaways](https://www.francescacortesi.com/blog/my-main-takeaways-from-andrew-chens-the-cold-start-problem); [coldstart.com](https://www.coldstart.com/)).
+Andrew Chen's _The Cold Start Problem_ — written from a decade of observing marketplaces and networks inside Andreessen Horowitz and Uber — provides the cleanest framework for this class of problem ([a16z](https://a16z.com/books/the-cold-start-problem/); [Brian's Notes](https://www.briansnotes.io/book/the-cold-start-problem/); [Francesca Cortesi's takeaways](https://www.francescacortesi.com/blog/my-main-takeaways-from-andrew-chens-the-cold-start-problem); [coldstart.com](https://www.coldstart.com/)).
 
 Chen's five stages of network growth:
 
@@ -38,6 +38,7 @@ Chen's most load-bearing concept is this: **every network has a "hard side"** �
 The founder's job is to **solve for the hard side first**, even if it means doing things that don't scale — manual outreach, heavy subsidies, concierge onboarding, white-glove support.
 
 Examples:
+
 - YouTube's hard side is **creators**, not viewers. Viewers are abundant; good creators are scarce.
 - Uber's hard side is **drivers**, not riders. Riders will come if cars arrive in 3 minutes; drivers won't come if riders are unpredictable.
 - Airbnb's hard side is **hosts**, not guests. Hosts are asked to open their homes to strangers; guests are asked to book a room.
@@ -50,10 +51,10 @@ Identify the hard side, pour resources into making it work, and the easy side fo
 
 Let's map DZZLO against Chen's framework:
 
-| Actor | Pays? | Installs? | Uses daily? | Direct benefit? | Digital literacy |
-|---|---|---|---|---|---|
-| Dealer (owner) | Yes | Yes | Yes | High — it's their business | Medium–high (already runs DU, OMC portal, GST filing) |
-| Customer (fuel buyer) | No | Ideally no | Occasional | Low — they just want fuel delivered | Variable; often low on the fleet/transport side |
+| Actor                 | Pays? | Installs?  | Uses daily? | Direct benefit?                     | Digital literacy                                      |
+| --------------------- | ----- | ---------- | ----------- | ----------------------------------- | ----------------------------------------------------- |
+| Dealer (owner)        | Yes   | Yes        | Yes         | High — it's their business          | Medium–high (already runs DU, OMC portal, GST filing) |
+| Customer (fuel buyer) | No    | Ideally no | Occasional  | Low — they just want fuel delivered | Variable; often low on the fleet/transport side       |
 
 **The hard side for DZZLO is the customer.** They have zero reason to onboard, they don't pay you, they interact infrequently, and they have higher variance in digital literacy. If the product asks them to install an app, create a password, or navigate a dashboard, the adoption rate will collapse.
 
@@ -77,9 +78,10 @@ Five moves, in order of leverage.
 
 **Make the product useful to the dealer even if zero customers ever join.**
 
-Every feature should deliver value with the customer modelled as a passive entry in the dealer's database. Customer interaction becomes *upside*, not prerequisite. This is the pattern **Khatabook** and **Vyapar** follow — the "other side" of the ledger is a digital representation the dealer themselves maintains, not a separate user who has to be onboarded.
+Every feature should deliver value with the customer modelled as a passive entry in the dealer's database. Customer interaction becomes _upside_, not prerequisite. This is the pattern **Khatabook** and **Vyapar** follow — the "other side" of the ledger is a digital representation the dealer themselves maintains, not a separate user who has to be onboarded.
 
 For DZZLO, single-player means:
+
 - Dealer can create a customer record with just a name and phone number.
 - Dealer can generate and print a GST invoice without the customer ever opening WhatsApp.
 - Dealer can track receivables, shortage, and reconciliation without any customer action.
@@ -94,6 +96,7 @@ Don't try to cover India thinly. **Dominate one micro-market first.**
 Chen calls this the atomic network — the smallest network configuration that can exist and still be self-sustaining. For Uber it was one neighborhood with enough drivers to guarantee a 3-minute pickup. For DoorDash it was one college campus with enough restaurants to justify the app.
 
 For DZZLO, the atomic unit is **one district with 600–800 petrol pumps within a 60 km radius** — Indore, Pune, Coimbatore, Rajkot, Nashik are all candidates. The goal is **60% saturation** in that district before expanding. At 60% density:
+
 - OMC field officers start recognizing the product name.
 - Dealer associations start endorsing it.
 - Word-of-mouth between dealers becomes the primary acquisition channel.
@@ -200,12 +203,12 @@ The full architectural resolution:
 Here is what a fleet customer experiences, end-to-end, with zero app install and zero account:
 
 1. **Dealer creates order.** Inside DZZLO, the dealer creates an order for "Sharma Transport, 5000L HSD, tanker PFU-42, delivery tomorrow 11 AM."
-2. **Auto WhatsApp to Sharma.** DZZLO sends a WhatsApp message to Sharma's phone: *"Order #DZ401234 for 5000L HSD placed by Patel Fuel Station. Amount: ₹4,82,500 incl. GST. Tap to confirm: [secure link]."*
+2. **Auto WhatsApp to Sharma.** DZZLO sends a WhatsApp message to Sharma's phone: _"Order #DZ401234 for 5000L HSD placed by Patel Fuel Station. Amount: ₹4,82,500 incl. GST. Tap to confirm: [secure link]."_
 3. **Sharma taps the link.** Opens a lightweight web view. Confirms the order with an OTP sent to the same phone number. **No login, no password, no account creation.**
-4. **Dispatch notification.** On the morning of delivery: *"Tanker PFU-42 dispatched for your order. Track: [live link]."*
+4. **Dispatch notification.** On the morning of delivery: _"Tanker PFU-42 dispatched for your order. Track: [live link]."_
 5. **Delivery verification.** At delivery, the driver completes DIP readings plus a photo in the dealer's mobile app. DZZLO auto-generates the final tax invoice, adjusts for any shortage, and sends Sharma a UPI payment link via WhatsApp.
 6. **Payment.** Sharma pays via UPI one-tap, or requests credit (captured in DZZLO against his receivables ledger).
-7. **History builds silently.** Over time, Sharma's order history, payment behaviour, and credit profile accumulate inside DZZLO. He can *opt in* later to an OkCredit-style customer account if he wants richer visibility — or he can stay WhatsApp-only forever. Both paths are first-class.
+7. **History builds silently.** Over time, Sharma's order history, payment behaviour, and credit profile accumulate inside DZZLO. He can _opt in_ later to an OkCredit-style customer account if he wants richer visibility — or he can stay WhatsApp-only forever. Both paths are first-class.
 
 This flow is **zero-friction for the customer** and **full-fat OMS for the dealer**. The hard side is solved by design, not by education. The gap closes itself.
 

@@ -8,7 +8,7 @@ Four quotes anchor the reframe.
 
 Paul Graham: "**Make something people want.**" The primary determinant of outcomes is whether you have found a real, painful, frequent, expensive problem. No amount of product polish or sales motion compensates for its absence.
 
-Peter Thiel, in *Zero to One*: "**Superior sales and distribution by itself can create a monopoly, even with no product differentiation. The converse is not true.**" Distribution is a first-class strategic asset, not a tax on a good product. Founders systematically underweight it because engineers find distribution distasteful.
+Peter Thiel, in _Zero to One_: "**Superior sales and distribution by itself can create a monopoly, even with no product differentiation. The converse is not true.**" Distribution is a first-class strategic asset, not a tax on a good product. Founders systematically underweight it because engineers find distribution distasteful.
 
 Andy Rachleff (founder of Benchmark Capital): "**When a great team meets a lousy market, the market wins. When a lousy team meets a great market, the market wins. When a great team meets a great market, something special happens.**" The market — the problem and the people who have it — dominates everything you control.
 
@@ -66,16 +66,16 @@ The operating model is **sales-led onboarding, product-led retention**. The sale
 
 ## Decision Framework
 
-| Signal | Product-Led | Sales-Led |
-|--------|------------|-----------|
-| ACV | < ₹50k / yr | > ₹2L / yr |
-| Buyer | Individual, self-serve | Committee, RFP, procurement |
-| Time-to-value | < 10 minutes | Weeks |
-| Digital maturity of buyer | High | Low |
-| Integrations required | Minimal (standalone value) | Heavy (SSO, ERP, custom) |
-| Workflow complexity | Horizontal, universal | Vertical, regulated, bespoke |
-| Sales cycle | Days | Months |
-| Customer success model | Self-serve docs + community | CSM, field engineer |
+| Signal                     | Product-Led                                                               | Sales-Led                                    |
+| -------------------------- | ------------------------------------------------------------------------- | -------------------------------------------- |
+| ACV                        | < ₹50k / yr                                                               | > ₹2L / yr                                   |
+| Buyer                      | Individual, self-serve                                                    | Committee, RFP, procurement                  |
+| Time-to-value              | < 10 minutes                                                              | Weeks                                        |
+| Digital maturity of buyer  | High                                                                      | Low                                          |
+| Integrations required      | Minimal (standalone value)                                                | Heavy (SSO, ERP, custom)                     |
+| Workflow complexity        | Horizontal, universal                                                     | Vertical, regulated, bespoke                 |
+| Sales cycle                | Days                                                                      | Months                                       |
+| Customer success model     | Self-serve docs + community                                               | CSM, field engineer                          |
 | **India fuel OMS reality** | Dealer checks WhatsApp first — self-serve does not start the conversation | Owner signs after an in-person or video demo |
 
 Read the table as a diagnostic, not a verdict. Most businesses live between the two columns — the exercise is to identify which row dominates your segment, then design around it.
@@ -112,7 +112,7 @@ For DZZLO OMS and the petrol pump owner specifically: sales-assisted, field-rep-
 
 These are the patterns that kill first-time B2B founders. Name them now so you can catch yourself mid-fall.
 
-- **"Build it and they will come."** No distribution plan → zero traction at launch → 6 months of "we just need more features" → runway exhaustion. The most common failure. Fixable only by doing distribution work *before* the next sprint.
+- **"Build it and they will come."** No distribution plan → zero traction at launch → 6 months of "we just need more features" → runway exhaustion. The most common failure. Fixable only by doing distribution work _before_ the next sprint.
 - **Hiring an AE before repeatable process.** You hire the rep "to get sales moving." The rep asks what the script is, what the ICP is, what the objection handling is — and you do not have answers, because you have not sold enough yourself. The rep churns in 4 months. Do not hire an AE before 10–20 founder-led closes.
 - **Running 100% sales with a complex product.** Every close requires 8 demos. Every renewal requires a CSM. Headcount scales linearly with revenue. Gross margins collapse below 60%. The business looks like services with a software wrapper. Either simplify the product or raise ACV.
 - **Running 100% PLG with enterprise ACVs.** Buyers qualified for ₹20L/yr deals sign up, hit the self-serve ceiling, and quietly bounce because nobody from your side called them. Leaving money on the table. Layer in sales on signals of enterprise intent — domain, seat count, usage pattern.
@@ -133,10 +133,10 @@ Close the doc with action, not reflection.
 
 ## Further Reading
 
-- Peter Thiel, *Zero to One* — the distribution chapter is the single best essay on this subject.
-- April Dunford, *Obviously Awesome* — positioning is the prerequisite for any GTM choice.
-- Geoffrey Moore, *Crossing the Chasm* — why the early adopter motion cannot be cloned to the mainstream.
-- Bob Moesta, *Demand-Side Sales 101* — JTBD applied to sales conversations, particularly useful for SME India.
+- Peter Thiel, _Zero to One_ — the distribution chapter is the single best essay on this subject.
+- April Dunford, _Obviously Awesome_ — positioning is the prerequisite for any GTM choice.
+- Geoffrey Moore, _Crossing the Chasm_ — why the early adopter motion cannot be cloned to the mainstream.
+- Bob Moesta, _Demand-Side Sales 101_ — JTBD applied to sales conversations, particularly useful for SME India.
 - [McKinsey — From PLG to PLS](https://www.mckinsey.com/industries/technology-media-and-telecommunications/our-insights/from-product-led-growth-to-product-led-sales-beyond-the-plg-hype)
 - [Growth Ahoy — PLG vs PLS vs SLG](https://www.growthahoy.com/blog/plg-pls-or-sales-led-what-growth-strategy-fits-your-saas)
 - [SandsDX — Product-Led vs Sales-Led](https://sandsdx.com/perspectives/executive/product-led-vs-sales-led/)

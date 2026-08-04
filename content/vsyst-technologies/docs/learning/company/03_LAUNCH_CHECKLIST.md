@@ -88,7 +88,7 @@ For DZZLO, the cold-channel is not email — it is WhatsApp. Adapted playbook:
 
 ### Days -14 to -1 — Infrastructure readiness
 
-**Analytics installed before launch — not after.** [Storylane's launch-readiness study](https://www.storylane.io/blog/saas-launch-analytics) finds the teams that instrument *before* launch ship 2.1x more useful iterations in the first 90 days than teams that instrument later.
+**Analytics installed before launch — not after.** [Storylane's launch-readiness study](https://www.storylane.io/blog/saas-launch-analytics) finds the teams that instrument _before_ launch ship 2.1x more useful iterations in the first 90 days than teams that instrument later.
 
 **Load test at 3–5x expected traffic.** [HexagonIT's launch-day checklist](https://www.hexagonitsolutions.com/saas-launch-checklist) reports that **21% of SaaS launches have a material availability incident in the first 72 hours**, nearly all of them capacity-related.
 
@@ -149,12 +149,12 @@ For DZZLO, the cold-channel is not email — it is WhatsApp. Adapted playbook:
 
 ### Other launch channels
 
-| Channel | Effort | Expected impact for DZZLO |
-|---|---|---|
-| **BetaList** | Low | Modest. Developer audience, less fit for SMB fuel. |
-| **Hacker News (Show HN)** | Medium | Low for SMB ops software. Skip unless there is a deep-tech angle. |
-| **Indie Hackers** | Medium | Long-term community channel, not a single-day driver. |
-| **[Firsto alternatives list](https://firsto.co/blog/product-hunt-alternatives)** | Low | Some will drive residual traffic — pick 3 from the list and submit. |
+| Channel                                                                          | Effort | Expected impact for DZZLO                                           |
+| -------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------- |
+| **BetaList**                                                                     | Low    | Modest. Developer audience, less fit for SMB fuel.                  |
+| **Hacker News (Show HN)**                                                        | Medium | Low for SMB ops software. Skip unless there is a deep-tech angle.   |
+| **Indie Hackers**                                                                | Medium | Long-term community channel, not a single-day driver.               |
+| **[Firsto alternatives list](https://firsto.co/blog/product-hunt-alternatives)** | Low    | Some will drive residual traffic — pick 3 from the list and submit. |
 
 ### India-specific launch channels
 
@@ -203,7 +203,7 @@ For DZZLO, the cold-channel is not email — it is WhatsApp. Adapted playbook:
 **Net Revenue Retention (NRR) targets.** [Directive's 2026 B2B SaaS report](https://directiveconsulting.com/insights/b2b-saas-2026-guide):
 
 - **NRR > 100%** = existing customers net-expand revenue — organic growth.
-- **NRR > 120%** = growth *without* new-customer acquisition — a hallmark of PMF.
+- **NRR > 120%** = growth _without_ new-customer acquisition — a hallmark of PMF.
 
 **First-value in 14 days.** [Directive's onboarding study](https://directiveconsulting.com/insights/saas-onboarding-research) finds customers who do **not** hit first value in 14 days are **3x more likely to churn in the first 90 days**. For DZZLO, define first-value explicitly as **first GST invoice issued** OR **first WhatsApp reminder sent** OR **first credit note reconciled**.
 
@@ -217,11 +217,11 @@ For DZZLO, the cold-channel is not email — it is WhatsApp. Adapted playbook:
 
 ### Cadence targets
 
-| Cadence | What to do |
-|---|---|
-| **Weekly** | 5 customer interviews · churn review · support ticket triage · NPS pulse |
-| **Bi-weekly** | Feature ship with changelog · pricing A/B review |
-| **Monthly** | NPS survey · cohort retention review · pricing test · dealer advisory call (design partners) · OMC TM outreach batch |
+| Cadence       | What to do                                                                                                           |
+| ------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Weekly**    | 5 customer interviews · churn review · support ticket triage · NPS pulse                                             |
+| **Bi-weekly** | Feature ship with changelog · pricing A/B review                                                                     |
+| **Monthly**   | NPS survey · cohort retention review · pricing test · dealer advisory call (design partners) · OMC TM outreach batch |
 
 ### Day 90 exit criteria
 

@@ -10,6 +10,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 ## 1. Market, Industry, Competitors (India fuel distribution)
 
 ### Global & India market sizing
+
 - [Business Research Insights — Fuel Management Software Market](https://www.businessresearchinsights.com/market-reports/fuel-management-software-market-112271) — global TAM ~USD 8.69B 2025, 14.7% CAGR
 - [OpenPR — Fuel Management Software 2026-2033](https://www.openpr.com/news/4460544/fuel-management-software-market-analysis-by-application-type) — conservative $3.6B by 2026
 - [Verified Market Research — Oil & Gas Software](https://www.verifiedmarketresearch.com/product/oil-and-gas-software-market/) — USD 1.25B (2024) → 2.03B (2032)
@@ -26,6 +27,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [P&S Market Research — India Diesel Genset Market](https://www.psmarketresearch.com/market-analysis/india-diesel-genset-market)
 
 ### Indian competitors (direct)
+
 - [Petrosoft India / petrolbunksoftware.com](https://petrolbunksoftware.com/) — "India's No.1 Petrol Pump Management Software"
 - [Petrosoft — Fuel Retail Trends India 2026](https://petrolbunksoftware.com/blog/fuel-retail-trends-india-2026)
 - [Petrosoft — Accounting Software Pain Points](https://petrolbunksoftware.com/blog/petrol-pump-accounting-software)
@@ -44,6 +46,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [TechnologyCounter — 10 Best Petrol Pump Software 2026](https://technologycounter.com/petrol-pump-software)
 
 ### Indian competitors (adjacent / generic)
+
 - [Lekhakar — Tally vs Busy vs Zoho Books 2026](https://www.lekhakar.in/blogs/tally-vs-busy-vs-zoho-books)
 - [Techjockey — Best accounting SMB: Tally vs Zoho](https://www.techjockey.com/blog/best-accounting-software-for-smbs-tally-vs-zoho)
 - [Patron Accounting — Zoho Books Pricing India 2026](https://www.patronaccounting.com/blog/zoho-books-pricing-india-2026)
@@ -55,6 +58,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [Strategy Boffins — MyBillBook vs OkCredit vs Khatabook](https://www.strategyboffins.com/start_up_strategy/mybillbook-vs-okcredit-vs-khatabook/)
 
 ### Global competitors (context)
+
 - [PDI Technologies](https://pditechnologies.com/) — enterprise fuel/wholesale ERP
 - [PDI CStore Essentials Pricing](https://www.pdicstoreessentials.com/plans-pricing)
 - [Titan Cloud Software](https://www.titancloud.com/)
@@ -63,6 +67,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [Gitnux — Best Fuel Pricing Software 2026](https://gitnux.org/best/fuel-pricing-software/)
 
 ### Adjacent — fuel delivery & dealer infrastructure
+
 - [FuelBuddy](https://www.fuelbuddy.in/) — 50,000+ customers across 180+ cities
 - [FuelBuddy — PESO legal framework](https://www.fuelbuddy.in/from-peso-to-customer-doorstep-understanding-the-legal-framework-for-doorstep-diesel-delivery/)
 - [Jio-bp Fuel4U business model](https://on-demand-app.com/fuel4u-jio-bp-on-demand-fuel-delivery-business-model)
@@ -71,6 +76,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [RentechDigital — Petrol Pumps India List](https://rentechdigital.com/smartscraper/business-report-details/list-of-petrol-pumps-in-india)
 
 ### Regulatory / compliance
+
 - [ClearTax — E-invoicing > ₹5Cr turnover](https://cleartax.in/s/e-invoicing-businesses-above-rs-5-crore-turnover)
 - [ClearTax — GST on Petrol](https://cleartax.in/s/gst-on-petrol)
 - [ClearTax — Startup tax exemptions](https://cleartax.in/s/startup-india-tax-exemptions-eligibility)
@@ -88,11 +94,13 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [India Briefing — GST for SaaS](https://www.india-briefing.com/news/gst-compliance-for-saas-and-cloud-computing-in-india-explained-39021.html/)
 
 ### EV transition / tailwinds & risks
+
 - [CEEW — EV transition economic impact](https://www.ceew.in/publications/indias-electric-vehicle-transition-electric-mobility-support-sustainable-economic-recovery)
 - [CEEW — Fuel demand growth in road transport](https://www.ceew.in/publications/how-will-fuel-demand-grow-with-changing-fuel-mix-in-different-vehicle-segments)
 - [Business Standard — 10% fuel pumps offer EV charging](https://www.business-standard.com/industry/auto/10-of-country-s-fuel-pumps-now-offer-ev-charging-facilities-iocl-leads-123063000232_1.html)
 
 ### WhatsApp / SMB digital readiness India
+
 - [Hyperleap AI — WhatsApp Stats India 2026](https://hyperleap.ai/blog/whatsapp-statistics-india-2026)
 - [Trengo — 45 WhatsApp Business stats 2026](https://trengo.com/blog/whatsapp-business-statistics)
 - [AiSensy — WhatsApp Business stats 2026](https://m.aisensy.com/blog/whatsapp-statistics-for-businesses/)
@@ -143,6 +151,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [Lemon Squeezy — Indian GST for SaaS](https://www.lemonsqueezy.com/blog/indian-sales-tax-gst-saas)
 
 ### Social proof & trust signals
+
 - [CXL — Social Proof Research Study](https://cxl.com/research-study/social-proof/)
 - [Baymard — Testimonials & research mentions](https://baymard.com/buzz)
 - [The Good — Social Proof & Conversion](https://thegood.com/insights/social-proof/)
@@ -281,6 +290,7 @@ URLs verified at time of research. If any link decays, the source title is searc
 - [Cognitigence — Cialdini's 7 Principles](https://www.cognitigence.com/blog/cialdini-7-principles-of-persuasion)
 
 ### India-specific legal/ESOP/finance
+
 - [StartupIndia — DPIIT Recognition](https://www.startupindia.gov.in/content/sih/en/startupgov/startup_recognition_page.html)
 - [Qapita — ESOPs India](https://www.qapita.com/in/blog/basic-guide-to-esops-in-india)
 - [Treelife — Vesting in India](https://treelife.in/legal/vesting-in-india/)
@@ -374,4 +384,3 @@ URLs verified at time of research. If any link decays, the source title is searc
 - Sources biased toward 2024–2026 publications where possible
 - Every stat cited in the accompanying playbook docs links back to one of the entries above. If you need a newer source, re-query the topic on the same publication (most of them refresh annually)
 - Internal codebase analysis of `dzzlo_oms_api` + `dzzlo_oms_app` is captured in `00_OVERVIEW.md` — no external links there
-
