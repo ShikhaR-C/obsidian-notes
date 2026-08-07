@@ -1,0 +1,77 @@
+#pull-to-refresh {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 999;
+  transform: translate(-50%, 0);
+  opacity: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  margin-top: -2.4rem;
+  border-radius: 50%;
+  background-color: var(--light);
+  border: 1px solid var(--lightgray);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  color: var(--darkgray);
+
+  &.settling {
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+  }
+
+  & svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.15s ease;
+  }
+
+  &.ready svg {
+    transform: rotate(180deg);
+    color: var(--secondary);
+  }
+
+  &.refreshing svg {
+    animation: ptr-spin 0.8s linear infinite;
+    color: var(--secondary);
+  }
+}
+
+@keyframes ptr-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.refresh-button {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--darkgray);
+  padding: 0;
+  margin: 0;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  & svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover svg {
+    color: var(--secondary);
+  }
+}
+
+// stop the browser's own overscroll bounce from fighting the pull gesture
+body {
+  overscroll-behavior-y: contain;
+}

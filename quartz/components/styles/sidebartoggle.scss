@@ -1,0 +1,61 @@
+@use "../../styles/variables.scss" as *;
+
+.sidebar-toggle {
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--darkgray);
+  padding: 0.2rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: var(--lightgray);
+  }
+
+  & svg {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s ease;
+  }
+
+  // hidden on mobile, where the left sidebar is already a compact row
+  @media all and ($mobile) {
+    display: none;
+  }
+}
+
+// the toggle itself lives in a rail that stays visible when collapsed
+.sidebar.left > .sidebar-rail {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+#quartz-root.left-collapsed {
+  & > #quartz-body {
+    grid-template-columns: 2.5rem auto #{$sidePanelWidth};
+
+    @media all and ($tablet) {
+      grid-template-columns: 2.5rem auto;
+    }
+  }
+
+  & .sidebar.left {
+    padding-left: 0;
+    padding-right: 0.5rem;
+    overflow: hidden;
+
+    & > *:not(.sidebar-rail) {
+      display: none;
+    }
+  }
+
+  & .sidebar-toggle svg {
+    transform: rotate(180deg);
+  }
+}

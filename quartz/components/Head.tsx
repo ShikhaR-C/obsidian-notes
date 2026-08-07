@@ -5,6 +5,7 @@ import { googleFontHref, googleFontSubsetHref } from "../util/theme"
 import { QuartzComponent, QuartzComponentConstructor, QuartzComponentProps } from "./types"
 import { unescapeHTML } from "../util/escape"
 import { CustomOgImagesEmitterName } from "../plugins/emitters/ogImage"
+import { basePathFromBaseUrl } from "../plugins/emitters/pwa"
 export default (() => {
   const Head: QuartzComponent = ({
     cfg,
@@ -84,6 +85,20 @@ export default (() => {
 
         <link rel="icon" href={iconPath} />
         <meta name="description" content={description} />
+
+        {/* PWA: installability + offline support (see plugins/emitters/pwa.ts) */}
+        <link rel="manifest" href={joinSegments(baseDir, "manifest.webmanifest")} />
+        <link rel="apple-touch-icon" href={joinSegments(baseDir, "static/icon-192.png")} />
+        <meta name="theme-color" content="#284b63" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-title" content={cfg.pageTitle} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if("serviceWorker" in navigator){addEventListener("load",function(){navigator.serviceWorker.register(${JSON.stringify(
+              basePathFromBaseUrl(cfg.baseUrl) + "sw.js",
+            )}).then(function(){if(!(navigator.connection&&navigator.connection.saveData)){navigator.serviceWorker.ready.then(function(r){r.active&&r.active.postMessage("precache-all")})}}).catch(function(){})})}`,
+          }}
+        />
         <meta name="generator" content="Quartz" />
 
         {css.map((resource) => CSSResourceToStyleElement(resource, true))}
