@@ -59,13 +59,32 @@ function precacheAll() {
       const res = await fetch(INDEX, { cache: "no-cache" })
       if (!res.ok) return
       const index = await res.json()
-      const urls = [INDEX, ...Object.keys(index).map((slug) => BASE + slug)]
+      // notes, plus every auto-generated folder page and tag page reachable from them —
+      // breadcrumbs and tag chips navigate to these, so offline needs them too
+      const urlSet = new Set([INDEX])
+      for (const slug of Object.keys(index)) {
+        urlSet.add(BASE + slug)
+        const parts = slug.split("/")
+        for (let i = 1; i < parts.length; i++) urlSet.add(BASE + parts.slice(0, i).join("/") + "/")
+        for (const tag of index[slug].tags ?? []) {
+          const segs = String(tag).split("/")
+          for (let i = 1; i <= segs.length; i++)
+            urlSet.add(BASE + "tags/" + segs.slice(0, i).join("/"))
+        }
+        urlSet.add(BASE + "tags/")
+      }
+      const urls = [...urlSet]
       let done = 0
       for (let i = 0; i < urls.length; i += PRECACHE_BATCH) {
         await Promise.all(
           urls.slice(i, i + PRECACHE_BATCH).map(async (url) => {
             try {
-              const hit = await fetch(url.endsWith(".json") ? url : url + ".html")
+              const target = url.endsWith(".json")
+                ? url
+                : url.endsWith("/")
+                  ? url + "index.html"
+                  : url + ".html"
+              const hit = await fetch(target)
               if (hit.ok) await cachePage(cache, url, hit)
             } catch {
               // one missing page shouldn't abort the whole pass
@@ -87,9 +106,13 @@ function precacheAll() {
 // SPA fetch of "/slug", and (by us) as "/slug.html". Store every variant so an
 // offline lookup hits regardless of which form the request takes.
 async function cachePage(cache, url, response) {
-  const keys = [url, url + ".html"]
-  if (url.endsWith("/index")) keys.push(url.slice(0, -"index".length))
-  if (url.endsWith(".json")) keys.length = 1
+  let keys
+  if (url.endsWith(".json")) keys = [url]
+  else if (url.endsWith("/")) keys = [url, url + "index.html"]
+  else {
+    keys = [url, url + ".html"]
+    if (url.endsWith("/index")) keys.push(url.slice(0, -"index".length))
+  }
   const bodies = keys.map(() => response.clone())
   await Promise.all(keys.map((key, i) => cache.put(key, bodies[i])))
 }
@@ -134,8 +157,11 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          const copy = res.clone()
-          caches.open(CACHE).then((cache) => cache.put(req, copy))
+          // never cache error pages — a cached 404 would shadow the real page later
+          if (res.ok) {
+            const copy = res.clone()
+            caches.open(CACHE).then((cache) => cache.put(req, copy))
+          }
           return res
         })
         .catch(() => matchPage(req).then((hit) => hit ?? caches.match(OFFLINE))),

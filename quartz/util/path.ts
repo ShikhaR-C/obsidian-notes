@@ -226,33 +226,113 @@ export interface TransformOptions {
   allSlugs: FullSlug[]
 }
 
+export interface SlugLookup {
+  /** normalized (no leading/trailing slash, no trailing `index`) slugs of every published file */
+  pages: Set<string>
+  /** every folder that contains at least one published file */
+  folders: Set<string>
+}
+
+const slugLookupCache = new WeakMap<FullSlug[], SlugLookup>()
+
+/** Index of everything a link can legally point to, memoized per allSlugs array. */
+export function slugLookup(allSlugs: FullSlug[]): SlugLookup {
+  const cached = slugLookupCache.get(allSlugs)
+  if (cached) return cached
+
+  const pages = new Set<string>()
+  const folders = new Set<string>()
+  for (const slug of allSlugs) {
+    pages.add(stripSlashes(simplifySlug(slug)))
+    pages.add(stripSlashes(slug))
+    const parts = slug.split("/")
+    for (let i = 1; i < parts.length; i++) {
+      folders.add(parts.slice(0, i).join("/"))
+    }
+  }
+
+  const lookup = { pages, folders }
+  slugLookupCache.set(allSlugs, lookup)
+  return lookup
+}
+
 export function transformLink(src: FullSlug, target: string, opts: TransformOptions): RelativeURL {
   let targetSlug = transformInternalLink(target)
 
   if (opts.strategy === "relative") {
     return targetSlug as RelativeURL
   } else {
-    const folderTail = isFolderPath(targetSlug) ? "/" : ""
-    const canonicalSlug = stripSlashes(targetSlug.slice(".".length))
-    let [targetCanonical, targetAnchor] = splitAnchor(canonicalSlug)
+    const [targetPath, targetAnchor] = splitAnchor(targetSlug)
+    const folderTail = isFolderPath(targetPath) ? "/" : ""
+    const segments = stripSlashes(targetPath)
+      .split("/")
+      .filter((seg) => seg.length > 0)
+    const upLevels = segments.filter((seg) => seg === "..").length
+    const hasRelativePrefix = segments.length > 0 && isRelativeSegment(segments[0])
+    // the link path with all relative segments removed — joining this onto any base can never
+    // escape the site root (which would drop the base path on subpath-hosted sites)
+    const canonicalSlug = segments.filter((seg) => !isRelativeSegment(seg)).join("/")
 
-    if (opts.strategy === "shortest") {
-      // if the file name is unique, then it's just the filename
-      const matchingFileNames = opts.allSlugs.filter((slug) => {
-        const parts = slug.split("/")
-        const fileName = parts.at(-1)
-        return targetCanonical === fileName
-      })
+    if (opts.strategy === "shortest" && canonicalSlug.length > 0) {
+      const { pages, folders } = slugLookup(opts.allSlugs)
+      const srcDir = src.split("/").slice(0, -1)
 
-      // only match, just use it
-      if (matchingFileNames.length === 1) {
-        const targetSlug = matchingFileNames[0]
-        return (resolveRelative(src, targetSlug) + targetAnchor) as RelativeURL
+      const resolveTo = (slug: string): RelativeURL => {
+        const isFolder = folders.has(slug) && !pages.has(slug)
+        let rel = resolveRelative(src, slug as FullSlug) as string
+        if ((isFolder || folderTail === "/") && !rel.endsWith("/")) {
+          rel += "/"
+        }
+        return (rel + targetAnchor) as RelativeURL
+      }
+
+      // resolve the way Obsidian does: explicit ./ or ../ prefixes are file-relative,
+      // bare names prefer the source's own folder, paths prefer the vault root
+      const candidates: string[] = []
+      if (hasRelativePrefix) {
+        const base = srcDir.slice(0, Math.max(srcDir.length - upLevels, 0))
+        candidates.push([...base, canonicalSlug].filter((s) => s.length > 0).join("/"))
+        candidates.push(canonicalSlug)
+      } else if (!canonicalSlug.includes("/")) {
+        candidates.push([...srcDir, canonicalSlug].join("/"))
+        candidates.push(canonicalSlug)
+      } else {
+        candidates.push(canonicalSlug)
+        candidates.push([...srcDir, canonicalSlug].join("/"))
+      }
+      for (const candidate of candidates) {
+        if (pages.has(candidate) || folders.has(candidate)) {
+          return resolveTo(candidate)
+        }
+      }
+
+      // suffix match ("shortest path when possible"): any page or folder whose path ends
+      // with the target; prefer targets closer to the source file, then shallower paths
+      const suffix = "/" + canonicalSlug
+      const matches = [
+        ...[...pages].filter((p) => p.endsWith(suffix)),
+        ...[...folders].filter((f) => f.endsWith(suffix)),
+      ]
+      if (matches.length > 0) {
+        const sharedPrefixLen = (p: string): number => {
+          const parts = p.split("/")
+          let n = 0
+          while (n < parts.length - 1 && n < srcDir.length && parts[n] === srcDir[n]) n++
+          return n
+        }
+        matches.sort(
+          (a, b) =>
+            sharedPrefixLen(b) - sharedPrefixLen(a) ||
+            Number(pages.has(b)) - Number(pages.has(a)) ||
+            a.split("/").length - b.split("/").length ||
+            a.localeCompare(b),
+        )
+        return resolveTo(matches[0])
       }
     }
 
-    // if it's not unique, then it's the absolute path from the vault root
-    return (joinSegments(pathToRoot(src), canonicalSlug) + folderTail) as RelativeURL
+    // nothing matched (or absolute strategy): treat as a path from the vault root
+    return (joinSegments(pathToRoot(src), canonicalSlug) + folderTail + targetAnchor) as RelativeURL
   }
 }
 

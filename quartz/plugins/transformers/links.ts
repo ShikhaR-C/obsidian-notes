@@ -6,6 +6,7 @@ import {
   TransformOptions,
   stripSlashes,
   simplifySlug,
+  slugLookup,
   splitAnchor,
   transformLink,
 } from "../../util/path"
@@ -121,8 +122,28 @@ export const CrawlLinks: QuartzTransformerPlugin<Partial<Options>> = (userOpts) 
                   // need to decodeURIComponent here as WHATWG URL percent-encodes everything
                   const full = decodeURIComponent(stripSlashes(destCanonical, true)) as FullSlug
                   const simple = simplifySlug(full)
-                  outgoing.add(simple)
-                  node.properties["data-slug"] = full
+
+                  // a link that points at nothing we publish (an unresolved Obsidian stub,
+                  // a draft, a file outside the vault) becomes plain text instead of a 404
+                  const { pages, folders } = slugLookup(ctx.allSlugs)
+                  const targetPath = stripSlashes(simple)
+                  const resolvable =
+                    targetPath === "" ||
+                    targetPath === "tags" ||
+                    targetPath.startsWith("tags/") ||
+                    pages.has(targetPath) ||
+                    folders.has(targetPath)
+
+                  if (resolvable) {
+                    outgoing.add(simple)
+                    node.properties["data-slug"] = full
+                  } else {
+                    node.tagName = "span"
+                    node.properties = {
+                      className: ["unresolved-link"],
+                      title: "This page has not been published",
+                    }
+                  }
                 }
 
                 // rewrite link internals if prettylinks is on

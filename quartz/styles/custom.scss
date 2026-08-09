@@ -1,3 +1,11 @@
 @use "./base.scss";
 
 // put your custom CSS here!
+
+// wikilinks whose target isn't published render as text, not dead links
+span.unresolved-link {
+  color: var(--darkgray);
+  opacity: 0.8;
+  cursor: default;
+  border-bottom: 1px dashed var(--gray);
+}

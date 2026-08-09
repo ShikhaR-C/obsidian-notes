@@ -1,7 +1,7 @@
 # 02 — GSTIN verification, direct from government
 
 **Researched:** 2026-08-05. **Constraint:** no paid aggregators.
-**Blunt answer:** there is **no open government API for GSTIN lookup that a private SaaS can subscribe to**. GSTN's architecture deliberately routes all machine access through commercial **GSPs** (GST Suvidha Providers). What still works direct-and-free: (a) checksum + format validation in code, (b) the **NIC e-way-bill / e-invoice "Get GSTIN details" API using each dealer's own API credentials** (see [[06-gst-filing-ewaybill-einvoice]]), (c) the captcha-gated manual portal search, (d) an API Setu application (outcome unproven — flagged below).
+**Blunt answer:** there is **no open government API for GSTIN lookup that a private SaaS can subscribe to**. GSTN's architecture deliberately routes all machine access through commercial **GSPs** (GST Suvidha Providers). What still works direct-and-free: (a) checksum + format validation in code, (b) the **NIC e-way-bill / e-invoice "Get GSTIN details" API using each dealer's own API credentials** (see [[07-ewaybill-einvoice]]), (c) the captcha-gated manual portal search, (d) an API Setu application (outcome unproven — flagged below).
 
 ---
 
@@ -15,7 +15,7 @@ https://services.gst.gov.in/services/searchtp — no login, but **captcha per qu
 - **Becoming a GSP** (the only "direct" path GSTN offers): latest empanelment (GSP 5.0, official eligibility PDF on gstn.org.in) required an Indian IT/ITES/BFSI company or MSME with **average turnover ≥ ₹50 lakh (FY 2020-21 → 2022-23)**, a **technical demo scored ≥70/100** (GSTR-1 upload, IRN handling, 2A reconciliation, DSC, security, load), India-based infra sized for **≥1 lakh GST transactions/month**, a data-privacy policy, an affidavit not to use GST data to sell financial products, and **MPLS connectivity to GSTN within 60 days of signing**.
 - **62 GSPs** are currently empaneled (batch 5; secondary source Sep-2025). ⚠️ **No batch-6 window was found open as of 2026-08-05** — empanelment opens episodically; treat as closed until GSTN advertises.
 - GSTN→GSP charges: the standard GSP agreement provides a **2-year fee moratorium from first API opening, extendable at GSTN's sole discretion**; current charging status is **not publicly verifiable**. GSPs' costs to ASPs are commercial (market ~₹0.33–1/call on annual packs — recorded in [[references]] for context only; out of scope per our constraint).
-- Assessment for us: the ₹50 lakh turnover bar is passable, but the demo + 1-lakh-txn/month infra + MPLS line + a window that isn't open make become-a-GSP disproportionate for GSTIN checks. Re-evaluate only if [[06-gst-filing-ewaybill-einvoice]] concludes we need full returns APIs at scale.
+- Assessment for us: the ₹50 lakh turnover bar is passable, but the demo + 1-lakh-txn/month infra + MPLS line + a window that isn't open make become-a-GSP disproportionate for GSTIN checks. Re-evaluate only if [[06-gst-return-filing]] concludes we need full returns APIs at scale.
 
 ## 3. API Setu — conflicting observations, worth one application ⚠️
 
@@ -31,7 +31,7 @@ Both NIC compliance systems expose a GSTIN-validation endpoint that returns regi
 - e-invoice: einv-apisandbox.nic.in → "Get GSTIN Details" — returns GSTIN, legal/trade name, address, state code, taxpayer type, **status (ACT/CNL/INA/PRO)**, and e-way-bill-block flag.
 - e-way bill: docs.ewaybillgst.gov.in → "GET GSTIN details" (same shape).
 
-Access model: direct client-credentials only for GSPs, e-commerce operators, and very large taxpayers — **but every dealer who registers for e-way-bill/e-invoice API access gets these calls with their own credentials**, and our OMS can be the system making them. That makes GSTIN verification a **free by-product of the e-way-bill integration** — full access mechanics, eligibility thresholds and per-dealer setup in [[06-gst-filing-ewaybill-einvoice]].
+Access model: direct client-credentials only for GSPs, e-commerce operators, and very large taxpayers — **but every dealer who registers for e-way-bill/e-invoice API access gets these calls with their own credentials**, and our OMS can be the system making them. That makes GSTIN verification a **free by-product of the e-way-bill integration** — full access mechanics, eligibility thresholds and per-dealer setup in [[07-ewaybill-einvoice]].
 
 ## 5. Zero-cost, zero-API validation layer (build first, catches most junk)
 
@@ -47,5 +47,5 @@ This is deterministic and free; only existence/active-status needs a live source
 ## Bottom line
 
 - **Now, ₹0:** checksum + PAN-cross-check in code at onboarding; manual portal search by ops for the handful of new dealers a week; legal-name match against the portal result.
-- **Soon, ₹0 and automated:** once dealers' e-way-bill API credentials exist ([[06-gst-filing-ewaybill-einvoice]]), call NIC Get-GSTIN-details server-side at onboarding — direct government data, no aggregator.
+- **Soon, ₹0 and automated:** once dealers' e-way-bill API credentials exist ([[07-ewaybill-einvoice]]), call NIC Get-GSTIN-details server-side at onboarding — direct government data, no aggregator.
 - **Parked:** GSP (window closed, infra-heavy), API Setu GSTN listing (apply opportunistically, unproven).
