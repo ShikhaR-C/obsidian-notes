@@ -2,12 +2,14 @@
 title: VSYST Group
 ---
 
-# VSYST TOWER
+# VSYST Group
 
-The full project overview and topic content now live in [[interior/index]].
+This index reflects the main areas of the VSYST Group vault and their landing pages.
 
-Use [[interior/index|this page]] to browse the vault structure and related topics.
-
-## Topics
+## VSYST Technologies
 
 - [[vsyst-technologies/index|VSYST Technologies]] — Technology, systems, and innovation focus
+
+## VSYST Tower
+
+- [[interior/index|VSYST Tower]] — Planning vault for construction and interior design, from foundation to finishing
