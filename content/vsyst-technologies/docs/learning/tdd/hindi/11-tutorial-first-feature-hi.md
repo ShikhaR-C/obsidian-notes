@@ -4,7 +4,7 @@
 
 अंत तक आप चक्र, triangulation, हरे पर refactoring, सीमा पर test doubles, और outside-in डिज़ाइन का अभ्यास कर चुके होंगे — यानी वे चीज़ें जिन्हें बाक़ी दस्तावेज़ सिर्फ़ समझाते हैं।
 
-**भाषा:** Python + pytest। ढाँचा किसी भी भाषा पर सीधे लागू होता है — runner बदलने के लिए देखिए [9. भाषा के अनुसार सेटअप](09-language-setup.md)।
+**भाषा:** Python + pytest। ढाँचा किसी भी भाषा पर सीधे लागू होता है — runner बदलने के लिए देखिए [9. भाषा के अनुसार सेटअप](09-language-setup-hi.md)।
 
 **पूरे ट्यूटोरियल का नियम:** आगे मत कूदिए और अंतिम कोड paste मत कीजिए। सीख _क्रम_ में है।
 
@@ -461,7 +461,7 @@ Review करने वाला शुद्ध-refactor वाला diff द�
 
 ### Step 2 — चक्र का जान-बूझकर अभ्यास कीजिए
 
-[12. अभ्यास katas](12-tutorial-katas.md) पूरे कीजिए — छोटे अभ्यास जो असली codebase के भटकाव के बिना लय बनाते हैं।
+[12. अभ्यास katas](12-tutorial-katas-hi.md) पूरे कीजिए — छोटे अभ्यास जो असली codebase के भटकाव के बिना लय बनाते हैं।
 
 ### Step 3 — जो सीखा उसे दोहराइए
 
@@ -476,4 +476,4 @@ Review करने वाला शुद्ध-refactor वाला diff द�
 
 ---
 
-आगे: [अभ्यास katas →](12-tutorial-katas.md) · संबंधित: [2. Red, Green, Refactor](02-red-green-refactor.md) · [3. अच्छे टेस्ट लिखना](03-writing-good-tests.md)
+आगे: [अभ्यास katas →](12-tutorial-katas-hi.md) · संबंधित: [2. Red, Green, Refactor](02-red-green-refactor-hi.md) · [3. अच्छे टेस्ट लिखना](03-writing-good-tests-hi.md)

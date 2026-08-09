@@ -2,7 +2,7 @@
 
 A short, practical guide to TDD — starting from "explain it like I'm five" and ending with the stuff that actually trips people up.
 
-🌐 **हिंदी में पढ़ें:** [hi/README.md](hi/README.md)
+🌐 **हिंदी में पढ़ें:** [README-hi.md](README-hi.md)
 
 ## Read in this order
 

@@ -18,7 +18,7 @@ Private fields, call के क्रम, या भीतरी ढाँचे
 
 **पहचान:** "मैंने कोड सुधारा और तीस टेस्ट ठीक करने पड़े।"
 
-**सुधार:** outputs और दिखने वाले असर पर assert कीजिए। देखिए [अच्छे टेस्ट लिखना](03-writing-good-tests.md)।
+**सुधार:** outputs और दिखने वाले असर पर assert कीजिए। देखिए [अच्छे टेस्ट लिखना](03-writing-good-tests-hi.md)।
 
 ---
 
@@ -122,4 +122,4 @@ Behaviour Driven Development काफ़ी हद तक TDD ही है, �
 
 ---
 
-आगे: [चीट शीट →](06-cheat-sheet.md)
+आगे: [चीट शीट →](06-cheat-sheet-hi.md)

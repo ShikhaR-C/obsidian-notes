@@ -254,4 +254,4 @@ _दस-पिन गेंदबाज़ी (bowling) के खेल का 
 
 ---
 
-वापस: [11. आपका पहला TDD फ़ीचर](11-tutorial-first-feature.md) · [6. चीट शीट](06-cheat-sheet.md) · [README](README.md)
+वापस: [11. आपका पहला TDD फ़ीचर](11-tutorial-first-feature-hi.md) · [6. चीट शीट](06-cheat-sheet-hi.md) · [README](README-hi.md)

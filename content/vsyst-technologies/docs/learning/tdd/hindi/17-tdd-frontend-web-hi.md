@@ -67,7 +67,7 @@ export const summarise = (order) => ({
 })
 ```
 
-Currency, तारीख़ें, बहुवचन, validation नियम, sort/filter logic, अनुमति की जाँच: यह सब शुद्ध है, यह सब `packages/domain` में जाता है, और फिर इसे React ऐप, vanilla admin पेज और React Native ऐप सब साझा करते हैं ([18](18-tdd-api-network.md) network परत को इसी तरह साझा करता है)। Component में जो बचता है वह है _rendering_ — और rendering को उतने टेस्ट नहीं चाहिए जितने लोग लिखते हैं।
+Currency, तारीख़ें, बहुवचन, validation नियम, sort/filter logic, अनुमति की जाँच: यह सब शुद्ध है, यह सब `packages/domain` में जाता है, और फिर इसे React ऐप, vanilla admin पेज और React Native ऐप सब साझा करते हैं ([18](18-tdd-api-network-hi.md) network परत को इसी तरह साझा करता है)। Component में जो बचता है वह है _rendering_ — और rendering को उतने टेस्ट नहीं चाहिए जितने लोग लिखते हैं।
 
 ---
 
@@ -283,7 +283,7 @@ it("shows a spinner while the request is in flight", async () => {
 })
 ```
 
-अपने ही `api` module को mock करना आपके ऐप को इस धारणा के ख़िलाफ़ टेस्ट करता है कि server क्या भेजता है। MSW उसे असली HTTP response के ख़िलाफ़ टेस्ट करता है — वही handlers जिन्हें API के अपने contract टेस्ट मान्य करते हैं ([18](18-tdd-api-network.md))। `total_cents` → `totalCents` वाला नाम-परिवर्तन पकड़ने और उसे production में भेज देने के बीच यही फ़र्क़ है।
+अपने ही `api` module को mock करना आपके ऐप को इस धारणा के ख़िलाफ़ टेस्ट करता है कि server क्या भेजता है। MSW उसे असली HTTP response के ख़िलाफ़ टेस्ट करता है — वही handlers जिन्हें API के अपने contract टेस्ट मान्य करते हैं ([18](18-tdd-api-network-hi.md))। `total_cents` → `totalCents` वाला नाम-परिवर्तन पकड़ने और उसे production में भेज देने के बीच यही फ़र्क़ है।
 
 ### Provider की समस्या
 
@@ -363,4 +363,4 @@ _एक दिन।_
 
 ---
 
-आगे: [18. API और network टेस्ट →](18-tdd-api-network.md) · संबंधित: [19. React Native](19-tdd-react-native.md) · [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy.md)
+आगे: [18. API और network टेस्ट →](18-tdd-api-network-hi.md) · संबंधित: [19. React Native](19-tdd-react-native-hi.md) · [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy-hi.md)

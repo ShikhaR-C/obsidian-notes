@@ -291,4 +291,4 @@ _One day._
 
 ---
 
-Back to: [14. Large-project strategy](14-large-project-strategy.md) · Related: [17. Frontend](17-tdd-frontend-web.md) · [18. API & network tests](18-tdd-api-network.md) · [README](README.md)
+Back to: [14. Large-project strategy](14-large-project-strategy.md) · Related: [17. Frontend](17-tdd-frontend-web.md) · [18. API & network tests](18-tdd-api-network.md) · [README](vsyst-technologies/docs/learning/tdd/README.md)

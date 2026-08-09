@@ -93,4 +93,4 @@ fail → pass → tidy → fail → pass → tidy → fail → pass → tidy
 
 ---
 
-आगे: [अच्छे टेस्ट लिखना →](03-writing-good-tests.md)
+आगे: [अच्छे टेस्ट लिखना →](03-writing-good-tests-hi.md)

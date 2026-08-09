@@ -308,4 +308,4 @@ cargo watch -x test
 
 ---
 
-वापस [README](README.md) · [चीट शीट](06-cheat-sheet.md)
+वापस [README](README-hi.md) · [चीट शीट](06-cheat-sheet-hi.md)

@@ -254,4 +254,4 @@ Redo a kata you've already solved, with one added rule:
 
 ---
 
-Back to: [11. Your first TDD feature](11-tutorial-first-feature.md) · [6. Cheat sheet](06-cheat-sheet.md) · [README](README.md)
+Back to: [11. Your first TDD feature](11-tutorial-first-feature.md) · [6. Cheat sheet](06-cheat-sheet.md) · [README](vsyst-technologies/docs/learning/tdd/README.md)

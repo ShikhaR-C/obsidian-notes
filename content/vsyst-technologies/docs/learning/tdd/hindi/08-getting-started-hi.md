@@ -17,7 +17,7 @@ dotnet watch test         # C#
 gotestsum --watch         # Go
 ```
 
-शून्य से runner चलाने के लिए देखिए [भाषा के अनुसार सेटअप](09-language-setup.md)।
+शून्य से runner चलाने के लिए देखिए [भाषा के अनुसार सेटअप](09-language-setup-hi.md)।
 
 ---
 
@@ -107,8 +107,8 @@ def test_legacy_pricing_current_behaviour():
 ## "गड़बड़ हो रही है" कैसा लगता है
 
 - Suite इतना समय लेती है कि आप उसे चलाना बंद कर देते हैं
-- हर refactor के बाद आप बीस टेस्ट ठीक करते हैं → [internals टेस्ट हो रहे हैं](03-writing-good-tests.md)
-- टेस्ट कभी-कभी फेल होते हैं और सब कंधे उचका देते हैं → [अस्थिरता](05-pitfalls-and-faq.md)
+- हर refactor के बाद आप बीस टेस्ट ठीक करते हैं → [internals टेस्ट हो रहे हैं](03-writing-good-tests-hi.md)
+- टेस्ट कभी-कभी फेल होते हैं और सब कंधे उचका देते हैं → [अस्थिरता](05-pitfalls-and-faq-hi.md)
 - आप coverage का gate पार करने के लिए कोड के बाद टेस्ट लिखते हैं → वह gate नुक़सान कर रहा है; उसे हटाने की बात कीजिए
 
 ---
@@ -127,4 +127,4 @@ def test_legacy_pricing_current_behaviour():
 
 ---
 
-आगे: [भाषा के अनुसार सेटअप →](09-language-setup.md)
+आगे: [भाषा के अनुसार सेटअप →](09-language-setup-hi.md)

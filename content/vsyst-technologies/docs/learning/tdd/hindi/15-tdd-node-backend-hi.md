@@ -2,7 +2,7 @@
 
 एक Express API को outside-in test-drive करना, बिना तेज़ परत में database लाए।
 
-**Stack:** Node 20+, Express, Vitest, supertest। Mongo को अलग से [16](16-tdd-mongodb-mongoose.md) में लिया गया है — जान-बूझकर, क्योंकि आपके ज़्यादातर backend टेस्टों को उसे छूना ही नहीं चाहिए।
+**Stack:** Node 20+, Express, Vitest, supertest। Mongo को अलग से [16](16-tdd-mongodb-mongoose-hi.md) में लिया गया है — जान-बूझकर, क्योंकि आपके ज़्यादातर backend टेस्टों को उसे छूना ही नहीं चाहिए।
 
 ---
 
@@ -118,7 +118,7 @@ it("creates an order and reserves stock", async () => {
 })
 ```
 
-इसे लाल रहने दीजिए। यह "पूरा हुआ" की परिभाषा है, कोई फेरा नहीं ([11, चरण 5](11-tutorial-first-feature.md))।
+इसे लाल रहने दीजिए। यह "पूरा हुआ" की परिभाषा है, कोई फेरा नहीं ([11, चरण 5](11-tutorial-first-feature-hi.md))।
 
 ### Step 2 — T0 पर भीतर की ओर बढ़िए, सेकंडों में
 
@@ -244,7 +244,7 @@ describe("POST /orders — contract", () => {
 ये भी सिर्फ़ T2 पर, और लागत के लायक़:
 
 - **Auth matrix** — anonymous, ग़लत user, सही user, admin, expired token। हर सुरक्षित route पर एक `it.each`।
-- **Response का आकार साझा schema से parse हो** — देखिए [18](18-tdd-api-network.md)।
+- **Response का आकार साझा schema से parse हो** — देखिए [18](18-tdd-api-network-hi.md)।
 - **Pagination** — `?limit`, `?cursor`, पन्नों के बीच स्थिर क्रम, आख़िरी पन्ने का cursor।
 - **Content negotiation और बड़े payloads**, अगर वे आपके लिए मायने रखते हैं।
 
@@ -355,7 +355,7 @@ IDs के लिए seed किया हुआ generator inject कीजि�
 | हर middleware को अलग से mock `req`/`res` के साथ  | Mocks आपकी धारणाएँ दर्ज करते हैं, Express का व्यवहार नहीं           | एक T2 टेस्ट जो असली stack से होकर किसी route तक जाए                    |
 | Getters, DTO mapping, `present()` की एक-एक field | कुछ भी स्वतंत्र रूप से टूट नहीं सकता                                | Response का आकार, साझा schema के मुक़ाबले                              |
 | Log की पंक्तियाँ                                 | ये लगातार बदलती हैं, टेस्ट तोड़ती हैं, और assertions कोई नहीं पढ़ता | संरचित events, _अगर_ किसी की उन पर निर्भरता है                         |
-| Mongoose का व्यवहार                              | यह पहले से टेस्ट की गई library है                                   | आपकी queries, असली Mongo के ख़िलाफ़ — [16](16-tdd-mongodb-mongoose.md) |
+| Mongoose का व्यवहार                              | यह पहले से टेस्ट की गई library है                                   | आपकी queries, असली Mongo के ख़िलाफ़ — [16](16-tdd-mongodb-mongoose-hi.md) |
 
 ---
 
@@ -373,8 +373,8 @@ _आधा दिन।_
 
 **नतीजा:** ऐसा endpoint जिसके business नियम बिना Express या Mongo के चलते हैं, और एक T2 तालिका जो उसके पूरे HTTP contract को ढकती है।
 
-**क्या साबित होता है:** [14](14-large-project-strategy.md) वाला ढाँचा असली कोड पर काम करता है — और यह भी कि जिन चीज़ों के लिए आपको लगता था कि चलता हुआ server चाहिए, उनमें से ज़्यादातर के लिए नहीं चाहिए था।
+**क्या साबित होता है:** [14](14-large-project-strategy-hi.md) वाला ढाँचा असली कोड पर काम करता है — और यह भी कि जिन चीज़ों के लिए आपको लगता था कि चलता हुआ server चाहिए, उनमें से ज़्यादातर के लिए नहीं चाहिए था।
 
 ---
 
-आगे: [16. MongoDB और Mongoose →](16-tdd-mongodb-mongoose.md) · संबंधित: [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy.md) · [18. API और network टेस्ट](18-tdd-api-network.md)
+आगे: [16. MongoDB और Mongoose →](16-tdd-mongodb-mongoose-hi.md) · संबंधित: [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy-hi.md) · [18. API और network टेस्ट](18-tdd-api-network-hi.md)

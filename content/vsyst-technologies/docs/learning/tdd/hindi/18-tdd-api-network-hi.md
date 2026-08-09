@@ -11,7 +11,7 @@
 
 ## पहले contract
 
-[14](14-large-project-strategy.md) वाली नाम-परिवर्तन की समस्या: API किसी field का नाम बदलती है, हर suite हरी रहती है, और React Native ऐप production में टूट जाता है। ऐसा इसलिए होता है क्योंकि server के टेस्ट और हर client के mocks **एक ही धारणा के अलग-अलग बयान** हैं।
+[14](14-large-project-strategy-hi.md) वाली नाम-परिवर्तन की समस्या: API किसी field का नाम बदलती है, हर suite हरी रहती है, और React Native ऐप production में टूट जाता है। ऐसा इसलिए होता है क्योंकि server के टेस्ट और हर client के mocks **एक ही धारणा के अलग-अलग बयान** हैं।
 
 इलाज: एक schema, जिसे दोनों पक्ष import करें।
 
@@ -118,7 +118,7 @@ Workflow, जिसकी शुरुआत schema से होती है:
 1. नए endpoint का **schema लिखिए**। यही डिज़ाइन की बातचीत है, और इसमें दस मिनट लगते हैं।
 2. ठोस request और अपेक्षित response के साथ **T2 टेस्ट लिखिए**। लाल — route मौजूद ही नहीं।
 3. **`handlers.js` में handler जोड़िए** ताकि clients तुरंत, समानांतर रूप से, उसके सहारे काम शुरू कर सकें।
-4. **Implementation को भीतर की ओर चलाइए**, T0 पर ([15](15-tdd-node-backend.md))।
+4. **Implementation को भीतर की ओर चलाइए**, T0 पर ([15](15-tdd-node-backend-hi.md))।
 5. **T2 टेस्ट हरा हो जाता है**, और mock के सहारे किया गया client का काम अब असली चीज़ के साथ चलता है।
 
 Step 3 वहीं है जहाँ टीम के पैमाने पर फ़ायदा है: फ़्रंटएंड backend के इंतज़ार में नहीं रुकता, और जब दोनों मिलते हैं, तो एक ऐसे schema पर मिलते हैं जिसके ख़िलाफ़ दोनों पक्ष टेस्ट किए जा चुके हैं।
@@ -315,7 +315,7 @@ it("shows an offline message rather than a generic error", async () => {
 - [ ] Rate-limit `429`, `Retry-After` का पालन करता है
 - [ ] बासी responses फेंक दिए जाते हैं, render नहीं होते
 
-हर स्क्रीन पर: loading, ख़ाली, error, retry ([17](17-tdd-frontend-web.md))।
+हर स्क्रीन पर: loading, ख़ाली, error, retry ([17](17-tdd-frontend-web-hi.md))।
 
 ---
 
@@ -368,4 +368,4 @@ _एक दिन।_
 
 ---
 
-आगे: [19. React Native →](19-tdd-react-native.md) · संबंधित: [15. Node backend](15-tdd-node-backend.md) · [17. फ़्रंटएंड](17-tdd-frontend-web.md)
+आगे: [19. React Native →](19-tdd-react-native-hi.md) · संबंधित: [15. Node backend](15-tdd-node-backend-hi.md) · [17. फ़्रंटएंड](17-tdd-frontend-web-hi.md)

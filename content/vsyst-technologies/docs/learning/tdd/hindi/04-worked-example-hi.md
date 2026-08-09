@@ -247,4 +247,4 @@ test_ten_percent_off_over_100
 
 ---
 
-आगे: [गलतियाँ और FAQ →](05-pitfalls-and-faq.md)
+आगे: [गलतियाँ और FAQ →](05-pitfalls-and-faq-hi.md)

@@ -308,4 +308,4 @@ _आधा दिन।_
 
 ---
 
-आगे: [17. फ़्रंटएंड →](17-tdd-frontend-web.md) · संबंधित: [15. Node backend](15-tdd-node-backend.md) · [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy.md)
+आगे: [17. फ़्रंटएंड →](17-tdd-frontend-web-hi.md) · संबंधित: [15. Node backend](15-tdd-node-backend-hi.md) · [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy-hi.md)

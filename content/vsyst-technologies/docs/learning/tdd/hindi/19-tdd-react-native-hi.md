@@ -1,6 +1,6 @@
 # 19. React Native के लिए TDD
 
-[17. फ़्रंटएंड](17-tdd-frontend-web.md) की हर बात यहाँ भी लागू होती है — user जो देखता है उससे query कीजिए, network सीमा पर MSW, और चार स्थितियाँ। यह दस्तावेज़ उस पर है जो _अलग_ है, और वह ज़्यादातर यह है: **platform तक पहुँचना कहीं मुश्किल है, इसलिए ज़्यादा logic उससे बाहर धकेलिए।**
+[17. फ़्रंटएंड](17-tdd-frontend-web-hi.md) की हर बात यहाँ भी लागू होती है — user जो देखता है उससे query कीजिए, network सीमा पर MSW, और चार स्थितियाँ। यह दस्तावेज़ उस पर है जो _अलग_ है, और वह ज़्यादातर यह है: **platform तक पहुँचना कहीं मुश्किल है, इसलिए ज़्यादा logic उससे बाहर धकेलिए।**
 
 **Stack:** Jest (RN का ecosystem Jest-पहला है — `react-native`/`jest-expo` presets, और Metro transform की धारणाएँ इसी में बनी हैं), `@testing-library/react-native`, MSW, और गिनती के device टेस्टों के लिए Detox या Maestro।
 
@@ -287,8 +287,8 @@ _एक दिन।_
 
 **नतीजा:** एक offline sync engine जिसकी पूरी test suite एक सेकंड से कम में चलती है, और चार screen टेस्ट।
 
-**क्या साबित होता है:** mobile का सबसे कठिन हिस्सा mobile-विशिष्ट है ही नहीं। एक बार यह reducer बन जाए, तो यह बस [12. Katas](12-tutorial-katas.md) है — बस दाँव ऊँचे हैं।
+**क्या साबित होता है:** mobile का सबसे कठिन हिस्सा mobile-विशिष्ट है ही नहीं। एक बार यह reducer बन जाए, तो यह बस [12. Katas](12-tutorial-katas-hi.md) है — बस दाँव ऊँचे हैं।
 
 ---
 
-वापस: [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy.md) · संबंधित: [17. फ़्रंटएंड](17-tdd-frontend-web.md) · [18. API और network टेस्ट](18-tdd-api-network.md) · [README](README.md)
+वापस: [14. बड़े प्रोजेक्ट की रणनीति](14-large-project-strategy-hi.md) · संबंधित: [17. फ़्रंटएंड](17-tdd-frontend-web-hi.md) · [18. API और network टेस्ट](18-tdd-api-network-hi.md) · [README](README-hi.md)

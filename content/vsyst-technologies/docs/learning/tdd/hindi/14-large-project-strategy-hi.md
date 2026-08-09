@@ -113,7 +113,7 @@ const user = aUser({ plan: "pro" })
 1. **Builder की defaults मान्य होनी चाहिए।** जो टेस्ट किसी field की परवाह नहीं करता, उसे मुफ़्त में चलता हुआ मान मिल जाता है।
 2. **टेस्ट सिर्फ़ वे fields बताएँ जिन पर वे निर्भर हैं।** अगर कोई टेस्ट `verified: true` सेट करता है और assertion का verification से कोई लेना-देना नहीं, तो वह लाइन हटा दीजिए — यह शोर है जो असली input को छिपाता है।
 3. **कोई ज़रूरी field जोड़िए → एक फ़ाइल बदलिए।** निवेश का पूरा रिटर्न यही है।
-4. साथ में यह भी दीजिए: एक `fixedClock()`, एक `InMemoryEventBus`, seed किए हुए ID generators, और [18. API और network टेस्ट](18-tdd-api-network.md) वाले साझा MSW handlers।
+4. साथ में यह भी दीजिए: एक `fixedClock()`, एक `InMemoryEventBus`, seed किए हुए ID generators, और [18. API और network टेस्ट](18-tdd-api-network-hi.md) वाले साझा MSW handlers।
 
 ---
 
@@ -123,7 +123,7 @@ const user = aUser({ plan: "pro" })
 
 | कारण                          | लक्षण                                            | इलाज                                                                                     |
 | ----------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| **टेस्टों के बीच साझा state** | अकेले पास, suite में फेल; क्रम पर निर्भर         | हर worker के लिए एक DB, टेस्टों के बीच truncate। देखिए [16](16-tdd-mongodb-mongoose.md)। |
+| **टेस्टों के बीच साझा state** | अकेले पास, suite में फेल; क्रम पर निर्भर         | हर worker के लिए एक DB, टेस्टों के बीच truncate। देखिए [16](16-tdd-mongodb-mongoose-hi.md)। |
 | **असली समय**                  | आधी रात, महीने के अंत, या CI के timezone में फेल | घड़ी inject कीजिए। Domain कोड में `new Date()` कभी मत बुलाइए।                            |
 | **असली network**              | दफ़्तर का wifi हिचकोला ले तो फेल                 | `onUnhandledRequest: 'error'` के साथ MSW। असली network सिर्फ़ T5 में।                    |
 | **sleep करके इंतज़ार**        | Local पर पास, व्यस्त CI मशीन पर फेल              | किसी शर्त पर `waitFor` / `findBy`। कभी `setTimeout(500)` नहीं।                           |
@@ -144,7 +144,7 @@ main में merge      → ऊपर वाला + staging पर T4 smoke  
 रात में             → T5 canaries, फेरबदल क्रम, पूरा E2E       बिना समय-सीमा, gating नहीं
 ```
 
-दो चीज़ों पर समझौता नहीं, दोनों [11, चरण 6](11-tutorial-first-feature.md) से:
+दो चीज़ों पर समझौता नहीं, दोनों [11, चरण 6](11-tutorial-first-feature-hi.md) से:
 
 - **जल्दी फेल हो।** T0, T1 का द्वार है; T1, T2 का। किसी domain unit test के लाल होने का पता लगाने के लिए आठ मिनट E2E पर मत लगाइए।
 - **Gating suite में auto-retry नहीं।** ऊपर देखिए।
@@ -163,13 +163,13 @@ Shard परत के हिसाब से कीजिए, फ़ाइल�
 2. API के T2 टेस्ट assert करें कि असली responses उस schema से **parse** होते हैं।
 3. हर client के T3 टेस्ट अपने MSW handlers उसी schema **से** बनाएँ।
 
-अब कोई नाम बदले तो API टेस्ट _और_ हर client टेस्ट एक साथ, commit के समय ही फेल हो जाएँगे। ब्योरा और कोड [18. API और network टेस्ट](18-tdd-api-network.md) में।
+अब कोई नाम बदले तो API टेस्ट _और_ हर client टेस्ट एक साथ, commit के समय ही फेल हो जाएँगे। ब्योरा और कोड [18. API और network टेस्ट](18-tdd-api-network-hi.md) में।
 
 ---
 
 ## बड़े मौजूदा codebase पर शुरुआत
 
-आप retrofit नहीं करते। [13, चरण 4](13-adoption-phases.md) ज्यों का त्यों लागू होता है, बस बड़े प्रोजेक्ट के लिए दो चीज़ें और:
+आप retrofit नहीं करते। [13, चरण 4](13-adoption-phases-hi.md) ज्यों का त्यों लागू होता है, बस बड़े प्रोजेक्ट के लिए दो चीज़ें और:
 
 - **टेस्ट लिखने से पहले परतें तय कीजिए।** वरना सब कुछ T2 या T4 में जा गिरेगा, जहाँ यह धीमा है, और साल भर में suite बचाने लायक़ नहीं रहेगी।
 - **`domain` को धीरे-धीरे निकालिए।** जब भी आप किसी नियम का test-drive करें, उसे handler या component से निकालकर शुद्ध package में ले जाइए। छह महीने बाद क़ीमती logic एक ऐसे package में होगा जो 4 सेकंड में चलता है।
@@ -194,4 +194,4 @@ _उसमें कुछ डालने लायक़ होने से �
 
 ---
 
-आगे: [15. Node backend →](15-tdd-node-backend.md) · संबंधित: [13. अपनाने के चरण](13-adoption-phases.md) · [3. अच्छे टेस्ट लिखना](03-writing-good-tests.md)
+आगे: [15. Node backend →](15-tdd-node-backend-hi.md) · संबंधित: [13. अपनाने के चरण](13-adoption-phases-hi.md) · [3. अच्छे टेस्ट लिखना](03-writing-good-tests-hi.md)

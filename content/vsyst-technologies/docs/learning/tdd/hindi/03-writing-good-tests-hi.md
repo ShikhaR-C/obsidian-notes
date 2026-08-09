@@ -134,4 +134,4 @@ Mocks असली सीमाओं पर काम के हैं: network
 
 ---
 
-आगे: [एक पूरा उदाहरण →](04-worked-example.md)
+आगे: [एक पूरा उदाहरण →](04-worked-example-hi.md)
