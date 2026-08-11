@@ -1,6 +1,8 @@
 # Phase 2 — Image Quality: FLUX, img2img, LoRAs, Upscaling
 
 > Level: Easy → Intermediate | Time: ~1 hr | Outcome: you can pick the right model for a job, refine an existing image instead of re-rolling the dice, and produce a clean 4096² print-quality file.
+>
+> **Tooling:** everything in this phase is now drivable from Comfy Studio (`comfy-studio/`, http://127.0.0.1:8787) — engine picker (Z-Image / FLUX), Refine (img2img), Enlarge & sharpen (upscale → tiled re-diffuse, with the `-gan` reference save), LoRA section, and the denoise ladder as a one-click experiment. Added 2026-08-11.
 
 ---
 
