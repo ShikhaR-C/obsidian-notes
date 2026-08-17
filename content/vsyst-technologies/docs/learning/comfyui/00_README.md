@@ -53,7 +53,8 @@ Read the phases in order. Each one ends with an exercise that produces a file yo
 | LoRA                                                     | Effect                                                       |
 | -------------------------------------------------------- | ------------------------------------------------------------ |
 | `wan2.2_i2v_lightx2v_4steps_lora_v1_{high,low}_noise`    | WAN 2.2 I2V 14B: **20 steps → 4 steps**                      |
-| `Qwen-Image-Edit-Lightning-4steps-V1.0-bf16`             | Qwen edit: **20 steps → 4 steps**                            |
+| `Qwen-Image-Edit-Lightning-4steps-V1.0-bf16`             | Qwen edit (v1): **20 steps → 4 steps**                       |
+| `Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16` _(added 2026-08-16)_ | Qwen edit **2509**: **20 steps at cfg 4 → 4 steps at cfg 1**. Pair it with the 2509 model, never the v1 one |
 | `Wan21_CausVid_14B_T2V_lora_rank32` _(added 2026-07-15)_ | VACE 14B: **20 steps → 4** — at strength **0.30**, never 1.0 |
 
 ### Just added (2026-07-15, ~6.9 GB)
@@ -240,5 +241,6 @@ Two exits, detailed in [[09-google-flow-parity]]: **(a) GGUF variants** via the 
 | 7     | [[07-capstones]] — three end-to-end projects                                        | Capstone            |
 | —     | [[08-reference]] — model↔encoder↔VAE matrix, troubleshooting, downloads             | Reference           |
 | —     | [[09-google-flow-parity]] — Flow/Veo 3.1 capability map → local stack + gap plan    | Reference           |
+| —     | [[10-comfy-studio-phase-3-plan]] — bringing ControlNet + Qwen-Edit into the website | Build plan          |
 
 Start with [[01-phase-1-foundations]].

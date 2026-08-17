@@ -1,6 +1,8 @@
 # Phase 3 — Directed Generation: ControlNet and Instruction Editing
 
 > Level: Intermediate | Time: ~1.5 hr | Outcome: you can dictate the _structure_ of an image (not just describe it), and edit an existing image with a sentence. This is where generation stops being a lottery.
+>
+> **Tooling (planned):** this phase is being built into Comfy Studio — **Edges / Depth / Pose** as three separate options, plus **instruction editing** with Qwen. The build plan is [[10-comfy-studio-phase-3-plan]] (2026-08-16); it also carries three corrections to §2 and §3 below, where the shipped blueprint has moved on from this text.
 
 ---
 

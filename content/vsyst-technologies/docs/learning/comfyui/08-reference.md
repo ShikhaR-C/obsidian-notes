@@ -81,6 +81,13 @@ curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/diffusion_models/qwen_image_ed
   https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/main/split_files/diffusion_models/qwen_image_edit_2509_fp8_e4m3fn.safetensors
 ```
 
+**Its speed LoRA — added 2026-08-16** (0.85 GB → `loras/`). Without this the 2509 blueprint takes the slow branch: **20 steps at cfg 4**, an estimated 8–12 min per edit here. With it: 4 steps at cfg 1. ⚠ **The file is not at the repo root** — unlike the v1 LoRA it lives in a `Qwen-Image-Edit-2509/` subfolder, so a curl copied from the v1 line 404s. Write it flat into `loras/` so the dropdown shows the name the blueprint expects. An 8-step variant sits beside it if 4 proves too coarse.
+
+```bash
+curl -fL -o ~/Documents/AI/ComfyUI/ComfyUI/models/loras/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors \
+  "https://huggingface.co/lightx2v/Qwen-Image-Lightning/resolve/main/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors"
+```
+
 **WAN 2.2 S2V 14B — the speaking presenter** (16.4 GB → `diffusion_models/`, plus a 0.63 GB audio encoder → `audio_encoders/`, a folder you'll create). Still image + voice track → lip-synced talking video. Native template since core 0.3.53; reuses umt5 and `wan_2.1_vae`. No published Apple-Silicon benchmark exists — your first run writes the first number.
 
 ```bash
