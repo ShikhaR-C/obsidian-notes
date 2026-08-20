@@ -32,38 +32,38 @@ Version ___ · Signed ______ · Review date ______ (quarterly) · CEO ______ · 
 
 **A. Division of labour** (one owner per row)
 
-| Function                                                                      | Owner              | Backup                    | Edges / notes                                           |
-| ----------------------------------------------------------------------------- | ------------------ | ------------------------- | ------------------------------------------------------- | ---------------------- |
-| Vision, strategy, product direction, roadmap                                  | CEO                | COO                       | COO consulted on capacity and sequencing                |
-| Engineering, architecture, code, releases (the code)                          | CEO/CTO            | Developer                 | COO owns the release _process_ ([[T26-release-checklist | T26]]), not the code   |
-| Operating cadence — meetings, scorecard, decision log                         | COO                | CEO                       |                                                         |
-| Finance operations — bank, payments, collections, close inputs, cash forecast | COO                | CEO                       | Books and audit with the CA — [[finance/00_README       | Finance for Founders]] |
-| Legal, governance, compliance calendar (with CA/CS)                           | COO                | CEO                       |                                                         |
-| People — hiring process, contracts, onboarding, policies, payroll             | COO                | CEO                       | Final hire/fire: section B                              |
-| Customer support and dealer onboarding                                        | COO                | Support/Ops               |                                                         |
-| Revenue operations — pipeline hygiene, collections, pricing ops               | COO                | Domain director           | Field selling and dealer relationships: Domain director |
-| Partnerships in discussion (IOCL, bank/gateway)                               | CEO (relationship) | COO (tracker, next steps) |                                                         |
-| Vendors, tools, IT, security, access                                          | COO                | Developer                 |                                                         |
-| Founder-only relationships (investors, key OMC contacts)                      | CEO                | —                         |                                                         |
+| Function                                                                      | Owner              | Backup                    | Edges / notes                                                                 |
+| ----------------------------------------------------------------------------- | ------------------ | ------------------------- | ----------------------------------------------------------------------------- |
+| Vision, strategy, product direction, roadmap                                  | CEO                | COO                       | COO consulted on capacity and sequencing                                      |
+| Engineering, architecture, code, releases (the code)                          | CEO/CTO            | Developer                 | COO owns the release _process_ ([[T26-release-checklist\|T26]]), not the code |
+| Operating cadence — meetings, scorecard, decision log                         | COO                | CEO                       |                                                                               |
+| Finance operations — bank, payments, collections, close inputs, cash forecast | COO                | CEO                       | Books and audit with the CA — [[finance/00_README\|Finance for Founders]]     |
+| Legal, governance, compliance calendar (with CA/CS)                           | COO                | CEO                       |                                                                               |
+| People — hiring process, contracts, onboarding, policies, payroll             | COO                | CEO                       | Final hire/fire: section B                                                    |
+| Customer support and dealer onboarding                                        | COO                | Support/Ops               |                                                                               |
+| Revenue operations — pipeline hygiene, collections, pricing ops               | COO                | Domain director           | Field selling and dealer relationships: Domain director                       |
+| Partnerships in discussion (IOCL, bank/gateway)                               | CEO (relationship) | COO (tracker, next steps) |                                                                               |
+| Vendors, tools, IT, security, access                                          | COO                | Developer                 |                                                                               |
+| Founder-only relationships (investors, key OMC contacts)                      | CEO                | —                         |                                                                               |
 
 **B. Decision rights** (decide alone · consult · joint · escalate)
 
-| Decision                                        | CEO                                 | COO                                            | Rule / where                                          |
-| ----------------------------------------------- | ----------------------------------- | ---------------------------------------------- | ----------------------------------------------------- | ----- |
-| Product roadmap and priorities                  | decide alone                        | consulted                                      |                                                       |
-| Architecture, tech stack                        | decide alone                        | informed                                       |                                                       |
-| Hire / fire an employee                         | joint                               | joint                                          | COO recommends via [[T10-hiring-scorecard-and-process | T10]] |
-| Engage / end a contractor within threshold      | informed                            | decide alone                                   | threshold in T22                                      |
-| Spend                                           | per T22                             | per T22                                        | two signatures above the T22 line                     |
-| Pricing, discounts, refunds                     | decide alone (until pricing is set) | consulted                                      | then T22                                              |
-| Promises to dealers (SLA, features, dates)      | consulted                           | decide alone inside [[T25-customer-support-sop | T25]] SLA; escalate outside it                        |       |
-| Policies (POSH, leave, expenses, IT)            | consulted                           | decide alone                                   | legal read by CA/CS                                   |
-| Public statements, dealer broadcasts            | joint                               | joint                                          |                                                       |
-| Contracts, MoUs, NDAs that bind the company     | joint                               | joint                                          |                                                       |
-| Vendor and tool selection within budget         | informed                            | decide alone                                   | register in [[T14-vendor-and-tool-register            | T14]] |
-| Cash red line, 13-week forecast                 | joint                               | joint                                          | [[T20-budget-vs-actual-and-cash-forecast              | T20]] |
-| Any one-way door                                | escalate                            | escalate                                       | board of three; log in T09                            |
-| CEO's answer to "decisions I will stop making": |                                     |                                                | ********\_\_\_\_********                              |
+| Decision                                        | CEO                                 | COO                                                                            | Rule / where                                                 |
+| ----------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Product roadmap and priorities                  | decide alone                        | consulted                                                                      |                                                              |
+| Architecture, tech stack                        | decide alone                        | informed                                                                       |                                                              |
+| Hire / fire an employee                         | joint                               | joint                                                                          | COO recommends via [[T10-hiring-scorecard-and-process\|T10]] |
+| Engage / end a contractor within threshold      | informed                            | decide alone                                                                   | threshold in T22                                             |
+| Spend                                           | per T22                             | per T22                                                                        | two signatures above the T22 line                            |
+| Pricing, discounts, refunds                     | decide alone (until pricing is set) | consulted                                                                      | then T22                                                     |
+| Promises to dealers (SLA, features, dates)      | consulted                           | decide alone inside [[T25-customer-support-sop\|T25]] SLA; escalate outside it |                                                              |
+| Policies (POSH, leave, expenses, IT)            | consulted                           | decide alone                                                                   | legal read by CA/CS                                          |
+| Public statements, dealer broadcasts            | joint                               | joint                                                                          |                                                              |
+| Contracts, MoUs, NDAs that bind the company     | joint                               | joint                                                                          |                                                              |
+| Vendor and tool selection within budget         | informed                            | decide alone                                                                   | register in [[T14-vendor-and-tool-register\|T14]]            |
+| Cash red line, 13-week forecast                 | joint                               | joint                                                                          | [[T20-budget-vs-actual-and-cash-forecast\|T20]]              |
+| Any one-way door                                | escalate                            | escalate                                                                       | board of three; log in T09                                   |
+| CEO's answer to "decisions I will stop making": |                                     |                                                                                | **\_\_\_\_**                                                 |
 
 **C. Money.** Thresholds, approvers and the two-signature rule live in T22 and the `DoA Matrix` tab. Record here only: "The COO may commit recurring spend up to ₹**\_\_** /month per item and ₹**\_\_** one-off without the CEO; above that, T22 applies." (Illustrative: ₹10,000/month, ₹25,000 one-off. A generic delegation-of-authority guide puts a bootstrapped startup's first line near \$5,000 — [Tallyfy](https://tallyfy.com/delegation-of-authority-matrix-template/) — set yours from the runway, not the guide.)
 

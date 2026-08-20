@@ -56,13 +56,13 @@ Columns for every group: **Item · Have? · Where stored · Owner · Renewal / n
 
 **3. Bank and money** ([IndiaFilings — RBI current-account rules](https://www.indiafilings.com/learn/rbi-guidelines-on-opening-of-current-account-2021))
 
-| Item                                                                                                                                                             | Have?              | Where stored | Owner | Renewal / next action |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------ | ----- | --------------------- | --- |
-| Current account: KYC pack (COI, MOA/AOA, board resolution, PAN, director KYC, office proof); maker–checker enabled                                               |                    |              |       | —                     |
-| Tax-reserve account (sweep 20–25% of taxable receipts — [[finance/07-phase-7-bootstrapping-runway-burn                                                           | Finance Phase 7]]) |              |       |                       | —   |
-| Payment-gateway KYC pack: COI, PAN, GSTIN, cancelled cheque, director KYC, live website with T&C / privacy / refund / contact pages (Easebuzz–UBI in discussion) |                    |              |       | —                     |
-| ERPNext as system of record; CA access; Tally at the CA if used                                                                                                  |                    |              |       | —                     |
-| Insurance policies (group health, D&O, PI/E&O, cyber, employee compensation) — numbers, renewal dates, broker; indicative costs **VERIFY LIVE** with the broker  |                    |              |       | renewal dates → T16   |
+| Item                                                                                                                                                             | Have? | Where stored | Owner | Renewal / next action |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------------ | ----- | --------------------- |
+| Current account: KYC pack (COI, MOA/AOA, board resolution, PAN, director KYC, office proof); maker–checker enabled                                               |       |              |       | —                     |
+| Tax-reserve account (sweep 20–25% of taxable receipts — [[finance/07-phase-7-bootstrapping-runway-burn\|Finance Phase 7]])                                       |       |              |       | —                     |
+| Payment-gateway KYC pack: COI, PAN, GSTIN, cancelled cheque, director KYC, live website with T&C / privacy / refund / contact pages (Easebuzz–UBI in discussion) |       |              |       | —                     |
+| ERPNext as system of record; CA access; Tally at the CA if used                                                                                                  |       |              |       | —                     |
+| Insurance policies (group health, D&O, PI/E&O, cyber, employee compensation) — numbers, renewal dates, broker; indicative costs **VERIFY LIVE** with the broker  |       |              |       | renewal dates → T16   |
 
 **4. IP, contracts, brand, product accounts**
 

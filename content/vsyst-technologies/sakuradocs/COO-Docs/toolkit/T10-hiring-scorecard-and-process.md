@@ -46,16 +46,16 @@ Competencies (5–8, incl. values — each gets a 1–4 score per interviewer):
 
 **(b) The process stages** — owners and SLAs (illustrative; the full table is lesson 09 §3):
 
-| Stage                                 | Owner                | SLA                          | Rule                                                                       |
-| ------------------------------------- | -------------------- | ---------------------------- | -------------------------------------------------------------------------- | ----- |
-| Scorecard                             | Hiring manager + COO | Before sourcing              | No scorecard, no posting                                                   |
-| Source → Screen (20-min call)         | COO / hiring manager | Screen within 3 working days | Score before next stage                                                    |
-| Interview 1 (structured, 45–60 min)   | 2 interviewers       | Within a week of screen      | Independent written scores                                                 |
-| Work sample (paid, 2–4 h, real task)  | Hiring manager       | Reviewed within 2 days       | The most predictive stage                                                  |
-| Interview 2 (values + remaining gaps) | The other director   | Within 3 days                | Same question bank                                                         |
-| References (two, called)              | Hiring manager       | Before offer                 | One un-volunteered name                                                    |
-| Decision meeting                      | CEO + COO            | 30 min, same day             | Scores in writing before discussion                                        |
-| Offer (verbal → written)              | COO                  | Within 2 days                | Probation stated up front; then [[T11-offer-letter-and-contract-checklists | T11]] |
+| Stage                                 | Owner                | SLA                          | Rule                                                                              |
+| ------------------------------------- | -------------------- | ---------------------------- | --------------------------------------------------------------------------------- |
+| Scorecard                             | Hiring manager + COO | Before sourcing              | No scorecard, no posting                                                          |
+| Source → Screen (20-min call)         | COO / hiring manager | Screen within 3 working days | Score before next stage                                                           |
+| Interview 1 (structured, 45–60 min)   | 2 interviewers       | Within a week of screen      | Independent written scores                                                        |
+| Work sample (paid, 2–4 h, real task)  | Hiring manager       | Reviewed within 2 days       | The most predictive stage                                                         |
+| Interview 2 (values + remaining gaps) | The other director   | Within 3 days                | Same question bank                                                                |
+| References (two, called)              | Hiring manager       | Before offer                 | One un-volunteered name                                                           |
+| Decision meeting                      | CEO + COO            | 30 min, same day             | Scores in writing before discussion                                               |
+| Offer (verbal → written)              | COO                  | Within 2 days                | Probation stated up front; then [[T11-offer-letter-and-contract-checklists\|T11]] |
 
 **(c) Question bank** — same questions to everyone; probe with "what exactly did _you_ do?" and "how did it turn out, in numbers?" (adapted from the _Who_ interviews):
 

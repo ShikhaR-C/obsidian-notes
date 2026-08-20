@@ -8,14 +8,14 @@ Two disciplines share the company's money, and this course refuses to duplicate 
 
 The split, written down once so neither seat drops a ball assuming the other has it:
 
-| Money question              | Finance course (founder-CFO + CA)              | This lesson (COO)                                               |
-| --------------------------- | ---------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Are the books right?        | Phases 1–4: entries, ledgers, statements       | Supplies clean inputs, on time (§9)                             |
-| Are we legal?               | [[finance/05-phase-5-indian-accounting-system  | Phase 5]]: every filing and deadline                            | The operational hooks that make filings painless (§7); the calendar itself is lesson 13 |
-| Will we survive?            | [[finance/07-phase-7-bootstrapping-runway-burn | Phase 7]]: burn, runway, the red line                           | The 13-week forecast, jointly owned (§8); collections that extend runway (§6)           |
-| Where did founder money go? | Phase 6: loans vs capital, documented          | Hygiene and the DPT-3 schedule (§9; lesson 05)                  |
-| What should DZZLO cost?     | Phase 9: model and unit economics              | The invoicing and billing rails the price will run on (§6, §11) |
-| Who may spend what?         | —                                              | The DoA and approvals (§3) — this is purely yours               |
+| Money question              | Finance course (founder-CFO + CA)                                                     | This lesson (COO)                                                                       |
+| --------------------------- | ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| Are the books right?        | Phases 1–4: entries, ledgers, statements                                              | Supplies clean inputs, on time (§9)                                                     |
+| Are we legal?               | [[finance/05-phase-5-indian-accounting-system\|Phase 5]]: every filing and deadline   | The operational hooks that make filings painless (§7); the calendar itself is lesson 13 |
+| Will we survive?            | [[finance/07-phase-7-bootstrapping-runway-burn\|Phase 7]]: burn, runway, the red line | The 13-week forecast, jointly owned (§8); collections that extend runway (§6)           |
+| Where did founder money go? | Phase 6: loans vs capital, documented                                                 | Hygiene and the DPT-3 schedule (§9; lesson 05)                                          |
+| What should DZZLO cost?     | Phase 9: model and unit economics                                                     | The invoicing and billing rails the price will run on (§6, §11)                         |
+| Who may spend what?         | —                                                                                     | The DoA and approvals (§3) — this is purely yours                                       |
 
 Everything below is a mechanism in the course's strict sense — an owner, a cadence, a number, a document. The [[startup-operations-plan|Startup Operations Plan]]'s money habits (the weekly cash check, advances, the tax-reserve sweep) are the behaviours; this lesson is the plumbing that makes them automatic.
 
@@ -33,15 +33,15 @@ Everything below is a mechanism in the course's strict sense — an owner, a cad
 
 Lesson 03 gave decisions four levels; money is where the levels get rupee values. The **delegation-of-authority (DoA) matrix** lists decision type × threshold × who decides × who is informed, and the classic template pairs each spend band with an approver and a second approver ([Tallyfy — DoA matrix](https://tallyfy.com/delegation-of-authority-matrix-template/)); keep the single-signature ceiling low while the company is bootstrapped. A first pass for VSYST — **illustrative; set the real lines with the CEO in exercise 13.1** and keep them in [[T22-delegation-of-authority-matrix|T22]] and the `DoA Matrix` tab of [the workbook](toolkit/vsyst-coo-workbook.xlsx):
 
-| Decision                                | Threshold (illustrative)                  | Decides                                    | Informed / second signature                  |
-| --------------------------------------- | ----------------------------------------- | ------------------------------------------ | -------------------------------------------- | ------ |
-| Routine spend within budget             | up to ₹10,000                             | Function owner                             | COO, in the monthly report                   |
-| Spend within budget                     | ₹10,000–₹50,000                           | COO alone                                  | CEO, in the weekly meeting                   |
-| Spend above band, or unbudgeted         | ₹50,000–₹2,00,000                         | CEO + COO jointly                          | Decision log ([[T09-decision-log-and-adr     | T09]]) |
-| Above the two-signature line            | > ₹2,00,000, or any multi-year commitment | Board (all three directors), minuted       | CS files the resolution if required          |
-| New recurring subscription (any amount) | —                                         | COO, with a [[T14-vendor-and-tool-register | T14]] register entry first                   | CEO    |
-| Refunds / credit notes                  | up to ₹10,000 COO; above, joint           | —                                          | Logged with reason                           |
-| Contracts binding the company           | Any                                       | Per lesson 03 §5.2 levels                  | Always through the checklist in lesson 05 §6 |
+| Decision                                | Threshold (illustrative)                  | Decides                                                                | Informed / second signature                      |
+| --------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------ |
+| Routine spend within budget             | up to ₹10,000                             | Function owner                                                         | COO, in the monthly report                       |
+| Spend within budget                     | ₹10,000–₹50,000                           | COO alone                                                              | CEO, in the weekly meeting                       |
+| Spend above band, or unbudgeted         | ₹50,000–₹2,00,000                         | CEO + COO jointly                                                      | Decision log ([[T09-decision-log-and-adr\|T09]]) |
+| Above the two-signature line            | > ₹2,00,000, or any multi-year commitment | Board (all three directors), minuted                                   | CS files the resolution if required              |
+| New recurring subscription (any amount) | —                                         | COO, with a [[T14-vendor-and-tool-register\|T14]] register entry first | CEO                                              |
+| Refunds / credit notes                  | up to ₹10,000 COO; above, joint           | —                                                                      | Logged with reason                               |
+| Contracts binding the company           | Any                                       | Per lesson 03 §5.2 levels                                              | Always through the checklist in lesson 05 §6     |
 
 Three rules make the matrix real. **The bank enforces it** — §2's maker-checker limits mirror these lines, so the control is technical, not honour-based. **Emergencies are logged, not exempted** — an urgent payment outside the matrix gets made, then logged in T09 within 24 hours with the reason. **Review quarterly** — thresholds that were right at three people strangle a team of eight; the review date sits in the matrix itself.
 

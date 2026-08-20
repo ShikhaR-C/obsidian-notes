@@ -19,7 +19,7 @@ The **role charter** is one seat written down: mission, three to five measurable
 
 1. **Seats before people.** Write what the seat owns without a name attached; then write who holds it today — possibly "COO (also holds Finance and People)". Seeing one name in five boxes is the point of the exercise.
 2. **Draw the next size, not the size after next.** At three people, draw eight. Designing thirty while you are three produces empty boxes and imaginary problems.
-3. **One accountable owner per outcome.** Two names on a box means each waits for the other; shared ownership is no ownership ([[index|the landing page]]'s law).
+3. **One accountable owner per outcome.** Two names on a box means each waits for the other; shared ownership is no ownership ([[COO-Docs/index|the landing page]]'s law).
 4. **Span three to five reports, and first-time managers at the low end** — the limit is not theory, it is how many real weekly 1:1s a person can hold ([[T04-one-on-one-template|T04]]).
 5. **Split a function only when one person is carrying two jobs that each need full attention.** A premature split manufactures handoffs; the honest trigger is the capacity-red row above.
 6. **A charter's KPIs must be existing scorecard rows**, and its decision rights must be existing lines in [[T22-delegation-of-authority-matrix|T22]]. If either doesn't exist yet, create it — a charter is not the place to invent private metrics or private authority.
