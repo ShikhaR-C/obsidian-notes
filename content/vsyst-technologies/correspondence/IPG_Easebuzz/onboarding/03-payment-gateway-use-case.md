@@ -2,7 +2,7 @@
 
 ## In one line
 
-A transport company pays a petrol pump dealer's invoice, from inside the DZZLO app, and the payment closes that invoice in the common ledger the moment it is confirmed avoiding any reconciliations.
+A transport company pays a petrol pump dealer's invoice, from inside the DZZLO app, and the payment closes that invoice in the common ledger the moment it is confirmed, leaving nothing to reconcile.
 
 ## Who pays whom, for what
 
@@ -30,7 +30,7 @@ Expectations drawn from observed throughput at the outlets on the platform — p
 
 ## What the gateway replaces
 
-Today the customer leaves the app, opens their own net banking, sets up the dealer as a beneficiary, types the account number and the amount by hand, and transfers. The dealer's staff read the bank statement the later on and mark the invoice paid.
+Today the customer leaves the app, opens their own net banking, sets up the dealer as a beneficiary, types the account number and the amount by hand, and transfers. The dealer's staff read the bank statement later on and mark the invoice paid.
 
 With the gateway, the invoice is pre-selected and the amount pre-filled, confirmation is instant, the customer's credit limit frees at once — at any hour — and reconciliation is not reduced but removed.
 

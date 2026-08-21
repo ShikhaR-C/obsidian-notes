@@ -35,4 +35,4 @@ The expected figures are assumptions drawn from observed throughput at the outle
 
 ## Why a payment gateway
 
-Every other step of the sale — order, delivery, invoice, ledger — already runs inside DZZLO and optimised to be errorless and effortless. Payment is the one step still outside it. See _Use Case of the Payment Gateway_.
+Every other step of the sale — order, delivery, invoice, ledger — already runs inside DZZLO and is built to be error-free and effortless. Payment is the one step still outside it. See _Use Case of the Payment Gateway_.

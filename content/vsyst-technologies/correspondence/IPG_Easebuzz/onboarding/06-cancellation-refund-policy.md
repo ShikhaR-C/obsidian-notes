@@ -12,7 +12,7 @@ Payments on DZZLO settle invoices raised by a dealer for fuel dispensed at the d
 
 ## 3. Cancelling an order
 
-An order that is still pending — fuel not yet dispensed — can be withdrawn by the customer at no charge. Once fuel has been dispensed and the invoice raised, the sale is complete and cannot be cancelled. Any correction to a raised invoice is made by the dealer through a credit note in the platform or requested by raising issue to the platform.
+An order that is still pending — fuel not yet dispensed — can be withdrawn by the customer at no charge. Once fuel has been dispensed and the invoice raised, the sale is complete and cannot be cancelled. Any correction to a raised invoice is made by the dealer through a credit note in the platform, or by raising an issue with us through Help → Contact Us.
 
 ## 4. Refunds of payments made to a dealer
 
