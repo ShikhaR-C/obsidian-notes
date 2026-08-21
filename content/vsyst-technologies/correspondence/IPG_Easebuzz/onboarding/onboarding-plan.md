@@ -12,17 +12,17 @@ Prior fact base (verified with the user, Jul 2026): `../20260708/IPG_Proposal_UB
 
 ## Easebuzz's wording → deliverable
 
-| Easebuzz asked for                                         | File                                     | Notes                                                                                                                                                                         |
-| ---------------------------------------------------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| About us · Contact us                                      | `01-about-us.md`                         | Two page-ready sections; carries legal name and address **as per GST**                                                                                                        |
-| Business model                                             | `02-business-model.md`                   |                                                                                                                                                                               |
-| Use case of payment gateway                                | `03-payment-gateway-use-case.md`         |                                                                                                                                                                               |
-| Payment flow                                               | `04-payment-flow.md`                     | Current flow in `dzzlo_oms_app` (from code), then expected flow with Easebuzz                                                                                                 |
-| Highlight mandatory policies                               | `05-mandatory-policies.md`               | One table in Easebuzz's A–F order: policy → where published → status                                                                                                          |
-| A) Cancellation and refund policy                          | `06-cancellation-refund-policy.md`       | Page-ready                                                                                                                                                                    |
-| B) Terms and conditions                                    | `07-terms-and-conditions.md`             | Page-ready                                                                                                                                                                    |
-| E) Governing law and dispute resolution                    | `08-governing-law-dispute-resolution.md` | Follows Easebuzz's example: _"These terms shall be governed by the laws of India. Any disputes will be subject to the jurisdiction of courts located in India…"_; reused in A, B |
-| F) Business name and address as per GST                    | footer line on `01`, `06`, `07`          | Same text everywhere: "VSYST Technologies Private Limited, ⟨address as on GST certificate⟩, GSTIN 22AAICV3528R1ZT"                                                              |
+| Easebuzz asked for                      | File                                     | Notes                                                                                                                                                                            |
+| --------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| About us · Contact us                   | `01-about-us.md`                         | Two page-ready sections; carries legal name and address **as per GST**                                                                                                           |
+| Business model                          | `02-business-model.md`                   |                                                                                                                                                                                  |
+| Use case of payment gateway             | `03-payment-gateway-use-case.md`         |                                                                                                                                                                                  |
+| Payment flow                            | `04-payment-flow.md`                     | Current flow in `dzzlo_oms_app` (from code), then expected flow with Easebuzz                                                                                                    |
+| Highlight mandatory policies            | `05-mandatory-policies.md`               | One table in Easebuzz's A–F order: policy → where published → status                                                                                                             |
+| A) Cancellation and refund policy       | `06-cancellation-refund-policy.md`       | Page-ready                                                                                                                                                                       |
+| B) Terms and conditions                 | `07-terms-and-conditions.md`             | Page-ready                                                                                                                                                                       |
+| E) Governing law and dispute resolution | `08-governing-law-dispute-resolution.md` | Follows Easebuzz's example: _"These terms shall be governed by the laws of India. Any disputes will be subject to the jurisdiction of courts located in India…"_; reused in A, B |
+| F) Business name and address as per GST | footer line on `01`, `06`, `07`          | Same text everywhere: "VSYST Technologies Private Limited, ⟨address as on GST certificate⟩, GSTIN 22AAICV3528R1ZT"                                                               |
 
 **Privacy policy** (not on Easebuzz's list; user asked): the one live at https://dzzlo-oms.web.app is a Feb-2021 generator template in Paresh Chawra's name (pre-incorporation), Gmail contact, says data is "not collected by me", and does not mention payments. It will need re-issuing in the company's name with a payments clause before go-live — **separate track, not part of this set**.
 
@@ -37,9 +37,9 @@ Each step is done, then paused for manual checking before the next begins.
 - [x] Step 4 — Payment Flow (`04`) _(drafted 2026-08-22 from `api_v3/services/voc_msts.js` + NewPayment / NewPayAck / NewVoucher / Payments screens; awaiting manual check — placeholder: auto-clear window for abandoned gateway payments)_
 - [x] Step 5 — Mandatory Policies highlight (`05`) _(drafted 2026-08-22; awaiting manual check — placeholders: site and page URLs, in-app placement, status column to be finalised at Step 9)_
 - [x] Step 6 — Cancellation & Refund Policy (`06`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, refund initiation and bank-credit windows, subscription refund stance, grievance officer, courts)_
-- [ ] Step 7 — Terms & Conditions (`07`)
+- [x] Step 7 — Terms & Conditions (`07`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, liability cap, grievance officer and SLAs, courts)_
 - [ ] Step 8 — Governing Law & Dispute Resolution (`08`)
-- [ ] Step 9 — Read-through; export to `.docx`/PDF; publish policy pages; send to Easebuzz
+- [ ] Step 9 — Read-through; export to `.docx`/PDF; create policy pages;
 
 ## Source map
 
