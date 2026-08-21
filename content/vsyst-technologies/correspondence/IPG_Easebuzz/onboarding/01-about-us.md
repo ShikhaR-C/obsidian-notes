@@ -8,6 +8,10 @@ We build **DZZLO OMS**, an order and credit management platform for petrol pump 
 
 DZZLO is in a controlled rollout: access is by referral only, and the platform is free to use while we build adoption. It is currently used at ⟨2⟩ dealer outlets by ⟨130+⟩ users, recording ⟨130+⟩ transactions a day.
 
+## Our intent
+
+Our aim is to give petrol pump dealers and their customers one common, affordable ERP platform on which their daily transactions are easy, accurate and transparent. The ground for this is ready: India has some of the cheapest mobile data in the world, UPI has made digital payment universal, and the Government's financial-inclusion drive has put a bank account in nearly every hand. Those conditions let a platform like DZZLO bring modern digital operations to two large sectors — petroleum retail and road transport — that still run their day-to-day business largely on informal channels.
+
 ## Our story
 
 The company is promoted by a family with over 35 years of petroleum retail dealership experience. DZZLO was built in-house and proven first at the family-operated outlet before being offered to other dealers, so the product encodes how the fuel-credit business actually runs on the ground. The founders, Shikhar Chawra and Shikha Chawra, left corporate careers to build it on that experience.
