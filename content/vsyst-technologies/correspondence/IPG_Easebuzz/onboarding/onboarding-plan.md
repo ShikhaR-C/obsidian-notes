@@ -38,7 +38,7 @@ Each step is done, then paused for manual checking before the next begins.
 - [x] Step 5 — Mandatory Policies highlight (`05`) _(drafted 2026-08-22; awaiting manual check — placeholders: site and page URLs, in-app placement, status column to be finalised at Step 9)_
 - [x] Step 6 — Cancellation & Refund Policy (`06`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, refund initiation and bank-credit windows, subscription refund stance, grievance officer, courts)_
 - [x] Step 7 — Terms & Conditions (`07`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, liability cap, grievance officer and SLAs, courts)_
-- [ ] Step 8 — Governing Law & Dispute Resolution (`08`)
+- [x] Step 8 — Governing Law & Dispute Resolution (`08`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, courts, grievance officer and SLAs)_
 - [ ] Step 9 — Read-through; export to `.docx`/PDF; create policy pages;
 
 ## Source map
