@@ -36,7 +36,7 @@ Each step is done, then paused for manual checking before the next begins.
 - [x] Step 3 — Use Case of the Payment Gateway (`03`) _(drafted 2026-08-22; awaiting manual check — placeholder: web channel)_
 - [x] Step 4 — Payment Flow (`04`) _(drafted 2026-08-22 from `api_v3/services/voc_msts.js` + NewPayment / NewPayAck / NewVoucher / Payments screens; awaiting manual check — placeholder: auto-clear window for abandoned gateway payments)_
 - [x] Step 5 — Mandatory Policies highlight (`05`) _(drafted 2026-08-22; awaiting manual check — placeholders: site and page URLs, in-app placement, status column to be finalised at Step 9)_
-- [ ] Step 6 — Cancellation & Refund Policy (`06`)
+- [x] Step 6 — Cancellation & Refund Policy (`06`) _(drafted 2026-08-22; awaiting manual check — placeholders: date, refund initiation and bank-credit windows, subscription refund stance, grievance officer, courts)_
 - [ ] Step 7 — Terms & Conditions (`07`)
 - [ ] Step 8 — Governing Law & Dispute Resolution (`08`)
 - [ ] Step 9 — Read-through; export to `.docx`/PDF; publish policy pages; send to Easebuzz
