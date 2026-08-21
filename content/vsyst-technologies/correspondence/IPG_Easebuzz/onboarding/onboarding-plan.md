@@ -35,7 +35,7 @@ Each step is done, then paused for manual checking before the next begins.
 - [x] Step 2 — Business Model (`02`) _(drafted 2026-08-22; awaiting manual check — placeholders: traction figures, first-phase outlet count)_
 - [x] Step 3 — Use Case of the Payment Gateway (`03`) _(drafted 2026-08-22; awaiting manual check — placeholder: web channel)_
 - [x] Step 4 — Payment Flow (`04`) _(drafted 2026-08-22 from `api_v3/services/voc_msts.js` + NewPayment / NewPayAck / NewVoucher / Payments screens; awaiting manual check — placeholder: auto-clear window for abandoned gateway payments)_
-- [ ] Step 5 — Mandatory Policies highlight (`05`)
+- [x] Step 5 — Mandatory Policies highlight (`05`) _(drafted 2026-08-22; awaiting manual check — placeholders: site and page URLs, in-app placement, status column to be finalised at Step 9)_
 - [ ] Step 6 — Cancellation & Refund Policy (`06`)
 - [ ] Step 7 — Terms & Conditions (`07`)
 - [ ] Step 8 — Governing Law & Dispute Resolution (`08`)
@@ -115,10 +115,9 @@ Short; follows Easebuzz's example wording. _"These terms shall be governed by th
 
 ## Open questions for the user
 
-1. Where will the policy pages be published — dzzlo-oms.web.app or vsyst.in? (needed for the URLs in `05`)
-2. Address exactly as on the GST certificate (to publish verbatim).
-3. Traction figures as of Aug 2026.
-4. Grievance officer: name, email. Refund window (days). Courts at Raipur?
+1. Address exactly as on the GST certificate (to publish verbatim).
+2. Traction figures as of Aug 2026.
+3. Grievance officer: name, email. Refund window (days). Courts at Raipur?
 
 ## Inbox (raw points from user — unsorted)
 
@@ -127,4 +126,5 @@ Short; follows Easebuzz's example wording. _"These terms shall be governed by th
 - 2026-08-21: _"privacy policy exists in https://dzzlo-oms.web.app. should we need a update there?"_ → answered in one paragraph above; separate track.
 - 2026-08-21: _"app started on June 2021 and company registered on Oct 2021. app not yet launch for all public. just few through referrals"_ → Facts settled.
 - 2026-08-21: _"stick to the requirements asked before. already provided requirements not listed in my question"_ → plan re-scoped to the eight documents.
+- 2026-08-22: policy pages will be published on **vsyst.in**, not dzzlo-oms.web.app → `05` URLs.
 - 2026-08-21: legacy gateway code in `api_v1` is dead — **do not mention it anywhere**; documents state only that no gateway is live today.
