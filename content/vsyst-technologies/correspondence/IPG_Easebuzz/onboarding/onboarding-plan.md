@@ -33,7 +33,7 @@ Each step is done, then paused for manual checking before the next begins.
 - [x] Step 0 — Plan with boilerplate _(2026-08-21)_; scoped to Easebuzz's actual wording _(2026-08-21)_
 - [x] Step 1 — About Us + Contact Us (`01`) _(drafted 2026-08-21; awaiting manual check — placeholders: GST address verbatim, traction figures, support hours, grievance officer)_
 - [x] Step 2 — Business Model (`02`) _(drafted 2026-08-22; awaiting manual check — placeholders: traction figures, first-phase outlet count)_
-- [ ] Step 3 — Use Case of the Payment Gateway (`03`)
+- [x] Step 3 — Use Case of the Payment Gateway (`03`) _(drafted 2026-08-22; awaiting manual check — placeholder: web channel)_
 - [ ] Step 4 — Payment Flow (`04`)
 - [ ] Step 5 — Mandatory Policies highlight (`05`)
 - [ ] Step 6 — Cancellation & Refund Policy (`06`)
