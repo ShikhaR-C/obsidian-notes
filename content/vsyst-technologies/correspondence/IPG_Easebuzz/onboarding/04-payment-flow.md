@@ -35,7 +35,7 @@ The manual acknowledgement in step 5 is the weak link. The platform's rule is th
 | 7   | DZZLO API | automatic                                | On success, approves the voucher exactly as a dealer would today — invoices Paid / Part-paid, ledger rebuilt, both sides notified, credit limit freed — at any hour, with no dealer action.                     |
 | 8   | Easebuzz  | settlement                               | Settles to the dealer's own bank account on T+1 as a sub-merchant settlement. VSYST receives no part of the money.                                                                                               |
 
-- **Failed or abandoned:** the voucher stays pending, the invoices stay open, and the customer can retry; a pending voucher with no successful gateway result is cleared automatically after ⟨24 hours⟩.
+- **Failed or abandoned:** the voucher stays pending, the invoices stay open, and the customer can retry; a pending voucher with no successful gateway result is cleared automatically after 24 hours.
 - **Pending at the bank:** DZZLO polls the status API until it resolves; nothing is posted to the ledger until success is confirmed.
 - **Refund:** raised only by the dealer in DZZLO against the original voucher, executed through the Easebuzz refund API to the original instrument, and recorded as a reversing entry in the ledger. See the Cancellation and Refund Policy.
 - **Reconciliation:** Easebuzz's settlement report is matched daily against vouchers by gateway transaction id.

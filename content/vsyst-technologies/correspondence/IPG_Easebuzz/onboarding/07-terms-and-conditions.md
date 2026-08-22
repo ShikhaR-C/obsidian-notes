@@ -1,6 +1,6 @@
 # Terms and Conditions
 
-**VSYST Technologies Private Limited** ("VSYST", "we") · DZZLO OMS app and website · Last updated ⟨date⟩
+**VSYST Technologies Private Limited** ("VSYST", "we") · DZZLO OMS app and website · Last updated: 11/02/2021
 
 ## 1. Acceptance
 
@@ -70,7 +70,7 @@ We may suspend or terminate an account for breach of these Terms, suspected frau
 
 ## 16. Availability, disclaimer and limitation of liability
 
-We work to keep the Platform available and accurate but provide it "as is". We do not guarantee uninterrupted or error-free operation, including of banks, the Payment Gateway, app stores or networks we do not control. VSYST is not liable for any dispute, loss or default between a Dealer and a Customer, for fuel supplied or not supplied, or for credit extended. To the extent permitted by law, VSYST's total liability for any claim arising from the Platform is limited to ⟨the fees you paid to VSYST in the twelve months before the claim, or ₹10,000 if none⟩, and excludes indirect or consequential loss.
+We work to keep the Platform available and accurate but provide it "as is". We do not guarantee uninterrupted or error-free operation, including of banks, the Payment Gateway, app stores or networks we do not control. VSYST is not liable for any dispute, loss or default between a Dealer and a Customer, for fuel supplied or not supplied, or for credit extended. To the extent permitted by law, VSYST's total liability for any claim arising from the Platform is limited to the fees you paid to VSYST in the twelve months before the claim, or ₹10,000 if none, and excludes indirect or consequential loss.
 
 ## 17. Indemnity
 
@@ -86,12 +86,12 @@ We may update these Terms. We will post the new version with its date and, for m
 
 ## 20. Governing law and dispute resolution
 
-These Terms are governed by the laws of India. Any dispute is subject to the exclusive jurisdiction of the courts at ⟨Raipur, Chhattisgarh⟩, India. Before going to court, please write to our grievance officer (clause 21); we will try to resolve the matter within ⟨30 days⟩. See _Governing Law and Dispute Resolution_.
+These Terms are governed by the laws of India. Any dispute is subject to the exclusive jurisdiction of the courts at Raipur, Chhattisgarh, India. Before going to court, please write to our grievance officer (clause 21); we will try to resolve the matter within 7 days. See _Governing Law and Dispute Resolution_.
 
 ## 21. Grievance officer and contact
 
-Grievance officer: ⟨Name⟩, ⟨email⟩. Email info@vsyst.in · Phone +91 94252 08228 · In the app: Help → Contact Us. We acknowledge within ⟨48 hours⟩.
+Grievance officer: Shikhar Chawra, info@vsyst.in. Email info@vsyst.in · Phone +91 94252 08228 · In the app: Help → Contact Us. We acknowledge within 48 hours.
 
 ---
 
-_VSYST Technologies Private Limited · ⟨address as per GST⟩ · GSTIN 22AAICV3528R1ZT · CIN U7200CT2021PTC012283_
+_VSYST Technologies Private Limited · A-2/11, Udaya Society, Tatibandh, Raipur, Chhattisgarh 492099 · GSTIN 22AAICV3528R1ZT · CIN U7200CT2021PTC012283_

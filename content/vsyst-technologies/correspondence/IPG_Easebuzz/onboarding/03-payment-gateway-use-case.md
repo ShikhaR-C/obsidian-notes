@@ -36,7 +36,7 @@ With the gateway, the invoice is pre-selected and the amount pre-filled, confirm
 
 ## Channels
 
-Android and iOS apps ⟨and web⟩. Every payment mode must work on all of them.
+Android and iOS apps and web. Every payment mode must work on all of them.
 
 ## Also requested
 

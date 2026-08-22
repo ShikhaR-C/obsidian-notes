@@ -26,9 +26,9 @@ Fuel (diesel or petrol) dispensed at the dealer's outlet into the customer's veh
 
 | Measure           | Current (Aug 2026)                                       | Expected                                                                   |
 | ----------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Dealer outlets    | ⟨2⟩                                                      | ⟨10–15⟩ in the first phase, added by referral                              |
-| Users             | ⟨130+⟩                                                   | —                                                                          |
-| Transactions/day  | ⟨130+⟩                                                   | —                                                                          |
+| Dealer outlets    | 2                                                      | 10–15 in the first phase, added by referral                              |
+| Users             | 130+                                                   | —                                                                          |
+| Transactions/day  | 130+                                                   | —                                                                          |
 | Volume per dealer | ₹10–20 lakh/month, paid by bank transfer outside the app | up to ₹1 crore+/month per outlet, excluding oil-company loyalty-card flows |
 
 The expected figures are assumptions drawn from observed throughput at the outlets already on the platform. They are projections, not commitments.

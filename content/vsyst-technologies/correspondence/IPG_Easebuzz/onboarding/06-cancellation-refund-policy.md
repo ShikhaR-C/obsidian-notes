@@ -1,6 +1,6 @@
 # Cancellation and Refund Policy
 
-**VSYST Technologies Private Limited** ("VSYST", "we") · DZZLO OMS app and website · Last updated ⟨date⟩
+**VSYST Technologies Private Limited** ("VSYST", "we") · DZZLO OMS app and website · Last updated: 11/02/2021
 
 ## 1. What this policy covers
 
@@ -21,12 +21,12 @@ The dealer is the seller and the recipient of the payment, so a refund is decide
 - **When a refund arises:** a payment in excess of the invoice, a duplicate payment, a payment made against the wrong invoice.
 - **How to request:** the customer asks the dealer through the app or by email, quoting the invoice and payment reference.
 - **How it is paid:** the dealer raises the refund in DZZLO; it is executed through the payment gateway to the original payment instrument. The reversal is recorded in the common ledger seen by both parties.
-- **Timeline:** the refund is initiated within ⟨7⟩ working days of the dealer's approval. Credit to the customer's account depends on the bank or card network, typically ⟨5–10⟩ working days thereafter.
+- **Timeline:** the refund is initiated within 7 working days of the dealer's approval. Credit to the customer's account depends on the bank or card network, typically 5–10 working days thereafter.
 - VSYST does not hold the funds and therefore cannot refund on a dealer's behalf. VSYST will provide the order, invoice and payment records needed to resolve any request.
 
 ## 5. Failed or pending payments
 
-No invoice is marked paid until the payment gateway confirms success. If an amount is debited but the payment shows as failed, the amount is reversed by the bank or gateway, usually within ⟨7⟩ working days. If it is not, write to us with the transaction reference and we will take it up with the payment gateway.
+No invoice is marked paid until the payment gateway confirms success. If an amount is debited but the payment shows as failed, the amount is reversed by the bank or gateway, usually within 7 working days. If it is not, write to us with the transaction reference and we will take it up with the payment gateway.
 
 ## 6. Duplicate payments
 
@@ -38,16 +38,16 @@ A dispute raised by a customer with its bank is handled through the payment gate
 
 ## 8. Subscription fees
 
-DZZLO is free to use today. When subscription fees are introduced, this section will state the billing period, cancellation and refund terms before any fee is charged. Our expected terms: a subscription can be cancelled at any time, access continues to the end of the paid period, and fees for the current period are ⟨not refunded⟩ except where VSYST has failed to provide the service.
+DZZLO is free to use today. When subscription fees are introduced, this section will state the billing period, cancellation and refund terms before any fee is charged. Our expected terms: a subscription can be cancelled at any time, access continues to the end of the paid period, and fees for the current period are not refunded except where VSYST has failed to provide the service.
 
 ## 9. Contact
 
-Email info@vsyst.in · Phone +91 94252 08228 · In the app: Help → Contact Us. Grievance officer: ⟨Name⟩, ⟨email⟩. We acknowledge requests within ⟨48 hours⟩ and resolve them within ⟨30 days⟩.
+Email info@vsyst.in · Phone +91 94252 08228 · In the app: Help → Contact Us. Grievance officer: Shikhar Chawra, info@vsyst.in. We acknowledge requests within 48 hours and resolve them within 7 days.
 
 ## 10. Governing law
 
-This policy is governed by the laws of India. Any dispute is subject to the exclusive jurisdiction of the courts at ⟨Raipur, Chhattisgarh⟩, India. See _Governing Law and Dispute Resolution_.
+This policy is governed by the laws of India. Any dispute is subject to the exclusive jurisdiction of the courts at Raipur, Chhattisgarh, India. See _Governing Law and Dispute Resolution_.
 
 ---
 
-_VSYST Technologies Private Limited · ⟨address as per GST⟩ · GSTIN 22AAICV3528R1ZT · CIN U7200CT2021PTC012283_
+_VSYST Technologies Private Limited · A-2/11, Udaya Society, Tatibandh, Raipur, Chhattisgarh 492099 · GSTIN 22AAICV3528R1ZT · CIN U7200CT2021PTC012283_
