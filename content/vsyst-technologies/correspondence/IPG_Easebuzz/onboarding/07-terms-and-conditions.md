@@ -4,7 +4,7 @@
 
 ## 1. Acceptance
 
-These Terms are an agreement between you and VSYST Technologies Private Limited. By registering on or using DZZLO OMS — the Android and iOS apps and the website (together, the "Platform") — you accept them for yourself and for the company you represent. If you do not agree, do not use the Platform.
+These Terms are an agreement between you and VSYST Technologies Private Limited. By registering on or using DZZLO OMS — the Android and iOS apps and the website (together, the "Platform") — you accept them for yourself and for the company you represent. If you do not agree to these Terms, we kindly ask that you do not register on or use the Platform.
 
 ## 2. Definitions
 
@@ -28,6 +28,8 @@ The Platform is for business use by Dealers, Customers and their Users; it is no
 
 Dealers are responsible for the accuracy of their invoices, their tax compliance, fulfilling orders, the credit limits they set, and deciding refunds. Customers are responsible for the orders placed by their Users, the vehicles and drivers they register, and payment of their invoices. Everyone must use the Platform lawfully and for genuine business.
 
+Both parties are responsible for agreeing on their credit terms.
+
 ## 6. Orders, delivery and invoices
 
 Orders are placed by a Customer and fulfilled by the Dealer at its outlet, to a verified vehicle and driver, with delivery confirmed by OTP. Delivery takes place at the outlet; nothing is shipped. The Invoice is the Dealer's document. Any dispute about quantity, quality, price or an invoice is between the Dealer and the Customer. The order, delivery and ledger records on the Platform are the record of what happened, and VSYST will make them available to both parties.
@@ -35,6 +37,8 @@ Orders are placed by a Customer and fulfilled by the Dealer at its outlet, to a 
 ## 7. Payments
 
 Payments made through the Platform are processed by the Payment Gateway and settled directly to the Dealer's bank account. VSYST does not receive, hold or route funds and is not a party to the payment. A payment is treated as made when the Payment Gateway confirms it; the Invoice is then marked paid and the ledger updated. A payment made outside the Platform must be recorded on it by the Customer and enters the ledger only when the Dealer approves it. Charges, if any, for a payment mode are shown before a payment is confirmed. VSYST stores no card numbers, bank credentials or UPI PINs.
+
+At present no Payment Gateway is integrated on the Platform, and all payments are made outside it. The Customer pays the Dealer directly — by NEFT, RTGS, cheque, cash, fleet card or card — and then records the payment on the Platform as a Voucher against the invoices paid, stating the amount, mode, reference and date. The Voucher remains pending until a Dealer user verifies the receipt and approves it manually; on approval the invoices are marked Paid or Part-paid and the common ledger is updated. A pending Voucher may be deleted by the Customer; an approved Voucher is never deleted. VSYST does not handle funds at any point in this process. When the Payment Gateway goes live, payments made through it will be governed by the preceding paragraph, and we will notify you in the app.
 
 ## 8. Fees for the Platform
 

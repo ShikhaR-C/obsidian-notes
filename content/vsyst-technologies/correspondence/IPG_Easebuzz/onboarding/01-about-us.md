@@ -14,23 +14,25 @@ Our aim is to give petrol pump dealers and their customers one common, affordabl
 
 We want the system to be automated and error-free: effortless for the user, free of confusion, and free of reconciliation, because every payment is made exactly — dealer-wise and invoice-wise — in full view of both parties. We know of no comparable platform for this sector. Data entry is distributed between the responsible users on each side, transport company and petrol pump dealer, so every record is authentic by construction. The accounting loop — order, invoice, payment — closes fully once the payment gateway is integrated. By removing the discrepancies from transactions, we already see faster fund flow for the businesses on the platform. A collaboration between VSYST, Union Bank of India and Easebuzz would help numerous such businesses go digital and gain efficiency, at minimal investment and for maximum return.
 
+We are trying to build a system that lets control on hands of respected company authorised for transaction. Like ordering and payments are done on customer behalf & delivery order and invoice done by dealer. that maintains the autheicity in platform. As the payments are done outside the platform the need of reconiliation and manual entry introduces delay. that is why it is currenlty provided to pilot dealers to entertain all of their customers according to market needs maturing the platform.
+
 ## Our story
 
 The company is promoted by a family with over 35 years of petroleum retail dealership experience. DZZLO was built in-house and proven first at the family-operated outlet before being offered to other dealers, so the product encodes how the fuel-credit business actually runs on the ground. The founders, Shikhar Chawra and Shikha Chawra, left corporate careers to build it on that experience.
 
 ## Company particulars
 
-| Particular            | Detail                                                                       |
-| --------------------- | ---------------------------------------------------------------------------- |
-| Legal name            | VSYST Technologies Private Limited                                           |
-| CIN                   | U7200CT2021PTC012283                                                         |
-| Date of incorporation | 21 October 2021                                                              |
+| Particular            | Detail                                                        |
+| --------------------- | ------------------------------------------------------------- |
+| Legal name            | VSYST Technologies Private Limited                            |
+| CIN                   | U7200CT2021PTC012283                                          |
+| Date of incorporation | 21 October 2021                                               |
 | Registered office     | A-2/11, Udaya Society, Tatibandh, Raipur, Chhattisgarh 492099 |
-| PAN                   | AAICV3528R                                                                   |
-| GSTIN                 | 22AAICV3528R1ZT                                                              |
-| DPIIT recognition     | Startup India, Certificate No. DIPP97734, February 2022                      |
-| Directors             | Paresh Chawra, Shikhar Chawra, Shikha Chawra                                 |
-| Product               | DZZLO OMS — Android and iOS, on the stores since June 2021                   |
+| PAN                   | AAICV3528R                                                    |
+| GSTIN                 | 22AAICV3528R1ZT                                               |
+| DPIIT recognition     | Startup India, Certificate No. DIPP97734, February 2022       |
+| Directors             | Paresh Chawra, Shikhar Chawra, Shikha Chawra                  |
+| Product               | DZZLO OMS — Android and iOS, on the stores since June 2021    |
 
 ---
 
@@ -39,13 +41,13 @@ The company is promoted by a family with over 35 years of petroleum retail deale
 **VSYST Technologies Private Limited**
 A-2/11, Udaya Society, Tatibandh, Raipur, Chhattisgarh 492099
 
-| Channel           | Detail                                            |
-| ----------------- | ------------------------------------------------- |
-| Email             | info@vsyst.in                                     |
-| Phone             | +91 94252 08228                                   |
-| Hours             | Monday–Saturday, 10:00–18:00 IST                |
-| In the app        | Help → Contact Us (message form)                  |
-| User manuals      | manual.vsyst.in · dealer.manual.vsyst.in          |
+| Channel           | Detail                                                        |
+| ----------------- | ------------------------------------------------------------- |
+| Email             | info@vsyst.in                                                 |
+| Phone             | +91 94252 08228                                               |
+| Hours             | Monday–Saturday, 10:00–18:00 IST                              |
+| In the app        | Help → Contact Us (message form)                              |
+| User manuals      | manual.vsyst.in · dealer.manual.vsyst.in                      |
 | Grievance officer | Shikhar Chawra · info@vsyst.in — acknowledges within 48 hours |
 
 ---

@@ -26,9 +26,9 @@ Fuel (diesel or petrol) dispensed at the dealer's outlet into the customer's veh
 
 | Measure           | Current (Aug 2026)                                       | Expected                                                                   |
 | ----------------- | -------------------------------------------------------- | -------------------------------------------------------------------------- |
-| Dealer outlets    | 2                                                      | 10–15 in the first phase, added by referral                              |
-| Users             | 130+                                                   | —                                                                          |
-| Transactions/day  | 130+                                                   | —                                                                          |
+| Dealer outlets    | 2                                                        | 10–15 in the first phase, added by referral                                |
+| Users             | 130+                                                     | —                                                                          |
+| Transactions/day  | 130+                                                     | —                                                                          |
 | Volume per dealer | ₹10–20 lakh/month, paid by bank transfer outside the app | up to ₹1 crore+/month per outlet, excluding oil-company loyalty-card flows |
 
 The expected figures are assumptions drawn from observed throughput at the outlets already on the platform. They are projections, not commitments.
@@ -36,3 +36,14 @@ The expected figures are assumptions drawn from observed throughput at the outle
 ## Why a payment gateway
 
 Every other step of the sale — order, delivery, invoice, ledger — already runs inside DZZLO and is built to be error-free and effortless. Payment is the one step still outside it. See _Use Case of the Payment Gateway_.
+
+Every Oil industry or petrol pump retail outlets and transport industries holds a huge part of national economy. Millions of people are engaged in both side to maintain their business relations. VSYST aims to ease day-to-day working of these people by achieving accuracy, transparency with efficiency.
+Purchase, sale, invoice and payment makes a transaction cycle. ¾ of the cycle is already achieved by DZZLO-OMS and the remaining ¼ part of the cycle can only be completed / perfected by a payment gateway to fully remove manual repetitive work and reconciliations.
+
+Apart from Purchase and sale the essential part of transaction/business is prominent payment. For prominent payment we provide accurate invoice generation based on delivery order selection to dealers. Dealers are not required to make entries in the platform. Only the customers are allowed to make order and then creates payment against particular dealer and invoice. Only two entries are done in this entire process of making transaction. First, Purchase order and Secondly, payments which are done by customer itself. One is already being done on DZZLO-OMS platform. And second part we are going to offer them through payment gateway.
+
+Our customers are happy to use our platform. Integration of IPG will fill them with joy as this is an awaited gap to be fulfilled.
+By getting accurate invoices on time. And a facility to make payment in app to ease accounts and same time and energy of millions of beneficiaries.
+Instead of lengthy and tedious payment processes today. Just pay the invoice in one click.
+Happy customer is the key to every successful business.
+DZZLO-OMS makes satisfied customers happy.
