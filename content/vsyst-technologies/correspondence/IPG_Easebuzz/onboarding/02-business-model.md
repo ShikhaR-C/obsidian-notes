@@ -47,3 +47,19 @@ By getting accurate invoices on time. And a facility to make payment in app to e
 Instead of lengthy and tedious payment processes today. Just pay the invoice in one click.
 Happy customer is the key to every successful business.
 DZZLO-OMS makes satisfied customers happy.
+
+---
+
+Transport industry is blood in country's viens. Indian economy is largly based on transport industry.
+Indian government is building roads. building high-tech Tolls for fast vehicle movement.
+More number of high connectivity highway (bharat mala project) that would help transport industry.
+Huge size of commercial vehicle now runs in roads (25 tons - 50 tons) needs more fuel. More number of RO santioned.
+Now and then crisis comes up in international market. Oil rates are up in international market.
+Due to increased costing, transactions transporters face many obstacles.
+They have no tool or platform to solve their problems. we started with solving their oil purchase first.
+we solve their overburnened work, need to transparency and trusted partners in the route they do business in.
+One platform that help them would be of great help. Single RO dealers could not build it for all as an ERP.
+They need it as single platform, effecient, transparent. One there they can do daily trsnsactions. follow govt. rules.
+They must get details of TDS, average of vehicle, get RO details. Get driver health and track record.
+relief stress of payments to dealers with clear accounts from their behalf.
+we have mission to cut short transporter inefficiencies.
