@@ -76,4 +76,4 @@ Two rows in action. **"Release approval & production deploy": CEO/CTO = A, Devel
 
 ## Related
 
-Lessons [[17-delegation-decision-rights-and-org-design|17]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]], [[08-the-operating-cadence|08]] · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T22-delegation-of-authority-matrix|T22]], [[T29-org-chart-and-role-charters|T29]], [[T09-decision-log-and-adr|T09]] · [[toolkit/index|COO Toolkit]]
+Lessons [[17-delegation-decision-rights-and-org-design|17]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]], [[08-the-operating-cadence|08]] · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T22-delegation-of-authority-matrix|T22]], [[T29-org-chart-and-role-charters|T29]], [[T09-decision-log-and-adr|T09]] · [[COO-Docs/toolkit/index|COO Toolkit]]

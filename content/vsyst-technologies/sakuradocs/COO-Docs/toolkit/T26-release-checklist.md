@@ -80,4 +80,4 @@ Two habits make this cheap rather than ceremonial. **The log is one table, not a
 
 ## Related
 
-Lessons [[12-product-and-engineering-operations|12]] (releases, environments, app-store operations, change management), [[10-customer-operations-support-and-success|10]] (who tells the dealers), [[15-sops-and-playbooks|15]] (checklists vs SOPs) · Templates [[T17-incident-postmortem|T17]], [[T25-customer-support-sop|T25]], [[T09-decision-log-and-adr|T09]], [[T22-delegation-of-authority-matrix|T22]], [[T14-vendor-and-tool-register|T14]] · [[tasks_12_tdd_testing/00-overview|tasks_12 TDD plan]] · [[toolkit/index|COO Toolkit]]
+Lessons [[12-product-and-engineering-operations|12]] (releases, environments, app-store operations, change management), [[10-customer-operations-support-and-success|10]] (who tells the dealers), [[15-sops-and-playbooks|15]] (checklists vs SOPs) · Templates [[T17-incident-postmortem|T17]], [[T25-customer-support-sop|T25]], [[T09-decision-log-and-adr|T09]], [[T22-delegation-of-authority-matrix|T22]], [[T14-vendor-and-tool-register|T14]] · [[tasks_12_tdd_testing/00-overview|tasks_12 TDD plan]] · [[COO-Docs/toolkit/index|COO Toolkit]]

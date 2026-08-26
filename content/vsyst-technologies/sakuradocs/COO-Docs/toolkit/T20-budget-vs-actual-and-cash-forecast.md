@@ -60,4 +60,4 @@ Monthly review, month 3 (numbers illustrative, from the tab's example rows): Peo
 
 ## Related
 
-Lessons [[06-money-rails-and-finance-operations|06]], [[08-the-operating-cadence|08]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T05-kpi-scorecard|T05]], [[T19-quarterly-plan-and-review|T19]], [[T23-board-and-investor-update|T23]], [[T14-vendor-and-tool-register|T14]] · [[finance/07-phase-7-bootstrapping-runway-burn|Finance Phase 7]] · [[toolkit/index|COO Toolkit]]
+Lessons [[06-money-rails-and-finance-operations|06]], [[08-the-operating-cadence|08]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T05-kpi-scorecard|T05]], [[T19-quarterly-plan-and-review|T19]], [[T23-board-and-investor-update|T23]], [[T14-vendor-and-tool-register|T14]] · [[finance/07-phase-7-bootstrapping-runway-burn|Finance Phase 7]] · [[COO-Docs/toolkit/index|COO Toolkit]]

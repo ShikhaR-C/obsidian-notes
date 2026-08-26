@@ -73,4 +73,4 @@ Tuesday 14:00, COO × Support/Ops Associate, week 6. **Their agenda:** drowning 
 
 ## Related
 
-Lessons [[08-the-operating-cadence|08]], [[09-people-operations|09]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]] · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T03-weekly-ops-meeting-agenda|T03]], [[T05-kpi-scorecard|T05]], [[T29-org-chart-and-role-charters|T29]], [[T10-hiring-scorecard-and-process|T10]] · [[toolkit/index|COO Toolkit]]
+Lessons [[08-the-operating-cadence|08]], [[09-people-operations|09]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]] · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T03-weekly-ops-meeting-agenda|T03]], [[T05-kpi-scorecard|T05]], [[T29-org-chart-and-role-charters|T29]], [[T10-hiring-scorecard-and-process|T10]] · [[COO-Docs/toolkit/index|COO Toolkit]]

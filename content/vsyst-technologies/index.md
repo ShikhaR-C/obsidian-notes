@@ -32,5 +32,6 @@ This knowledge base collects the material behind the technology work: DZZLO OMS 
 
 - [[vsyst-technologies/sakuradocs/ERPNext-Implementation-Guide|ERPNext Implementation Guide]] — Setting up ERPNext for operations
 - [[vsyst-technologies/sakuradocs/startup-operations-plan|Startup Operations Plan]] — Company operations planning
+- [[vsyst-technologies/sakuradocs/CEO-Docs/index|CEO Docs]] — Phase-by-phase course for VSYST's Chief Executive Officer: the seat, how a CEO thinks, strategy, capital, governance, team, culture, story, product, partnerships, and the CEO's own operating system; 30 templates + CEO workbook
 - [[vsyst-technologies/sakuradocs/COO-Docs/index|COO Docs]] — Phase-by-phase course for VSYST's Chief Operating Officer: role, mindset, 30-day foundation, function-by-function build, autopilot; 30 templates + management workbook
 - [[vsyst-technologies/sakuradocs/certification-and-standards-roadmap|Certification and Standards Roadmap]] — Which ISO certification VSYST may be asked for, by whom, at what cost, and on what trigger

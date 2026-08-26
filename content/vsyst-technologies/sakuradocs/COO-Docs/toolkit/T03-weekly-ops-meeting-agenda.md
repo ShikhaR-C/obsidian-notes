@@ -84,4 +84,4 @@ Monday 10:30–11:00 (30-minute form; scorecard filled by 10:00 from Mongo, ERPN
 
 ## Related
 
-Lessons [[08-the-operating-cadence|08]], [[16-metrics-dashboards-and-scorecards|16]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T05-kpi-scorecard|T05]], [[T06-okr-planning-sheet|T06]], [[T09-decision-log-and-adr|T09]], [[T28-weekly-business-review|T28]], [[T24-all-hands-agenda|T24]], [[T04-one-on-one-template|T04]] · [[toolkit/index|COO Toolkit]]
+Lessons [[08-the-operating-cadence|08]], [[16-metrics-dashboards-and-scorecards|16]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T05-kpi-scorecard|T05]], [[T06-okr-planning-sheet|T06]], [[T09-decision-log-and-adr|T09]], [[T28-weekly-business-review|T28]], [[T24-all-hands-agenda|T24]], [[T04-one-on-one-template|T04]] · [[COO-Docs/toolkit/index|COO Toolkit]]

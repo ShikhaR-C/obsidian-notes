@@ -79,4 +79,4 @@ Outcome note     —
 
 ## Related
 
-Lessons [[11-revenue-operations-and-partnerships|11]], [[12-product-and-engineering-operations|12]], [[10-customer-operations-support-and-success|10]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T09-decision-log-and-adr|T09]], [[T22-delegation-of-authority-matrix|T22]], [[T15-risk-register|T15]], [[T06-okr-planning-sheet|T06]], [[T19-quarterly-plan-and-review|T19]] · [[ERPNext-Implementation-Guide|ERPNext Implementation Guide]] · [[toolkit/index|COO Toolkit]]
+Lessons [[11-revenue-operations-and-partnerships|11]], [[12-product-and-engineering-operations|12]], [[10-customer-operations-support-and-success|10]], [[19-planning-okrs-and-the-quarterly-rhythm|19]] · Templates [[T09-decision-log-and-adr|T09]], [[T22-delegation-of-authority-matrix|T22]], [[T15-risk-register|T15]], [[T06-okr-planning-sheet|T06]], [[T19-quarterly-plan-and-review|T19]] · [[ERPNext-Implementation-Guide|ERPNext Implementation Guide]] · [[COO-Docs/toolkit/index|COO Toolkit]]

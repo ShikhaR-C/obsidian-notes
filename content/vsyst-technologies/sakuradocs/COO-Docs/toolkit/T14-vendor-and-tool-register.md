@@ -72,4 +72,4 @@ The tab ships pre-filled with the in-use stack; extract (costs blank — enter f
 
 ## Related
 
-Lessons [[07-tools-and-it-foundation|07]], [[14-vendors-procurement-and-cost-control|14]], [[06-money-rails-and-finance-operations|06]], [[12-product-and-engineering-operations|12]] · Templates [[T02-company-binder-checklist|T02]], [[T09-decision-log-and-adr|T09]], [[T15-risk-register|T15]], [[T22-delegation-of-authority-matrix|T22]] · [[toolkit/index|COO Toolkit]]
+Lessons [[07-tools-and-it-foundation|07]], [[14-vendors-procurement-and-cost-control|14]], [[06-money-rails-and-finance-operations|06]], [[12-product-and-engineering-operations|12]] · Templates [[T02-company-binder-checklist|T02]], [[T09-decision-log-and-adr|T09]], [[T15-risk-register|T15]], [[T22-delegation-of-authority-matrix|T22]] · [[COO-Docs/toolkit/index|COO Toolkit]]

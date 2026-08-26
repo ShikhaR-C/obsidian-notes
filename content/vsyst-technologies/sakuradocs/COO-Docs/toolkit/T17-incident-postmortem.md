@@ -90,4 +90,4 @@ Read at ops meeting on: <date> · Lessons folded into: <T17/T25/T26/alerts/SOP-�
 
 ## Related
 
-Lessons [[12-product-and-engineering-operations|12]], [[10-customer-operations-support-and-success|10]], [[13-compliance-calendar-risk-and-insurance|13]] · Templates [[T25-customer-support-sop|T25]], [[T15-risk-register|T15]], [[T26-release-checklist|T26]], [[T08-sop-template|T08]] · [[toolkit/index|COO Toolkit]]
+Lessons [[12-product-and-engineering-operations|12]], [[10-customer-operations-support-and-success|10]], [[13-compliance-calendar-risk-and-insurance|13]] · Templates [[T25-customer-support-sop|T25]], [[T15-risk-register|T15]], [[T26-release-checklist|T26]], [[T08-sop-template|T08]] · [[COO-Docs/toolkit/index|COO Toolkit]]

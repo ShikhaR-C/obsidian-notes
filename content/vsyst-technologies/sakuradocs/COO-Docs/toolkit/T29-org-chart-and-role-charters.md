@@ -92,4 +92,4 @@ Condensed; outcomes are illustrative and dated from a start month.
 
 ## Related
 
-Lessons [[17-delegation-decision-rights-and-org-design|17]] (org design and the hiring order), [[09-people-operations|09]] (charters before hiring), [[20-the-autopilot-test-and-scaling-the-machine|20]] (seats and the holiday test) · Templates [[T21-headcount-plan|T21]], [[T10-hiring-scorecard-and-process|T10]], [[T07-raci-matrix|T07]], [[T22-delegation-of-authority-matrix|T22]], [[T30-coo-charter-and-90-day-plan|T30]], [[T04-one-on-one-template|T04]] · [[toolkit/index|COO Toolkit]]
+Lessons [[17-delegation-decision-rights-and-org-design|17]] (org design and the hiring order), [[09-people-operations|09]] (charters before hiring), [[20-the-autopilot-test-and-scaling-the-machine|20]] (seats and the holiday test) · Templates [[T21-headcount-plan|T21]], [[T10-hiring-scorecard-and-process|T10]], [[T07-raci-matrix|T07]], [[T22-delegation-of-authority-matrix|T22]], [[T30-coo-charter-and-90-day-plan|T30]], [[T04-one-on-one-template|T04]] · [[COO-Docs/toolkit/index|COO Toolkit]]

@@ -61,4 +61,4 @@ Row 6 worked end to end. _Risk:_ 2Factor.in outage blocks login and delivery OTP
 
 ## Related
 
-Lessons [[13-compliance-calendar-risk-and-insurance|13]], [[12-product-and-engineering-operations|12]], [[08-the-operating-cadence|08]] · Templates [[T16-compliance-calendar|T16]], [[T17-incident-postmortem|T17]], [[T14-vendor-and-tool-register|T14]], [[T20-budget-vs-actual-and-cash-forecast|T20]] · [[toolkit/index|COO Toolkit]]
+Lessons [[13-compliance-calendar-risk-and-insurance|13]], [[12-product-and-engineering-operations|12]], [[08-the-operating-cadence|08]] · Templates [[T16-compliance-calendar|T16]], [[T17-incident-postmortem|T17]], [[T14-vendor-and-tool-register|T14]], [[T20-budget-vs-actual-and-cash-forecast|T20]] · [[COO-Docs/toolkit/index|COO Toolkit]]

@@ -76,4 +76,4 @@ Two notes on reading it. The bottom lines are **deliberately generous** — rais
 
 ## Related
 
-Lessons [[17-delegation-decision-rights-and-org-design|17]] (the thinking behind it), [[06-money-rails-and-finance-operations|06]] (maker–checker and payment approvals), [[05-legal-and-governance-foundation|05]] (board ratification), [[14-vendors-procurement-and-cost-control|14]] (spend approvals in practice) · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T09-decision-log-and-adr|T09]], [[T07-raci-matrix|T07]], [[T21-headcount-plan|T21]], [[T29-org-chart-and-role-charters|T29]] · [[toolkit/index|COO Toolkit]]
+Lessons [[17-delegation-decision-rights-and-org-design|17]] (the thinking behind it), [[06-money-rails-and-finance-operations|06]] (maker–checker and payment approvals), [[05-legal-and-governance-foundation|05]] (board ratification), [[14-vendors-procurement-and-cost-control|14]] (spend approvals in practice) · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T09-decision-log-and-adr|T09]], [[T07-raci-matrix|T07]], [[T21-headcount-plan|T21]], [[T29-org-chart-and-role-charters|T29]] · [[COO-Docs/toolkit/index|COO Toolkit]]

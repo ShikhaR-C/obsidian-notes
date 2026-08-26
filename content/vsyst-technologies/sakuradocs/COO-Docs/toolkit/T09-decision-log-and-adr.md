@@ -77,4 +77,4 @@ And one illustrative ADR, in the skeleton's shape: **ADR-001 — Put the SMS/OTP
 
 ## Related
 
-Lessons [[02-how-a-coo-thinks|02]] (doors, the log as hygiene), [[08-the-operating-cadence|08]] (the log as ritual), [[17-delegation-decision-rights-and-org-design|17]] (who may decide) · Templates [[T22-delegation-of-authority-matrix|T22]] (the ₹ thresholds that trigger logging), [[T07-raci-matrix|T07]] (a DACI for one big decision gets logged here), [[T03-weekly-ops-meeting-agenda|T03]], [[T19-quarterly-plan-and-review|T19]] (decisions-needed section feeds the log) · [[toolkit/index|COO Toolkit]]
+Lessons [[02-how-a-coo-thinks|02]] (doors, the log as hygiene), [[08-the-operating-cadence|08]] (the log as ritual), [[17-delegation-decision-rights-and-org-design|17]] (who may decide) · Templates [[T22-delegation-of-authority-matrix|T22]] (the ₹ thresholds that trigger logging), [[T07-raci-matrix|T07]] (a DACI for one big decision gets logged here), [[T03-weekly-ops-meeting-agenda|T03]], [[T19-quarterly-plan-and-review|T19]] (decisions-needed section feeds the log) · [[COO-Docs/toolkit/index|COO Toolkit]]

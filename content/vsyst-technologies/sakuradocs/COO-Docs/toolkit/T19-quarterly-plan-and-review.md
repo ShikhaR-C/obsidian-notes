@@ -66,4 +66,4 @@ Q3 review, sketched: activation rate trended up after the onboarding SOP shipped
 
 ## Related
 
-Lessons [[19-planning-okrs-and-the-quarterly-rhythm|19]], [[08-the-operating-cadence|08]], [[16-metrics-dashboards-and-scorecards|16]] · Templates [[T06-okr-planning-sheet|T06]], [[T05-kpi-scorecard|T05]], [[T20-budget-vs-actual-and-cash-forecast|T20]], [[T23-board-and-investor-update|T23]], [[T18-project-charter|T18]], [[T09-decision-log-and-adr|T09]] · [[toolkit/index|COO Toolkit]]
+Lessons [[19-planning-okrs-and-the-quarterly-rhythm|19]], [[08-the-operating-cadence|08]], [[16-metrics-dashboards-and-scorecards|16]] · Templates [[T06-okr-planning-sheet|T06]], [[T05-kpi-scorecard|T05]], [[T20-budget-vs-actual-and-cash-forecast|T20]], [[T23-board-and-investor-update|T23]], [[T18-project-charter|T18]], [[T09-decision-log-and-adr|T09]] · [[COO-Docs/toolkit/index|COO Toolkit]]

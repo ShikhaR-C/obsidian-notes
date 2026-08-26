@@ -110,4 +110,4 @@ Change log  1.1 · 2026-08-19 · rate-confirmation query rewritten after schema
 
 ## Related
 
-Lessons [[15-sops-and-playbooks|15]], [[07-tools-and-it-foundation|07]], [[10-customer-operations-support-and-success|10]] · Templates [[T25-customer-support-sop|T25]] (a filled SOP in this format), [[T26-release-checklist|T26]], [[T12-onboarding-checklist|T12]], [[T17-incident-postmortem|T17]], [[T09-decision-log-and-adr|T09]] · [[toolkit/index|COO Toolkit]]
+Lessons [[15-sops-and-playbooks|15]], [[07-tools-and-it-foundation|07]], [[10-customer-operations-support-and-success|10]] · Templates [[T25-customer-support-sop|T25]] (a filled SOP in this format), [[T26-release-checklist|T26]], [[T12-onboarding-checklist|T12]], [[T17-incident-postmortem|T17]], [[T09-decision-log-and-adr|T09]] · [[COO-Docs/toolkit/index|COO Toolkit]]

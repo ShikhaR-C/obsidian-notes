@@ -62,4 +62,4 @@ Reading it the way the ops meeting would: O1/KR2 and O2/KR2 are **at risk** — 
 
 ## Related
 
-Lessons [[19-planning-okrs-and-the-quarterly-rhythm|19]], [[16-metrics-dashboards-and-scorecards|16]], [[02-how-a-coo-thinks|02]] · Templates [[T19-quarterly-plan-and-review|T19]], [[T05-kpi-scorecard|T05]], [[T23-board-and-investor-update|T23]], [[T03-weekly-ops-meeting-agenda|T03]] · [[toolkit/index|COO Toolkit]]
+Lessons [[19-planning-okrs-and-the-quarterly-rhythm|19]], [[16-metrics-dashboards-and-scorecards|16]], [[02-how-a-coo-thinks|02]] · Templates [[T19-quarterly-plan-and-review|T19]], [[T05-kpi-scorecard|T05]], [[T23-board-and-investor-update|T23]], [[T03-weekly-ops-meeting-agenda|T03]] · [[COO-Docs/toolkit/index|COO Toolkit]]

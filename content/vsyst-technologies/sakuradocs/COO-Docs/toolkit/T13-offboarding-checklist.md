@@ -59,4 +59,4 @@ A developer-contractor's engagement ends on delivery. Day 0: GitHub write access
 
 ## Related
 
-Lessons [[09-people-operations|09]], [[07-tools-and-it-foundation|07]] · Templates [[T12-onboarding-checklist|T12]], [[T14-vendor-and-tool-register|T14]], [[T22-delegation-of-authority-matrix|T22]], [[T08-sop-template|T08]] · [[toolkit/index|COO Toolkit]]
+Lessons [[09-people-operations|09]], [[07-tools-and-it-foundation|07]] · Templates [[T12-onboarding-checklist|T12]], [[T14-vendor-and-tool-register|T14]], [[T22-delegation-of-authority-matrix|T22]], [[T08-sop-template|T08]] · [[COO-Docs/toolkit/index|COO Toolkit]]

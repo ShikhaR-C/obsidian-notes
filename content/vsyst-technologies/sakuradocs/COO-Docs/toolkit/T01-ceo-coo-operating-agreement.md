@@ -102,4 +102,4 @@ At a three-director company the CEO and COO seats may sit on one person on diffe
 
 ## Related
 
-Lessons [[01-what-is-a-coo|01]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]], [[17-delegation-decision-rights-and-org-design|17]] · Templates [[T22-delegation-of-authority-matrix|T22]], [[T09-decision-log-and-adr|T09]], [[T04-one-on-one-template|T04]], [[T07-raci-matrix|T07]], [[T30-coo-charter-and-90-day-plan|T30]] · [[toolkit/index|COO Toolkit]]
+Lessons [[01-what-is-a-coo|01]], [[03-the-coo-core-value-and-the-ceo-coo-contract|03]], [[17-delegation-decision-rights-and-org-design|17]] · Templates [[T22-delegation-of-authority-matrix|T22]], [[T09-decision-log-and-adr|T09]], [[T04-one-on-one-template|T04]], [[T07-raci-matrix|T07]], [[T30-coo-charter-and-90-day-plan|T30]] · [[COO-Docs/toolkit/index|COO Toolkit]]

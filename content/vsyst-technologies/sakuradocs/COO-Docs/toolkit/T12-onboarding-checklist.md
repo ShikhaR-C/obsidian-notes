@@ -79,4 +79,4 @@ First hire, Support/Ops Associate, offer accepted Tuesday. By Friday: agreement 
 
 ## Related
 
-Lessons [[09-people-operations|09]], [[07-tools-and-it-foundation|07]], [[10-customer-operations-support-and-success|10]] · Templates [[T13-offboarding-checklist|T13]], [[T14-vendor-and-tool-register|T14]], [[T29-org-chart-and-role-charters|T29]], [[T10-hiring-scorecard-and-process|T10]], [[T04-one-on-one-template|T04]] · [[toolkit/index|COO Toolkit]]
+Lessons [[09-people-operations|09]], [[07-tools-and-it-foundation|07]], [[10-customer-operations-support-and-success|10]] · Templates [[T13-offboarding-checklist|T13]], [[T14-vendor-and-tool-register|T14]], [[T29-org-chart-and-role-charters|T29]], [[T10-hiring-scorecard-and-process|T10]], [[T04-one-on-one-template|T04]] · [[COO-Docs/toolkit/index|COO Toolkit]]

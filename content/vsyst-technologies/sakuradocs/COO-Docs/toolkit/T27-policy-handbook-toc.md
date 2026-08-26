@@ -52,4 +52,4 @@ Approvals in one line: **the COO owns the operational policies; the CEO signs th
 
 ## Related
 
-Lessons [[09-people-operations|09]] (the first six in context, statutory thresholds), [[13-compliance-calendar-risk-and-insurance|13]] (DPDP and CERT-In duties), [[05-legal-and-governance-foundation|05]] (board approvals), [[07-tools-and-it-foundation|07]] (what the IT policy enforces) · Templates [[T11-offer-letter-and-contract-checklists|T11]], [[T12-onboarding-checklist|T12]], [[T13-offboarding-checklist|T13]], [[T16-compliance-calendar|T16]], [[T22-delegation-of-authority-matrix|T22]] · [[toolkit/index|COO Toolkit]]
+Lessons [[09-people-operations|09]] (the first six in context, statutory thresholds), [[13-compliance-calendar-risk-and-insurance|13]] (DPDP and CERT-In duties), [[05-legal-and-governance-foundation|05]] (board approvals), [[07-tools-and-it-foundation|07]] (what the IT policy enforces) · Templates [[T11-offer-letter-and-contract-checklists|T11]], [[T12-onboarding-checklist|T12]], [[T13-offboarding-checklist|T13]], [[T16-compliance-calendar|T16]], [[T22-delegation-of-authority-matrix|T22]] · [[COO-Docs/toolkit/index|COO Toolkit]]

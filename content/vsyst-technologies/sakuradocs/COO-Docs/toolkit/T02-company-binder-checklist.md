@@ -100,4 +100,4 @@ Illustrative row, filled: `DPIIT recognition certificate · Yes · Drive › 01-
 
 ## Related
 
-Lessons [[05-legal-and-governance-foundation|05]], [[07-tools-and-it-foundation|07]], [[13-compliance-calendar-risk-and-insurance|13]] · Templates [[T16-compliance-calendar|T16]], [[T14-vendor-and-tool-register|T14]], [[T11-offer-letter-and-contract-checklists|T11]], [[T15-risk-register|T15]] · [[finance/05-phase-5-indian-accounting-system|Finance Phase 5]] · [[toolkit/index|COO Toolkit]]
+Lessons [[05-legal-and-governance-foundation|05]], [[07-tools-and-it-foundation|07]], [[13-compliance-calendar-risk-and-insurance|13]] · Templates [[T16-compliance-calendar|T16]], [[T14-vendor-and-tool-register|T14]], [[T11-offer-letter-and-contract-checklists|T11]], [[T15-risk-register|T15]] · [[finance/05-phase-5-indian-accounting-system|Finance Phase 5]] · [[COO-Docs/toolkit/index|COO Toolkit]]

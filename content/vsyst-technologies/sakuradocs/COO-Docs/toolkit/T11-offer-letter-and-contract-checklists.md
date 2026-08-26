@@ -82,4 +82,4 @@ A freelance designer is engaged for the dealer-app onboarding screens. Before th
 
 ## Related
 
-Lessons [[09-people-operations|09]], [[05-legal-and-governance-foundation|05]], [[06-money-rails-and-finance-operations|06]] · Templates [[T10-hiring-scorecard-and-process|T10]], [[T12-onboarding-checklist|T12]], [[T02-company-binder-checklist|T02]], [[T27-policy-handbook-toc|T27]] · [[toolkit/index|COO Toolkit]]
+Lessons [[09-people-operations|09]], [[05-legal-and-governance-foundation|05]], [[06-money-rails-and-finance-operations|06]] · Templates [[T10-hiring-scorecard-and-process|T10]], [[T12-onboarding-checklist|T12]], [[T02-company-binder-checklist|T02]], [[T27-policy-handbook-toc|T27]] · [[COO-Docs/toolkit/index|COO Toolkit]]

@@ -79,4 +79,4 @@ The number that says it worked is not how many templates are filled — it is **
 
 ## Related
 
-Lessons [[01-what-is-a-coo|01]] (the remit split), [[03-the-coo-core-value-and-the-ceo-coo-contract|03]] (the COO scorecard this charter borrows), [[04-how-to-become-a-coo-in-2026|04]] (the 30/60/90 in context), [[00-course-map-and-timeline|00]] (the full Week 0 → Month 18 timeline) · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T22-delegation-of-authority-matrix|T22]], [[T05-kpi-scorecard|T05]], [[T29-org-chart-and-role-charters|T29]], [[T23-board-and-investor-update|T23]] · [[toolkit/index|COO Toolkit]]
+Lessons [[01-what-is-a-coo|01]] (the remit split), [[03-the-coo-core-value-and-the-ceo-coo-contract|03]] (the COO scorecard this charter borrows), [[04-how-to-become-a-coo-in-2026|04]] (the 30/60/90 in context), [[COO-Docs/00-course-map-and-timeline|00]] (the full Week 0 → Month 18 timeline) · Templates [[T01-ceo-coo-operating-agreement|T01]], [[T22-delegation-of-authority-matrix|T22]], [[T05-kpi-scorecard|T05]], [[T29-org-chart-and-role-charters|T29]], [[T23-board-and-investor-update|T23]] · [[COO-Docs/toolkit/index|COO Toolkit]]

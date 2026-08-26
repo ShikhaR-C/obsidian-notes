@@ -86,7 +86,7 @@ Do this once; the Sheets copy becomes the working workbook and the vault's .xlsx
 
 ## Which template in which week
 
-The [[00-course-map-and-timeline|master timeline]] governs the order — this is the quick map of when each template first gets filled (re-signs and audits recur after):
+The [[COO-Docs/00-course-map-and-timeline|master timeline]] governs the order — this is the quick map of when each template first gets filled (re-signs and audits recur after):
 
 | Window       | Templates you fill                                                                                                                                                                                                                                                                                 | With lessons |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |

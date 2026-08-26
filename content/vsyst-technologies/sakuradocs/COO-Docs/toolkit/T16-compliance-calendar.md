@@ -63,4 +63,4 @@ October, walked: the AGM happened 30 Sep, so three clocks are already running 鈥
 
 ## Related
 
-Lessons [[05-legal-and-governance-foundation|05]], [[06-money-rails-and-finance-operations|06]], [[13-compliance-calendar-risk-and-insurance|13]], [[09-people-operations|09]] 路 Templates [[T02-company-binder-checklist|T02]], [[T15-risk-register|T15]], [[T14-vendor-and-tool-register|T14]] 路 [[finance/05-phase-5-indian-accounting-system|Finance Phase 5]] 路 [[toolkit/index|COO Toolkit]]
+Lessons [[05-legal-and-governance-foundation|05]], [[06-money-rails-and-finance-operations|06]], [[13-compliance-calendar-risk-and-insurance|13]], [[09-people-operations|09]] 路 Templates [[T02-company-binder-checklist|T02]], [[T15-risk-register|T15]], [[T14-vendor-and-tool-register|T14]] 路 [[finance/05-phase-5-indian-accounting-system|Finance Phase 5]] 路 [[COO-Docs/toolkit/index|COO Toolkit]]

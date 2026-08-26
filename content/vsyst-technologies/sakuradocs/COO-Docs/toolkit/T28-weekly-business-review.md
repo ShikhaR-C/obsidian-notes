@@ -84,4 +84,4 @@ Read it back and notice what it prevents: the activation dip has a cause, an act
 
 ## Related
 
-Lessons [[16-metrics-dashboards-and-scorecards|16]] (the scorecard and KPI tree it reads), [[08-the-operating-cadence|08]] (where it sits in the week), [[19-planning-okrs-and-the-quarterly-rhythm|19]] (how it feeds the monthly and the quarterly) · Templates [[T05-kpi-scorecard|T05]], [[T03-weekly-ops-meeting-agenda|T03]], [[T09-decision-log-and-adr|T09]], [[T23-board-and-investor-update|T23]], [[T19-quarterly-plan-and-review|T19]] · [[toolkit/index|COO Toolkit]]
+Lessons [[16-metrics-dashboards-and-scorecards|16]] (the scorecard and KPI tree it reads), [[08-the-operating-cadence|08]] (where it sits in the week), [[19-planning-okrs-and-the-quarterly-rhythm|19]] (how it feeds the monthly and the quarterly) · Templates [[T05-kpi-scorecard|T05]], [[T03-weekly-ops-meeting-agenda|T03]], [[T09-decision-log-and-adr|T09]], [[T23-board-and-investor-update|T23]], [[T19-quarterly-plan-and-review|T19]] · [[COO-Docs/toolkit/index|COO Toolkit]]

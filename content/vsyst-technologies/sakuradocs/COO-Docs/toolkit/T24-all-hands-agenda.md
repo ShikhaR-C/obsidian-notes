@@ -69,4 +69,4 @@ The first real all-hands at VSYST is four or five people — three directors, th
 
 ## Related
 
-Lessons [[08-the-operating-cadence|08]] (where it sits in the month), [[09-people-operations|09]] (culture as mechanisms), [[16-metrics-dashboards-and-scorecards|16]] (the numbers shown), [[17-delegation-decision-rights-and-org-design|17]] (who owns what by the time the room has eight people) · Templates [[T03-weekly-ops-meeting-agenda|T03]], [[T05-kpi-scorecard|T05]], [[T04-one-on-one-template|T04]], [[T23-board-and-investor-update|T23]], [[T29-org-chart-and-role-charters|T29]] · [[toolkit/index|COO Toolkit]]
+Lessons [[08-the-operating-cadence|08]] (where it sits in the month), [[09-people-operations|09]] (culture as mechanisms), [[16-metrics-dashboards-and-scorecards|16]] (the numbers shown), [[17-delegation-decision-rights-and-org-design|17]] (who owns what by the time the room has eight people) · Templates [[T03-weekly-ops-meeting-agenda|T03]], [[T05-kpi-scorecard|T05]], [[T04-one-on-one-template|T04]], [[T23-board-and-investor-update|T23]], [[T29-org-chart-and-role-charters|T29]] · [[COO-Docs/toolkit/index|COO Toolkit]]

@@ -187,7 +187,7 @@ There are 137 entries above. If a word in a lesson is not here, it is either pla
 1. **_High Output Management_** — because it settles what the job _is_ before you start doing it. Changes your 1:1 format ([[T04-one-on-one-template|T04]]) and how you pick what to do on Monday.
 2. **_Traction_** — because it is the fastest installable operating system for a company of your size. Changes the weekly meeting agenda ([[T03-weekly-ops-meeting-agenda|T03]]) and gives you Rocks and a Scorecard.
 3. **_The Goal_** — because a small company that improves the wrong step gets busier without getting better. Changes what your quarter is about: one constraint statement, written down.
-4. **_The Checklist Manifesto_** — short, and it is the argument for everything in [[toolkit/index|the toolkit]]. Changes your release and onboarding checklists from "we should" into "we do".
+4. **_The Checklist Manifesto_** — short, and it is the argument for everything in [[COO-Docs/toolkit/index|the toolkit]]. Changes your release and onboarding checklists from "we should" into "we do".
 5. **_The Great CEO Within_** — because writing before meeting is the single habit that makes a three-person leadership team fast. Changes how issues reach the weekly meeting.
 
 After those five, read by need: _Measure What Matters_ and _Good Strategy Bad Strategy_ before your first quarterly planning day ([[19-planning-okrs-and-the-quarterly-rhythm|lesson 19]]), _Who_ before your first hire ([[09-people-operations|lesson 09]]), _Working Backwards_ when the scorecard turns into a written weekly review ([[16-metrics-dashboards-and-scorecards|lesson 16]]), and _Team Topologies_ only once there is more than one team to shape.
@@ -489,7 +489,7 @@ Behind lesson 04's pay and equity section and lesson 09's hiring. These are recr
 
 ### Startup ops checklists and templates (global)
 
-The template sources behind [[toolkit/index|the toolkit]] — adapted for India rather than copied.
+The template sources behind [[COO-Docs/toolkit/index|the toolkit]] — adapted for India rather than copied.
 
 - [Stripe — the founding team's first checklist](https://stripe.com/resources/more/checklist-for-business-startups-what-founding-teams-need-to-do-first)
 - [Whale — SOPs for your startup](https://usewhale.io/blog/sops-for-your-startup/)
@@ -514,12 +514,12 @@ The template sources behind [[toolkit/index|the toolkit]] — adapted for India 
 
 ## 5. The course's own map
 
-Every file in the course, with the reason you would open it. [[00-course-map-and-timeline|The master timeline]] carries the sequencing — what to do in which week — and [[toolkit/index|the toolkit index]] carries the per-template detail. This is the flat index for when you know what you need and only want the door.
+Every file in the course, with the reason you would open it. [[COO-Docs/00-course-map-and-timeline|The master timeline]] carries the sequencing — what to do in which week — and [[COO-Docs/toolkit/index|the toolkit index]] carries the per-template detail. This is the flat index for when you know what you need and only want the door.
 
 | File                                                                                                   | Go here when…                                                                                                                                                                        |
 | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | [[COO-Docs/index\|COO Docs]]                                                                           | You want the whole course in one page — the framing, the governing rule, and where VSYST stands today                                                                                |
-| [[00-course-map-and-timeline\|00 — Course Map and Master Timeline]]                                    | You want to know what to actually do this week, who owns it, which template it fills and when you may move on                                                                        |
+| [[COO-Docs/00-course-map-and-timeline\|00 — Course Map and Master Timeline]]                           | You want to know what to actually do this week, who owns it, which template it fills and when you may move on                                                                        |
 | [[01-what-is-a-coo\|01 — What Is a COO]]                                                               | Someone asks what the seat is, or you need to draw the line between COO, CEO, CFO, GM, chief of staff and head of ops                                                                |
 | [[02-how-a-coo-thinks\|02 — How a COO Thinks]]                                                         | You are stuck on a problem and need the model — the constraint, the door type, leverage, mechanisms, second-order effects                                                            |
 | [[03-the-coo-core-value-and-the-ceo-coo-contract\|03 — The COO's Core Value and the CEO–COO Contract]] | You and the CEO have not written down who decides what, or a decision keeps getting relitigated                                                                                      |
@@ -541,10 +541,10 @@ Every file in the course, with the reason you would open it. [[00-course-map-and
 | [[19-planning-okrs-and-the-quarterly-rhythm\|19 — Planning, OKRs and the Quarterly Rhythm]]            | It is annual or quarterly planning week, or the monthly written update is due                                                                                                        |
 | [[20-the-autopilot-test-and-scaling-the-machine\|20 — The Autopilot Test and Scaling the Machine]]     | You want to score how far the machine has come, run the two-week holiday test, or plan the next operator hire                                                                        |
 | **21 — Reference** (this page)                                                                         | You need a definition, a book, a source, or the map you are reading now                                                                                                              |
-| [[toolkit/index\|COO Toolkit]] (T01–T30)                                                               | You need the blank master of a template, the rule for filling it, or the map of which template comes in which week                                                                   |
+| [[COO-Docs/toolkit/index\|COO Toolkit]] (T01–T30)                                                      | You need the blank master of a template, the rule for filling it, or the map of which template comes in which week                                                                   |
 | [the workbook](toolkit/vsyst-coo-workbook.xlsx)                                                        | The number lives in a sheet, not a note — cash, budget, scorecard, OKRs, compliance, vendors, risks, RACI, hiring, headcount, decisions, cadence, SOP index, DoA, automation backlog |
 
-**The templates, by the window in which you first fill them** (order and detail: [[toolkit/index|the toolkit index]]):
+**The templates, by the window in which you first fill them** (order and detail: [[COO-Docs/toolkit/index|the toolkit index]]):
 
 | Window      | Templates                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -570,4 +570,4 @@ This course deliberately does not repeat what the vault already holds. Eight nei
 
 ---
 
-**Back to:** [[COO-Docs/index|COO Docs]] — the course landing page · [[00-course-map-and-timeline|00 — Course Map and Master Timeline]] — what to do next, in order.
+**Back to:** [[COO-Docs/index|COO Docs]] — the course landing page · [[COO-Docs/00-course-map-and-timeline|00 — Course Map and Master Timeline]] — what to do next, in order.

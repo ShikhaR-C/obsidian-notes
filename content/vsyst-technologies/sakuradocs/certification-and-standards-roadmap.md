@@ -28,16 +28,16 @@ Read this alongside [[startup-operations-plan|Startup Operations Plan]] (the bus
 
 ## 2. The register — ranked by the odds of anyone actually asking
 
-| Standard | What it certifies | Who at VSYST would be asked | Indicative cost / effort | Verdict |
-| --- | --- | --- | --- | --- |
-| **ISO/IEC 27001:2022** (+ Amd 1:2024) | Information Security Management System (ISMS) | IOCL / PSU vendor security review; enterprise transporter contracts; bank & gateway partners; **the GSP route explicitly** | ₹1–4 lakh all-in; **3–6 months** | **The one that will be demanded.** Trigger-based project — §3 |
-| **ISO/IEC 27701:2025** | Privacy Information Management System (PIMS) | DPDP-conscious enterprise customers; contracts where we are a Processor for dealers' customer data | Cheapest as an integrated audit with 27001; standalone now possible | Build the documents now, certify on demand — §4 |
-| **ISO 9001** (**:2015** → **:2026**) | Quality Management System (QMS) | PSU tender pre-qualification criteria; IOCL vendor enlistment | **₹25,000–75,000**, up to **75% MSME-reimbursable**; 2–4 months | Only if tenders are real — **and there is a timing window right now**, §5 |
-| **ISO/IEC 27017 / 27018** | Cloud security controls / PII in public cloud | Rarely asked standalone | Small increment on a 27001 audit | Add as scope extensions **after** 27001, never before |
-| **ISO/IEC 20000-1:2018** | IT service management (ITSM) | Occasionally a very large enterprise with SLA language | Comparable to 27001 | Wait for a named ask. We already do the substance |
-| **ISO 22301:2019** | Business continuity (BCM) | BFSI-grade counterparties | Comparable to 27001 | Wait for a named ask. [[07-tools-and-it-foundation|Lesson 07]] §5 (RPO/RTO + restore drills) is the substance |
-| **ISO/IEC 42001:2023** | AI management system (AIMS) | Nobody, yet | — | Watch item only. Revisit if DZZLO ships AI that **decides** things about users or credit |
-| **ISO 14001 / ISO 45001** | Environmental / occupational health & safety | Boilerplate lines in some PSU checklists | — | **Skip.** Not meaningful for a software firm; argue the exclusion rather than buy the certificate |
+| Standard                              | What it certifies                             | Who at VSYST would be asked                                                                                                | Indicative cost / effort                                            | Verdict                                                                                           |
+| ------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **ISO/IEC 27001:2022** (+ Amd 1:2024) | Information Security Management System (ISMS) | IOCL / PSU vendor security review; enterprise transporter contracts; bank & gateway partners; **the GSP route explicitly** | ₹1–4 lakh all-in; **3–6 months**                                    | **The one that will be demanded.** Trigger-based project — §3                                     |
+| **ISO/IEC 27701:2025**                | Privacy Information Management System (PIMS)  | DPDP-conscious enterprise customers; contracts where we are a Processor for dealers' customer data                         | Cheapest as an integrated audit with 27001; standalone now possible | Build the documents now, certify on demand — §4                                                   |
+| **ISO 9001** (**:2015** → **:2026**)  | Quality Management System (QMS)               | PSU tender pre-qualification criteria; IOCL vendor enlistment                                                              | **₹25,000–75,000**, up to **75% MSME-reimbursable**; 2–4 months     | Only if tenders are real — **and there is a timing window right now**, §5                         |
+| **ISO/IEC 27017 / 27018**             | Cloud security controls / PII in public cloud | Rarely asked standalone                                                                                                    | Small increment on a 27001 audit                                    | Add as scope extensions **after** 27001, never before                                             |
+| **ISO/IEC 20000-1:2018**              | IT service management (ITSM)                  | Occasionally a very large enterprise with SLA language                                                                     | Comparable to 27001                                                 | Wait for a named ask. We already do the substance                                                 |
+| **ISO 22301:2019**                    | Business continuity (BCM)                     | BFSI-grade counterparties                                                                                                  | Comparable to 27001                                                 | Wait for a named ask. [[07-tools-and-it-foundation\|Lesson 07]] §5 (RPO/RTO + restore drills) is the substance |
+| **ISO/IEC 42001:2023**                | AI management system (AIMS)                   | Nobody, yet                                                                                                                | —                                                                   | Watch item only. Revisit if DZZLO ships AI that **decides** things about users or credit          |
+| **ISO 14001 / ISO 45001**             | Environmental / occupational health & safety  | Boilerplate lines in some PSU checklists                                                                                   | —                                                                   | **Skip.** Not meaningful for a software firm; argue the exclusion rather than buy the certificate |
 
 Two structural points about that table. First, the top three are the only rows with a plausible named asker in our pipeline today. Second, the rows are **not** independent: 27001 is the platform, 27017/27018/27701 bolt onto it cheaply, and 9001 is an unrelated track bought for a different reason (tender eligibility, not security).
 
@@ -67,16 +67,16 @@ There is no legacy question for us: **all ISO/IEC 27001:2013 certificates expire
 
 What a certification body will actually want to see, beyond the twelve controls:
 
-| Artefact | What it is | Do we have it? |
-| --- | --- | --- |
-| Information security policy | The top-level signed policy | No — [[T27-policy-handbook-toc\|T27]] is the right home |
-| Risk assessment + risk treatment plan | Named assets, threats, scored risks, decisions | No — the [[T15-risk-register\|T15]] risk register is the seed, needs an infosec cut |
-| **Statement of Applicability (SoA)** | Every Annex A control: applied or excluded, with justification | No — this is the single biggest document |
-| Internal audit | Someone audits the ISMS before the CB does | No — a small company usually buys this |
-| Management review | Minuted leadership review of the ISMS | Folds into the board/ops cadence ([[08-the-operating-cadence\|lesson 08]]) |
-| Supplier security | Data-processing terms per vendor | Partly — [[T14-vendor-and-tool-register\|T14]] already asks for this |
-| Secure development | SDLC, code review, release control | Partly — [[T26-release-checklist\|T26]] and [[12-product-and-engineering-operations\|lesson 12]] |
-| Evidence of operation | Access reviews, backup restores, incident drills — **run, logged, dated** | This is what [[07-tools-and-it-foundation\|lesson 07]] §6 produces |
+| Artefact                              | What it is                                                                | Do we have it?                                                                                   |
+| ------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Information security policy           | The top-level signed policy                                               | No — [[T27-policy-handbook-toc\|T27]] is the right home                                          |
+| Risk assessment + risk treatment plan | Named assets, threats, scored risks, decisions                            | No — the [[T15-risk-register\|T15]] risk register is the seed, needs an infosec cut              |
+| **Statement of Applicability (SoA)**  | Every Annex A control: applied or excluded, with justification            | No — this is the single biggest document                                                         |
+| Internal audit                        | Someone audits the ISMS before the CB does                                | No — a small company usually buys this                                                           |
+| Management review                     | Minuted leadership review of the ISMS                                     | Folds into the board/ops cadence ([[08-the-operating-cadence\|lesson 08]])                       |
+| Supplier security                     | Data-processing terms per vendor                                          | Partly — [[T14-vendor-and-tool-register\|T14]] already asks for this                             |
+| Secure development                    | SDLC, code review, release control                                        | Partly — [[T26-release-checklist\|T26]] and [[12-product-and-engineering-operations\|lesson 12]] |
+| Evidence of operation                 | Access reviews, backup restores, incident drills — **run, logged, dated** | This is what [[07-tools-and-it-foundation\|lesson 07]] §6 produces                               |
 
 The last row is why the sequencing rule matters. An auditor does not certify intentions; they sample **records over a period**. A system that has been running three months audits cleanly; one that was assembled last week does not.
 
@@ -84,20 +84,20 @@ The last row is why the sequencing rule matters. An auditor does not certify int
 
 Certification is granted to a legal entity **for a defined scope**, and the scope statement is printed on the certificate. Enterprise reviewers read it. Propose something narrow and honest:
 
-> *"Design, development, hosting, and support of the DZZLO OMS platform (API, web and mobile applications), Raipur, India."*
+> _"Design, development, hosting, and support of the DZZLO OMS platform (API, web and mobile applications), Raipur, India."_
 
 A narrow scope is cheaper to audit, faster to reach, and passes review. A sprawling "all business operations of VSYST Technologies" scope costs more, takes longer, and invites questions we cannot yet answer.
 
 ### 3.4 Cost and timeline
 
-| Line item | Indicative | Source |
-| --- | --- | --- |
-| Consulting / implementation | ₹1–3 lakh | [TCSA — ISO 27001 cost India 2026](https://www.tcsa.in/resources/iso-27001-cost-india-2026) |
-| Certification body audit (Stage 1 + Stage 2, billed separately) | ₹0.8–1.2 lakh | same |
-| **Total, small Indian company** | **₹1–4 lakh** | same |
-| Time, kickoff → certificate | **12–16 weeks** fast track; **3–6 months** typical | [Secureframe — certification timeline](https://secureframe.com/hub/iso-27001/certification-timeline) |
-| Stage 1 → Stage 2 gap | typically 6–8 weeks; the ISMS should have run ≥3 months | [Glocert — Stage 1 vs Stage 2](https://www.glocertinternational.com/resources/guides/iso-27001-certification-process/) |
-| Ongoing | annual surveillance audits (years 1 and 2), full recertification in year 3 | [ISMS.online — audit cycle](https://www.isms.online/iso-27001/audits/cycle-phases-timelines/) |
+| Line item                                                       | Indicative                                                                 | Source                                                                                                                 |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Consulting / implementation                                     | ₹1–3 lakh                                                                  | [TCSA — ISO 27001 cost India 2026](https://www.tcsa.in/resources/iso-27001-cost-india-2026)                            |
+| Certification body audit (Stage 1 + Stage 2, billed separately) | ₹0.8–1.2 lakh                                                              | same                                                                                                                   |
+| **Total, small Indian company**                                 | **₹1–4 lakh**                                                              | same                                                                                                                   |
+| Time, kickoff → certificate                                     | **12–16 weeks** fast track; **3–6 months** typical                         | [Secureframe — certification timeline](https://secureframe.com/hub/iso-27001/certification-timeline)                   |
+| Stage 1 → Stage 2 gap                                           | typically 6–8 weeks; the ISMS should have run ≥3 months                    | [Glocert — Stage 1 vs Stage 2](https://www.glocertinternational.com/resources/guides/iso-27001-certification-process/) |
+| Ongoing                                                         | annual surveillance audits (years 1 and 2), full recertification in year 3 | [ISMS.online — audit cycle](https://www.isms.online/iso-27001/audits/cycle-phases-timelines/)                          |
 
 **VERIFY LIVE** — all figures are 2026 market estimates from certification vendors, i.e. from parties selling the service. Get three written quotes and compare **three-year totals**, not year-one prices: surveillance audits are where a cheap first year is recovered.
 
@@ -125,11 +125,11 @@ ISO 9001 certifies a **quality management system**, not security. Its entire val
 
 **The window, as of today:** ISO 9001 is being revised. The FDIS approval ballot closed **10 July 2026** and publication of **ISO 9001:2026** is scheduled for **16 September 2026**, with a three-year transition to **September 2029** ([Punyam — publication expected September 2026](https://www.punyam.com/blog/iso-9001-revision-update-publication-expected-in-september-2026/); [SGS — key updates and transition](https://www.sgs.com/en/showcases/iso-9001-2026-key-updates-and-transition-guidance)). The revision adds emphasis on quality culture, ethical conduct, clearer risk-and-opportunity handling, and climate change. **VERIFY LIVE** — a publication date is a schedule until it is history.
 
-| Situation | Do this |
-| --- | --- |
+| Situation                                             | Do this                                                                                                           |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | A tender needing ISO 9001 closes **before ~Nov 2026** | Certify to **:2015 now**. The PQC wants a valid accredited certificate; transition later inside the 3-year window |
-| Tenders are a **2027 plan** | **Wait.** Certify directly to **:2026** after publication and skip a transition audit entirely |
-| No tender pipeline exists | **Do nothing.** ISO 9001 buys us nothing outside procurement |
+| Tenders are a **2027 plan**                           | **Wait.** Certify directly to **:2026** after publication and skip a transition audit entirely                    |
+| No tender pipeline exists                             | **Do nothing.** ISO 9001 buys us nothing outside procurement                                                      |
 
 **The cost changes this decision.** ISO 9001 at our size is a **1.5–2 day** audit costing **₹25,000–75,000** all-in, and the Ministry of MSME reimburses **75% up to ₹75,000** for micro and small enterprises with Udyam registration — 9001 is explicitly in scope for that scheme where 27001 is not (§6.2, §6.4). A near-free certificate that unlocks tender eligibility is a different proposition from a ₹3-lakh one, so the "is the pipeline real?" bar is lower here than anywhere else in this document. It is still not zero: an unused certificate carries annual surveillance audits forever.
 
@@ -143,14 +143,14 @@ The three questions a founder actually asks. Taken in that order, because the an
 
 What gates us is not eligibility, it is **evidence**. A certification body will not proceed to Stage 2 until the system has produced records to sample:
 
-| Prerequisite before Stage 2 | Why | Do we have it? |
-| --- | --- | --- |
-| A defined, documented scope | It is printed on the certificate (§3.3) | One sentence of work |
-| The management system **operating for ~3 months** | The auditor samples records over a period; there is no fixed minimum in the standard, but ~3 months is the working expectation | **No — this is the clock that cannot be bought** |
-| **At least one complete internal audit** | ISO 27001 cl. 9.2 / ISO 9001 cl. 9.2 | No — usually outsourced by a small company |
-| **At least one management review** | cl. 9.3, minuted | No — folds into the board cadence |
-| Risk assessment + treatment plan, and (for 27001) the **SoA** | The core documents an auditor reads first | No — §3.2 lists them |
-| Day-to-day operational records | Access reviews, backup restores, incident records, training sign-offs | Partially — this is exactly what [[07-tools-and-it-foundation\|lesson 07]] §6 produces |
+| Prerequisite before Stage 2                                   | Why                                                                                                                            | Do we have it?                                                                         |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| A defined, documented scope                                   | It is printed on the certificate (§3.3)                                                                                        | One sentence of work                                                                   |
+| The management system **operating for ~3 months**             | The auditor samples records over a period; there is no fixed minimum in the standard, but ~3 months is the working expectation | **No — this is the clock that cannot be bought**                                       |
+| **At least one complete internal audit**                      | ISO 27001 cl. 9.2 / ISO 9001 cl. 9.2                                                                                           | No — usually outsourced by a small company                                             |
+| **At least one management review**                            | cl. 9.3, minuted                                                                                                               | No — folds into the board cadence                                                      |
+| Risk assessment + treatment plan, and (for 27001) the **SoA** | The core documents an auditor reads first                                                                                      | No — §3.2 lists them                                                                   |
+| Day-to-day operational records                                | Access reviews, backup restores, incident records, training sign-offs                                                          | Partially — this is exactly what [[07-tools-and-it-foundation\|lesson 07]] §6 produces |
 
 Sources for the prerequisite set: [Sprinto — ISO 27001 audit requirements and stages](https://sprinto.com/blog/iso-27001-audit/); [Glocert — Stage 1 vs Stage 2](https://www.glocertinternational.com/resources/guides/iso-27001-certification-process/).
 
@@ -160,15 +160,15 @@ Sources for the prerequisite set: [Sprinto — ISO 27001 audit requirements and 
 
 A certification quote is, at bottom, **audit days × day rate**. The days are not a negotiating position: they are fixed by accreditation rules that bind the certification body.
 
-**ISO 9001 / QMS** — IAF MD 5:2023, Table QMS 1, initial audit (Stage 1 + Stage 2 combined), by *effective number of personnel*:
+**ISO 9001 / QMS** — IAF MD 5:2023, Table QMS 1, initial audit (Stage 1 + Stage 2 combined), by _effective number of personnel_:
 
 | Effective personnel | Initial audit days |
-| --- | --- |
-| **1–5** | **1.5** |
-| **6–10** | **2** |
-| 11–15 | 2.5 |
-| 16–25 | 3 |
-| 26–45 | 4 |
+| ------------------- | ------------------ |
+| **1–5**             | **1.5**            |
+| **6–10**            | **2**              |
+| 11–15               | 2.5                |
+| 16–25               | 3                  |
+| 26–45               | 4                  |
 
 **ISO 27001 / ISMS** — ISO/IEC 27006-1 sets a different, higher scale: roughly **5 audit days for an organisation under 10 people**, rising to 14+ around 200 staff ([ISMS.online — ISO 27006](https://www.isms.online/iso-27006/)). At our headcount an ISMS audit is about **three times** a QMS audit, and that ratio — not consultant greed — is why 27001 costs what it does.
 
@@ -176,20 +176,20 @@ The rules around those numbers, all from [IAF MD 5:2023](https://iaf.nu/iaf_syst
 
 - **Surveillance ≈ 1/3** of the initial audit time, annually. **Recertification ≈ 2/3** of what an initial audit would take today (cl. 5, cl. 6). Neither is normally under one audit day.
 - **Effective personnel** includes part-time and partially-in-scope people converted to full-time equivalents (cl. 2.3.3) — so contractors count, and a 3-person company does not become a 1-person audit.
-- **Reductions are capped at 30%** of the table figure (cl. 3.9). Three of the standard reduction factors genuinely apply to us (cl. 8 v): *very small site for the number of personnel*, *high level of automation*, and *staff working off-location whose compliance is auditable through records*.
+- **Reductions are capped at 30%** of the table figure (cl. 3.9). Three of the standard reduction factors genuinely apply to us (cl. 8 v): _very small site for the number of personnel_, _high level of automation_, and _staff working off-location whose compliance is auditable through records_.
 - Days are rounded to the nearest half day (cl. 2.2.3), and remote auditing cannot cut on-site duration below 80% (cl. 4.1).
 
 **The practical use of this section:** ask every quote to state **audit days for Stage 1, Stage 2, surveillance and recertification, separately**. A quote that won't state days is not a quote — and a quoted day-count materially below the table is a certificate that will not survive scrutiny.
 
 ### 6.3 The rupee ranges
 
-| What | Audit days at our size | Year-1 all-in | Ongoing | Elapsed time |
-| --- | --- | --- | --- | --- |
-| **ISO/IEC 27001** | ~5 | **₹1–4 lakh** (consulting ₹1–3 L + CB audit ₹0.8–1.2 L) | Surveillance yr 1 & 2 ≈ 1/3 days each; recertification yr 3 ≈ 2/3 | 12–16 weeks fast track; **3–6 months** typical |
-| **ISO 9001** | 1.5–2 | **₹25,000–75,000** for under 25 staff, accredited and all-in — **less after the MSME subsidy, §6.4** | Annual surveillance | 2–4 months |
-| **ISO/IEC 27701** | Increment on the ISMS audit | Cheapest as an **integrated audit alongside 27001** — shared clauses are audited once; standalone costs materially more | Folded into the same cycle | Add to the 27001 timeline |
-| **CERT-In-empanelled VAPT** | n/a — engagement, not certification | **₹40,000–1.5 lakh** for a typical SaaS web-app scope; ₹1.5–4 lakh at moderate complexity | Annual re-test, renewal-gated for govt programmes | 2–6 weeks |
-| **ISO 27017 / 27018** | Small increment | Marginal, as a scope extension on an existing 27001 audit | Same cycle | Same cycle |
+| What                        | Audit days at our size              | Year-1 all-in                                                                                                           | Ongoing                                                           | Elapsed time                                   |
+| --------------------------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------------------------------------- |
+| **ISO/IEC 27001**           | ~5                                  | **₹1–4 lakh** (consulting ₹1–3 L + CB audit ₹0.8–1.2 L)                                                                 | Surveillance yr 1 & 2 ≈ 1/3 days each; recertification yr 3 ≈ 2/3 | 12–16 weeks fast track; **3–6 months** typical |
+| **ISO 9001**                | 1.5–2                               | **₹25,000–75,000** for under 25 staff, accredited and all-in — **less after the MSME subsidy, §6.4**                    | Annual surveillance                                               | 2–4 months                                     |
+| **ISO/IEC 27701**           | Increment on the ISMS audit         | Cheapest as an **integrated audit alongside 27001** — shared clauses are audited once; standalone costs materially more | Folded into the same cycle                                        | Add to the 27001 timeline                      |
+| **CERT-In-empanelled VAPT** | n/a — engagement, not certification | **₹40,000–1.5 lakh** for a typical SaaS web-app scope; ₹1.5–4 lakh at moderate complexity                               | Annual re-test, renewal-gated for govt programmes                 | 2–6 weeks                                      |
+| **ISO 27017 / 27018**       | Small increment                     | Marginal, as a scope extension on an existing 27001 audit                                                               | Same cycle                                                        | Same cycle                                     |
 
 Sources: [TCSA — ISO 27001 cost India 2026](https://www.tcsa.in/resources/iso-27001-cost-india-2026); [JS Certification — ISO 9001 cost India 2026](https://jscertification.com/iso-9001-certification-cost-in-india/); [ISMS.online — ISO 27701:2025 certification cost](https://www.isms.online/iso-27701/certification-2025/certification-cost/); [TCSA — VAPT cost India 2026](https://www.tcsa.in/resources/vapt-cost-india-2026). All **VERIFY LIVE** — every figure comes from a party selling the service.
 
@@ -211,15 +211,15 @@ Two consequences worth acting on:
 
 The elapsed-time figures in §6.3 are dominated by one immovable block. Roughly, for ISO 27001:
 
-| Weeks | What happens | Compressible with money? |
-| --- | --- | --- |
-| 0–2 | Scope defined, gap analysis against Annex A | Yes |
-| 2–8 | Documentation: policy, risk assessment, treatment plan, SoA, procedures | Yes — this is what consultants sell |
-| **8–20** | **The ISMS operates and generates records** (~3 months minimum) | **No** |
-| ~week 20 | Internal audit + management review completed | Partly |
-| ~week 21 | **Stage 1** — documentation review; improvement requests issued | — |
-| +6–8 weeks | **Stage 2** — implementation verified, 3–7 days on site depending on scope | Slightly |
-| +2–4 weeks | Nonconformities closed, certificate issued | Partly |
+| Weeks      | What happens                                                               | Compressible with money?            |
+| ---------- | -------------------------------------------------------------------------- | ----------------------------------- |
+| 0–2        | Scope defined, gap analysis against Annex A                                | Yes                                 |
+| 2–8        | Documentation: policy, risk assessment, treatment plan, SoA, procedures    | Yes — this is what consultants sell |
+| **8–20**   | **The ISMS operates and generates records** (~3 months minimum)            | **No**                              |
+| ~week 20   | Internal audit + management review completed                               | Partly                              |
+| ~week 21   | **Stage 1** — documentation review; improvement requests issued            | —                                   |
+| +6–8 weeks | **Stage 2** — implementation verified, 3–7 days on site depending on scope | Slightly                            |
+| +2–4 weeks | Nonconformities closed, certificate issued                                 | Partly                              |
 
 Sources: [Secureframe — certification timeline](https://secureframe.com/hub/iso-27001/certification-timeline); [Glocert — Stage 1 vs Stage 2](https://www.glocertinternational.com/resources/guides/iso-27001-certification-process/); [ISMS.online — audit cycle](https://www.isms.online/iso-27001/audits/cycle-phases-timelines/).
 
@@ -229,14 +229,14 @@ Sources: [Secureframe — certification timeline](https://secureframe.com/hub/is
 
 In Indian practice these get asked **before** anyone asks for ISO 27001.
 
-| Ask | Where it comes from | Cost / time | Notes |
-| --- | --- | --- | --- |
+| Ask                                               | Where it comes from                                                                                     | Cost / time                                                          | Notes                                                                                                                                                                                                      |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **CERT-In-empanelled auditor / VAPT certificate** | Recurs across **every** government integration we researched: DigiLocker, NTR/MoRTH, GSP, UIDAI Sub-AUA | **₹40k–1.5 L** typical SaaS web-app scope; 2–6 weeks; annual re-test | [[tasks_15_govt_apis/references\|tasks_15 · references]] concludes it directly: **budget one auditor relationship** — a single engagement can serve several programmes. Most are **annual**, renewal-gated |
-| **STQC audit of the application** | DigiLocker / API Setu onboarding, post-integration | ⚠️ quote — not published | [[05-apisetu-digilocker-onboarding\|05 — API Setu / DigiLocker]] §Audits |
-| **Annual re-audit + fresh certificate** | NTR/MoRTH: 1-year client-ID validity, annual renewal + fresh audit | Recurring, per above | [[04-vehicle-rc-driving-licence\|04 — Vehicle RC / DL]] |
-| **PCI DSS SAQ-A** | If card data ever transits our flow via [[04-payment-flow\|Easebuzz]] | Self-assessment: internal effort + ASV scan | A self-assessment, not an audit — but no longer trivial, see below |
-| **SOC 2 Type II** | US / international buyers only | 6–12 months; separate budget | ~80% control overlap with 27001. **Do not run both without a named customer demanding the second** |
-| **DPDP compliance** | Statutory | Internal + legal | Not certifiable. Evidence it via §4 |
+| **STQC audit of the application**                 | DigiLocker / API Setu onboarding, post-integration                                                      | ⚠️ quote — not published                                             | [[05-apisetu-digilocker-onboarding\|05 — API Setu / DigiLocker]] §Audits                                                                                                                                   |
+| **Annual re-audit + fresh certificate**           | NTR/MoRTH: 1-year client-ID validity, annual renewal + fresh audit                                      | Recurring, per above                                                 | [[04-vehicle-rc-driving-licence\|04 — Vehicle RC / DL]]                                                                                                                                                    |
+| **PCI DSS SAQ-A**                                 | If card data ever transits our flow via [[04-payment-flow\|Easebuzz]]                                   | Self-assessment: internal effort + ASV scan                          | A self-assessment, not an audit — but no longer trivial, see below                                                                                                                                         |
+| **SOC 2 Type II**                                 | US / international buyers only                                                                          | 6–12 months; separate budget                                         | ~80% control overlap with 27001. **Do not run both without a named customer demanding the second**                                                                                                         |
+| **DPDP compliance**                               | Statutory                                                                                               | Internal + legal                                                     | Not certifiable. Evidence it via §4                                                                                                                                                                        |
 
 On **PCI DSS**: SAQ-A covers fully outsourced e-commerce merchants using a redirect or iframe to a compliant gateway — which is the normal Easebuzz shape. Under **v4.0.1**, two requirements now apply to SAQ-A e-commerce merchants that did not before: **6.4.3** (payment-page script management — every script authorised, inventoried with written justification, integrity assured) and **11.6.1** (payment-page tamper detection) ([PCIDSS Dashboard — SAQ-A for hosted checkout](https://pcidss-dashboard.com/blog/saq-a-for-hosted-checkout-pages-what-you-need-to-know/); [Hyperproof — new SAQ A eligibility criteria](https://hyperproof.io/resource/pci-dss-4-0-update-new-saq-a-eligibility-criteria/)). Requirements 2, 6, 8 and 11 also apply to the web server hosting the redirect, and that server must be in the external vulnerability scan scope. Separately, RBI rules prohibit merchants storing CVV and mandate tokenisation for online card storage — ⚠️ **VERIFY LIVE** with Easebuzz which SAQ tier our integration model puts us in, in writing, before go-live.
 
@@ -247,7 +247,7 @@ India has a large, cheap market in **unaccredited** ISO certificates. They arriv
 The checks, in order:
 
 1. **The certification body must be accredited by an IAF MLA signatory** — **NABCB** in India (a full IAF member and MLA signatory, [NABCB on IAF CertSearch](https://www.iafcertsearch.org/accreditation-body/26010c7f-faa6-5e5b-9e55-a2e121c45e5d)), or UKAS, ANAB and equivalents.
-2. **The certificate must carry both logos** — the certification body's *and* the accreditation body's mark. A certificate with only the CB's logo, or an IAF logo without a real accreditation, is unaccredited ([NABCB — guidance on selecting a certification body, PDF](https://nabcb.qci.org.in/wp-content/uploads/2023/08/BCB-602_Guidance-on-selection-of-CB_NABCB_Sept-2018.pdf); [CCC — how to tell if a certificate is genuine](https://ccc-consultants.org/how-do-you-know-if-your-iso-certificates-are-genuine/)).
+2. **The certificate must carry both logos** — the certification body's _and_ the accreditation body's mark. A certificate with only the CB's logo, or an IAF logo without a real accreditation, is unaccredited ([NABCB — guidance on selecting a certification body, PDF](https://nabcb.qci.org.in/wp-content/uploads/2023/08/BCB-602_Guidance-on-selection-of-CB_NABCB_Sept-2018.pdf); [CCC — how to tell if a certificate is genuine](https://ccc-consultants.org/how-do-you-know-if-your-iso-certificates-are-genuine/)).
 3. **Verify the body independently** at [iafcertsearch.org](https://www.iafcertsearch.org/) before signing — not from the body's own website.
 4. **Check the accreditation scope covers IT/software**, not just manufacturing. An accredited body outside its scope is the same problem wearing better clothes.
 5. **The consultant cannot be the certifier.** Impartiality rules forbid the body that built your ISMS from auditing it. Anyone offering "implementation + certificate, one package" is telling you which kind of certificate it is — walk.
@@ -259,16 +259,16 @@ Put the chosen body and its renewal dates in [[T14-vendor-and-tool-register|T14]
 
 Certification is not a date on the calendar; it is an **event-driven row**, like the ones in [[13-compliance-calendar-risk-and-insurance|lesson 13]] §2.3. Write these into [[T16-compliance-calendar|T16]] as dormant rows with the trigger stated, and the scored version of the risk ("a deal is lost for want of a certificate we cannot obtain in time") into [[T15-risk-register|T15]].
 
-| Trigger event | Action it fires | Owner | Lead time | Budget |
-| --- | --- | --- | --- | --- |
-| An IOCL / enterprise **security questionnaire** arrives | Answer from the twelve controls; open the ISO 27001 project if the deal is probable | CEO/CTO + COO | 3–6 months | ₹1–4 L |
-| **GSP batch-6 window opens** ([[02-gstin-verification\|02]]) | ISO 27001 + CERT-In-empanelled audit become **mandatory before go-live** | CEO/CTO | 3–6 months | ₹1–4 L + annual audit |
-| Any **government API** onboarding starts (DigiLocker, NTR, e-way/e-invoice) | Engage the CERT-In-empanelled auditor; STQC where applicable | CEO/CTO | 1–3 months | Per [[tasks_15_govt_apis/00-overview\|tasks_15 overview]] |
-| A **PSU tender PQC** lists ISO 9001 | Apply the §5 timing rule | COO | 2–4 months | ₹25k–75k, 75% MSME-reimbursable |
-| First enterprise contract with **DPDP / processor clauses** | Complete the PIMS artefacts; certify 27701 only if demanded | COO | Aligned to 13 May 2027 | Incremental |
-| **Easebuzz production go-live** | Confirm SAQ tier in writing; close 6.4.3 / 11.6.1 | CEO/CTO | Weeks | Internal effort |
-| A **US/international** customer asks | SOC 2 Type II — only then, and reuse the 27001 controls | COO | 6–12 months | Separate |
-| DZZLO ships **AI that decides** something about a user | Re-open ISO/IEC 42001 as a real question | CEO/CTO | — | — |
+| Trigger event                                                               | Action it fires                                                                     | Owner         | Lead time              | Budget                                                    |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------- | ---------------------- | --------------------------------------------------------- |
+| An IOCL / enterprise **security questionnaire** arrives                     | Answer from the twelve controls; open the ISO 27001 project if the deal is probable | CEO/CTO + COO | 3–6 months             | ₹1–4 L                                                    |
+| **GSP batch-6 window opens** ([[02-gstin-verification\|02]])                | ISO 27001 + CERT-In-empanelled audit become **mandatory before go-live**            | CEO/CTO       | 3–6 months             | ₹1–4 L + annual audit                                     |
+| Any **government API** onboarding starts (DigiLocker, NTR, e-way/e-invoice) | Engage the CERT-In-empanelled auditor; STQC where applicable                        | CEO/CTO       | 1–3 months             | Per [[tasks_15_govt_apis/00-overview\|tasks_15 overview]] |
+| A **PSU tender PQC** lists ISO 9001                                         | Apply the §5 timing rule                                                            | COO           | 2–4 months             | ₹25k–75k, 75% MSME-reimbursable                           |
+| First enterprise contract with **DPDP / processor clauses**                 | Complete the PIMS artefacts; certify 27701 only if demanded                         | COO           | Aligned to 13 May 2027 | Incremental                                               |
+| **Easebuzz production go-live**                                             | Confirm SAQ tier in writing; close 6.4.3 / 11.6.1                                   | CEO/CTO       | Weeks                  | Internal effort                                           |
+| A **US/international** customer asks                                        | SOC 2 Type II — only then, and reuse the 27001 controls                             | COO           | 6–12 months            | Separate                                                  |
+| DZZLO ships **AI that decides** something about a user                      | Re-open ISO/IEC 42001 as a real question                                            | CEO/CTO       | —                      | —                                                         |
 
 ## 10. The next 90 days — with no certificate purchased
 
@@ -276,7 +276,7 @@ Certification is not a date on the calendar; it is an **event-driven row**, like
 2. **Write four documents we need anyway**: the information security policy ([[T27-policy-handbook-toc|T27]]), an infosec cut of the risk register ([[T15-risk-register|T15]]), a **draft Statement of Applicability**, and data-processing terms per vendor in [[T14-vendor-and-tool-register|T14]]. These are ~70% of a 27001 project and 100% useful without one.
 3. **Shortlist two or three CERT-In-empanelled auditors** and get quotes. One relationship, several programmes — this is the single highest-leverage purchase on the page, and it is needed before ISO anything.
 4. **Add the dormant rows** from §9 to [[T16-compliance-calendar|T16]], and the certification budget line to [[T20-budget-vs-actual-and-cash-forecast|T20]].
-5. **Confirm Udyam registration and the MSME reimbursement route** with the CA (§6.4) — it is the difference between a ₹75,000 ISO 9001 and a ₹19,000 one, and it must be in place *before* the certification spend, not claimed afterwards.
+5. **Confirm Udyam registration and the MSME reimbursement route** with the CA (§6.4) — it is the difference between a ₹75,000 ISO 9001 and a ₹19,000 one, and it must be in place _before_ the certification spend, not claimed afterwards.
 6. **Decide ISO 9001 only against a real tender pipeline** — and if the pipeline is 2027, wait for the September 2026 publication.
 7. **Prepare the security one-pager** the [[transporters/09_Sales_Strategy|sales strategy]] already calls for: data residency, DPDP alignment, RBAC, encryption, the twelve controls, and an honest "27001 on trigger" line. It answers the question in most deals without a certificate.
 
@@ -284,13 +284,13 @@ Certification is not a date on the calendar; it is an **event-driven row**, like
 
 These cost nothing, are never audited, and prevent rework. Worth stating once so nobody re-litigates them per feature.
 
-| Standard | Use in DZZLO |
-| --- | --- |
-| **ISO 8601** | All stored timestamps — UTC in the API and the database, not only in file naming ([[07-tools-and-it-foundation\|lesson 07]] §7 already mandates ISO dates for documents) |
-| **ISO 4217** | Currency codes (`INR`) wherever money is stored or transmitted |
-| **ISO 3166-1** | Country codes. ⚠️ Note the trap: **GST state codes are not ISO 3166-2** — they are Indian census codes. Do not map one onto the other |
-| **ISO 639-1** | Language codes, if the app localises |
-| **ISO 20022** | The direction bank statement and payment messaging is moving. Relevant if voucher reconciliation ever pulls from bank APIs instead of manual entry — worth knowing **before** designing that, not after |
+| Standard          | Use in DZZLO                                                                                                                                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **ISO 8601**      | All stored timestamps — UTC in the API and the database, not only in file naming ([[07-tools-and-it-foundation\|lesson 07]] §7 already mandates ISO dates for documents)                                              |
+| **ISO 4217**      | Currency codes (`INR`) wherever money is stored or transmitted                                                                                                                                                        |
+| **ISO 3166-1**    | Country codes. ⚠️ Note the trap: **GST state codes are not ISO 3166-2** — they are Indian census codes. Do not map one onto the other                                                                                 |
+| **ISO 639-1**     | Language codes, if the app localises                                                                                                                                                                                  |
+| **ISO 20022**     | The direction bank statement and payment messaging is moving. Relevant if voucher reconciliation ever pulls from bank APIs instead of manual entry — worth knowing **before** designing that, not after               |
 | **ISO/IEC 25010** | Product quality model — a usable non-functional-requirements checklist for the partner API work ([[tasks_11_partner_api/07-phase-7-rollout-docs-versioning\|tasks_11 · phase 7]]). A reference model, not certifiable |
 
 ---

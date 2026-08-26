@@ -55,4 +55,4 @@ Monday 2026-08-24, 09:55 — the associate posts the filled v0 in the ops channe
 
 ## Related
 
-Lessons [[16-metrics-dashboards-and-scorecards|16]], [[08-the-operating-cadence|08]], [[02-how-a-coo-thinks|02]] · Templates [[T03-weekly-ops-meeting-agenda|T03]], [[T28-weekly-business-review|T28]], [[T06-okr-planning-sheet|T06]], [[T09-decision-log-and-adr|T09]], [[T20-budget-vs-actual-and-cash-forecast|T20]] · [[toolkit/index|COO Toolkit]]
+Lessons [[16-metrics-dashboards-and-scorecards|16]], [[08-the-operating-cadence|08]], [[02-how-a-coo-thinks|02]] · Templates [[T03-weekly-ops-meeting-agenda|T03]], [[T28-weekly-business-review|T28]], [[T06-okr-planning-sheet|T06]], [[T09-decision-log-and-adr|T09]], [[T20-budget-vs-actual-and-cash-forecast|T20]] · [[COO-Docs/toolkit/index|COO Toolkit]]
