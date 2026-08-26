@@ -15,7 +15,9 @@ const config: QuartzConfig = {
     analytics: null,
     locale: "en-US",
     baseUrl: "shikhar-c.github.io/obsidian-notes",
-    ignorePatterns: ["private", "templates", ".obsidian"],
+    // "**/_*" keeps build scaffolding (_BUILD-SPEC, _BUILD-STATE, _build_*.py) out of the
+    // published site — the Assets emitter would otherwise copy non-md files verbatim.
+    ignorePatterns: ["private", "templates", ".obsidian", "**/_*"],
     defaultDateType: "modified",
     theme: {
       fontOrigin: "googleFonts",
