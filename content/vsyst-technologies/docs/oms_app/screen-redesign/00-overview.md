@@ -1,0 +1,155 @@
+# Plan: App screen redesign on a new `api_v4` — the plan of the plan
+
+> **Repos under change:** `dzzlo_oms_app` (new screens, one at a time) and `dzzlo_oms_api` (new `api_v4/` layer). `dip-web` is untouched until a v4 read model is useful to it.
+> **Status:** Plan drafted 2026-09-03. Decisions D1–D4 confirmed by the user in the drafting session (see §Decisions). **No repo code changes until the user says "start" for a named phase or screen** — this is a house rule, not a suggestion.
+> **What this is:** the *workflow, strategy and planning process* for the project. It deliberately plans **no screen**. Each screen gets its own spec when the user opens its discussion session ([[03-per-screen-playbook]]).
+> **Companions:** [[01-tdd-workflow]] (how we test), [[02-foundations]] (one-time groundwork in both repos), [[03-per-screen-playbook]] (the repeatable loop), [[templates/screen-spec]] (the per-screen planning artifact).
+
+## Why this project, and why it is bigger than "new screens"
+
+Three changes land together and each depends on the other two:
+
+1. **New screen structure and visuals.** The app's screens will be replaced one at a time by redesigned screens built from Figma frames. Features will evolve during development; discussion sessions are part of the method.
+2. **A new, screen-oriented API.** The current v3 surface forces the app to assemble each screen from several generic endpoints: the Accounts screen awaits three independent calls in series, the invoice detail chains three requests and is cloned in four files, `Customer/NewOrder` orchestrates five endpoints through ~15 effects, and 100 of the app's 132 endpoints are modelled as RTK mutations, so ledger and balance reads get no cache at all. The redesign needs read models shaped for screens and commands with clean contracts. Those are a **new contract**, which by the repo's own rule (`.ai/agents/versioning-agent.md`: "breaking changes always use a new version folder") means a new version folder.
+3. **TDD as the method, not a follow-up.** The tasks_12 net protects what exists. Here the contract is being *designed*, so tests come first by construction: the screen spec produces the failing API tests, the API's fixtures produce the failing screen tests. The full workflow is in [[01-tdd-workflow]].
+
+Doing any one of these alone would be cheaper. Doing them together is what makes the strangler pattern possible: each new screen ships with its own v4 read model and its own tests, while every untouched screen keeps running on v3, and a v1.78 build keeps working throughout.
+
+---
+
+## Decisions
+
+| # | Decision | Choice | Why |
+| --- | --- | --- | --- |
+| D1 | API versioning | **`api_v4/` as a thin, additive layer mounted at `/api/v4`.** It owns routes, controllers, read models, commands, schemas and its own middleware chain; it **reuses** `api_v3/services/*`, `models/`, `helpers/`. v3 is frozen for features (test-first bugfixes only). ✅ user-confirmed | New contract ⇒ new folder (house rule). Reusing services avoids the v2→v3 duplication that `cross_version_edits_plan.md` exists to manage. A full rewrite would delay the first screen by months. |
+| D2 | Shape of v4 | **One read model per screen** (`/api/v4/screens/<slug>`) plus **commands** (`POST /api/v4/<resource>/<verb>`) only where v3 lacks the behaviour or its contract is defective (reads issued as `PUT`, unbounded lists, two-call screens like `so_msts/app/section1`+`section2`). GET for read models keyed by ≤ 3 scalar ids + cursor; POST when the body carries filters. | Screen-shaped payloads are the whole point; commands stay few so business logic keeps one home (the v3 service). |
+| D3 | Rollout | **Strangler, screen by screen.** The app talks to v3 and v4 at the same time; each release migrates a few screens; the version gate retires v3 routes only when no admitted app version can call them. ✅ user-confirmed | Zero big-bang risk; every release is shippable. |
+| D4 | Design source | **Figma frames exist (as images); features evolve in discussion sessions.** Frames go in `designs/<screen-slug>/`; a live Figma URL can be read through the Figma MCP. ✅ user-confirmed | The spec template's §4 captures the frames and the dated session decisions. |
+| D5 | Auth posture of v4 | **Every v4 route sits behind `protect` + `authorize(...)` at the router level; the tenant is derived from the token (`req.loggedInUser.co_id` validated by `check_user_company_status`), never from the body; every id the body accepts is membership-checked before sub-queries.** A harness test asserts no v4 route answers without a bearer. | v3 imports `protect`/`authorize`/`scope` and applies them to zero routes; `dealer_id`/`cust_id` come from the client. v4 must not inherit that. (The v3 hole itself is a separate security task — §Open questions.) |
+| D6 | Envelope | Success `{ success: true, data, page?, meta }`; error `{ success: false, error, error_code }`. Cursor pagination everywhere a list can grow: default 25, max 100, opaque cursor, `limit+1` probe. **No unbounded lists in v4.** | Keeping `success`/`error_code` means the app's existing error plumbing (`rtkQueryErrorLogger`, `errorRTK`) works unchanged for v4; v3's `limit=0 ⇒ whole collection` default is designed out. |
+| D7 | Validation | Schema per route (unknown keys rejected, ObjectId format checked) via a small validation library — **recommendation: zod**. New dependency ⇒ approval. | The API has no input validation anywhere; `sanitizeMongo` strips `$` but not garbage. |
+| D8 | v4 tests | `test/api_v4/` reuses the in-process app (`test/dzzlo_oms_test.js`), `beforeAllHelper`, the seed and the memory-mongod harness; its own contract set `fixtures/api_v4/` with captures, meta, drift detector, freshness gate, and app pull. | Same idiom, same certification (`yarn test:full`), no second harness. |
+| D9 | App client | **One RTK Query instance.** v4 endpoints use an absolute URL built from a new `API_VERSION_PATH_V4` env (all five env files, because `react-native-dotenv` runs with `allowUndefined:false`); tag types are shared so a v3 mutation can still invalidate a v4 read model during the transition. | Tags do not cross `createApi` instances; a second instance would break invalidation between old and new screens. |
+| D10 | Screen location and cutover | New screens live in `src/screens/v2/<Name>/` and new shared UI in `src/components/v2/`; route names do not change; a small **screen registry** maps a route name to its v1/v2 component. Kill-switch: **pending user decision** — Firebase Remote Config flag `screen_v2_<slug>` (dependency already present) vs release-only. Old component deleted the release after the new one ships. | Registry keeps the six navigator files from growing; a remote kill-switch avoids waiting on store review to back out a bad screen. |
+| D11 | Visual system | The unstarted **tasks_04 design-system plan** (tokens, MD3 typography, semantic colours, font-scale discipline) is executed as foundation step F-APP-3, **scoped to `src/theme/` and v2 screens only**. Old screens are never restyled; tasks_04's screen-migration phase is replaced by this project's per-screen loop. `@shopify/restyle` is re-validated against RN 0.84 / React 19 before install; fallback is tokens + Paper MD3 theme + `AppText`/`Box` primitives. | Two visual systems co-exist for the life of the strangler; that is acceptable because screens are replaced whole. |
+| D12 | Screen tests | Tier 3 (RNTL) tests are **decision-only** and red-first; layout is reviewed in the design session against the frames, not asserted by Jest. `src/test/testUtils.js` (`renderScreen`) is created once in F-APP-2. | Matches the tasks_12 policy and keeps the app suite inside its 2-minute budget. |
+| D13 | Touching v3 | Never for the redesign. If a new screen needs a v3 service to change, that is its own test-first PR with a flow-map row, because it changes behaviour for v1.78 too. | Version safety first (house rule). |
+| D14 | Roles | User decides, approves, says "start", ships. Fable facilitates sessions, writes specs and briefs, reviews red commits. Opus execution subagents do red → green → refactor inside a brief. | Standing directive: Fable plans, Opus executes. |
+| D15 | Prerequisite | Merge the three tasks_12 PRs first (API #35, app #48, web #23), re-export fixtures. | Without them `master`/`main` have no CI, no gate, no fixtures. See §Current state — this is now cheap. |
+
+---
+
+## Current state
+
+Surveyed 2026-09-03 — the facts that shape the foundations.
+
+### `dzzlo_oms_api` (branch `api_tdd`, tree clean)
+
+- **`api_tdd` is `master` + 10 commits and 0 behind** — PR #35 is a fast-forward merge now (the earlier reconciliation worry is gone; master's ledger work is already merged in). Seed snapshot on disk `v3_2026-09-02`; committed `fixtures/api_v3/fixtures.meta.json` still says `v3_2026-07-08` — stale by its own rule.
+- Mount chain in `dzzlo_oms.js`: `compression → express.json(1mb) → morgan(dev) → /healthcheck → api_key_v1() → logging() (sets req.loggedInUser from the Bearer) → check_user_version() → cookieParser → sanitizeMongo → helmet → cors → static → app.use("/api/v2") → app.use("/api/v3") → app.use("/api/dip/v1") → errorHandler`. v1 mount commented out. Global rate limit commented out.
+- `api_v/api3.js` order: `/contact`, `/auth` **before** `api_key_v3()`; then `legacy_credit_presenter()`; `/sadmin`, `/cust_msts`, `/dealer_msts`, `/invites` **before** `check_user_company_status()`; everything else after.
+- Auth primitives in `api_v3/auth.js` (`protect`, `authorize`, `scope`, 30-second user cache) are correct and **applied to zero business routes**. Tenant identity = `co_id` on the user; the only server-side derivation in v3 is `controllers/collections/veh_trns.js:40-41` — the precedent v4 generalises.
+- `helpers/advancedResults.getResults`: `limit = parseInt(...) || 0` ⇒ a missing `limit` returns the whole filtered collection. `GET /dealer_custs` has no pagination and populates both sides. `getSalesOrdersHeader` (`services/so_msts.js:300-420`) awaits 7+ independent queries in series; `allRelationCurrBal` fans out one balance computation per relation. `multipleOrderRes` (`services/order_msts.js:415`) is the good pattern: two waves of batched `$in` + `Map`.
+- Test harness: 49 active suites under `test/api_v3/`, one memory mongod per file, seed via real API calls, `docs/testing.md` (440 lines) is the runbook, `scripts/release_gate.sh` + `check_fixtures_fresh.js`, CI on `test:full`. Jest picks up any `*.test.js` not in the legacy ignore list, so `test/api_v4/` needs no config change (verify in F-API-1).
+- No input-validation library, no OpenAPI. Express 5, Mongoose 9. Version gate: hardcoded `check_user_version` (≤ 1.68 blocked) plus nine files with inline `meta.version` branches; a DB-driven gate is in flight on local branch `feature/db-driven-version-gate`.
+- Governance files that this plan must amend (approval needed): `AI.md` "Write ONLY inside `api_v3/`" and `.ai/agents/versioning-agent.md` version map.
+
+### `dzzlo_oms_app` (branch `app_tdd`, tree clean, 5 ahead / 0 behind `main`)
+
+- RN 0.84.1, React 19.2.3, react-navigation 7, RTK 2.11, Paper 5.15 (used shallowly: `useTheme`/`Text`/`Divider`; buttons and inputs are hand-rolled), Reanimated 4, FlashList in 13 files vs FlatList in 54, Firebase (`perf` is live in the base query; `remote-config` is a dependency).
+- Navigation: `AppNavigatorContainer` → role tree `Drawer → (Tab | Stack) → native-stack`; both `TrnTab.js` files swap in read-only `Common/` variants by user scope. Navigator boilerplate is duplicated in six files.
+- 193 screen files / ~92k LOC. Orders, Invoices, Payments each exist three times (Dealer/Customer/Common); the invoice detail exists four times; ten screen files exceed 1,100 lines. Extracted business logic in `src/helpers` is ~300 LOC; money math lives in render.
+- Data layer: one `createApi` (`reducerPath 'dzzlo-oms-api'`, `baseUrl = API_URL + API_VERSION_PATH` = `/api/v3` in every env file), retry with 4xx short-circuit, perf wrapper, `makeStore()` factory. 132 endpoints (32 queries / 100 mutations); `fetch_one_dealer_customer` exists twice (25 call sites); every list screen imports both the GET-paginated and the POST-filtered twin.
+- Tests: 16 files (Tier 1 + Tier 2), Jest 30 + MSW 2, virtual mocks for the two phantom native packages, **no screen tests, no `src/test/testUtils.js`, no shared MSW handlers file**. Fixtures pulled from `../dzzlo_oms_api/fixtures/api_v3/` only.
+- Styling: 3,424 inline style objects and 1,160 literal hex colours; `src/constants/designTokens.js` exists and is unused; theme in `src/utils/Colors/index.js` (`Light`/`Dark`, MD3 `fontObject`). The tasks_04 design-system plan: 1 of 205 tasks checked.
+
+---
+
+## Phases
+
+| Phase | Doc | Outcome | Gate to start | Effort (guide) |
+| --- | --- | --- | --- | --- |
+| **0 — Prerequisites** | this doc §Phase 0 | Three TDD PRs merged; fixtures re-exported and pulled; kill-switch and validation-library decisions taken; Figma frames in `designs/` | user: "start phase 0" | ½ day |
+| **1 — API foundations** | [[02-foundations#Phase 1 — API foundations|02 §Phase 1]] | `/api/v4` mounted with its chain, envelope, validation, tenancy helpers, cursor pagination, compose runner, v4 fixture set, docs — every piece test-first; **no screen endpoint yet** | Phase 0 done; approvals in §Governance granted | 3–5 dev-days |
+| **2 — App foundations** | [[02-foundations#Phase 2 — App foundations|02 §Phase 2]] | v4 client, `renderScreen` harness, design tokens + primitives, screen registry/cutover, strings/errors convention, docs — test-first; **no screen yet** | Phase 1 merged and on staging | 4–6 dev-days |
+| **3 — Screens, one at a time** | [[03-per-screen-playbook]] | Each screen: spec → API → design → screen → ship → retire | per screen: "spec agreed" then "start …" | S 3–5 days · M 1–2 weeks · L split into sub-specs |
+| **4 — Retirement** | §Phase 4 below | v3 routes deprecated then removed behind the version gate; old screens and duplicate endpoints deleted; `legacy_credit_presenter` and inline version branches removed when their versions retire | when every consumer of a route is gone | continuous |
+
+Phases 1 and 2 are sequential (the app foundation's proof is a real `/api/v4` ping against staging). Phase 3 repeats. Phase 4 is folded into each screen's Step 6 and closed out at the end.
+
+### Phase 0 — Prerequisites
+
+- [ ] Merge `dzzlo_oms_api` PR #35 (fast-forward), `dzzlo_oms_app` PR #48 (clean), `dip-web` PR #23 (has drifted: 6 behind / 3 ahead — merge `main` into `web_tdd` first, add the missing `istDayEnd` test as its own test-first commit).
+- [ ] In the API: `yarn seed && yarn fixtures:export`, commit; in the app and web: `yarn fixtures:pull`, commit. Gate: `bash scripts/release_gate.sh` prints PASS.
+- [ ] Decide D7 (validation library) and D10 (kill-switch) — §Open questions 1–2.
+- [ ] Drop the Figma frames into `designs/<screen-slug>/` (or record the live Figma URL in `designs/README.md`).
+- [ ] Create branches: `api_v4_foundations` from `master`, `app_v4_foundations` from `main`.
+
+### Phase 4 — Retirement (rules)
+
+1. A v3 route gets a `Deprecation` header + log line the release after its last app consumer is deleted (Step 6 of the playbook).
+2. A v3 route is **removed** only when the version gate no longer admits any build that can call it. Each removal is an explicit, dated decision in this doc's log.
+3. `legacy_credit_presenter` and the nine inline `meta.version` branches are removed when the DB-driven version gate lands and the corresponding versions are retired — a separate PR each, test-first.
+4. The `Common/` read-only twins and the four invoice-detail clones are deleted as their replacing screens ship; the six navigator files shrink to registry lookups.
+
+---
+
+## Governance
+
+What needs the user's explicit approval before an execution agent may touch it.
+
+| Item | Repo | Why it is gated | Phase |
+| --- | --- | --- | --- |
+| `api_v/api4.js` (new) + one line in `dzzlo_oms.js` + one line in `test/dzzlo_oms_test.js` | API | mounting a version is gated by `versioning-agent.md` | 1 |
+| New dependency for validation (zod or alternative) in `package.json` | API | dependency policy | 1 |
+| `AI.md` Active Development Rule and `.ai/agents/versioning-agent.md` version map amended for v4 | API | governance docs | 1 |
+| `scripts/check_fixtures_fresh.js`, `test/api_v3/temp/seed/export_fixtures.js` generalised for two fixture sets | API | shared tooling | 1 |
+| `API_VERSION_PATH_V4` added to `.env.development/.testing/.production/.ci/.example` | App | `allowUndefined:false` — a missing var breaks the bundle | 2 |
+| `@shopify/restyle` install (only if re-validated) | App | dependency policy; tasks_04 decision to re-confirm | 2 |
+| Any edit under `api_v3/services/*`, `models/*`, `helpers/*` | API | changes v1.78 behaviour; test-first PR with flow-map row, one per change | 3 |
+| Any `git rm` (old screens, legacy suites) | both | deletions are always separately gated | 3–4 |
+
+Everything else in Phases 1–2 is additive inside `api_v4/`, `test/api_v4/`, `fixtures/api_v4/`, `src/screens/v2/`, `src/components/v2/`, `src/theme/`, `src/store/apis/v4/`, `src/test/`.
+
+---
+
+## Risks
+
+| Risk | Detail | Mitigation |
+| --- | --- | --- |
+| 🔴 v4 inherits v3 service defects | A read model that calls `getSalesOrdersHeader` inherits its seven serial awaits; one that calls `allRelationCurrBal` inherits the per-relation fan-out | Read models compose the *lower* service pieces (queries, presenters like `multipleOrderRes`), not the top-level handlers; a serial-await fix inside a v3 service is a separate test-first perf PR (D13) |
+| 🔴 Two API versions in flight for months | Every ledger rule now has one home (v3 service) but two callers | v4 has no business logic of its own (commands compose services); the drift detector and flow map cover both; v3 frozen for features |
+| 🟠 Scope creep in sessions | "Features will evolve" | Only sessions grow scope; every change is spec → test → code in one PR (01 §1.4); `it.todo` never merges |
+| 🟠 Design fidelity vs test fidelity confusion | Nobody asserts pixels, so a screen can be green and wrong | Design session 2 reviews the built screen against the frames with the screenshot checklist before merge |
+| 🟠 Fixture staleness across two sets | v3 and v4 metas, two pull targets | freshness gate covers both; release gate blocks |
+| 🟡 Remote Config kill-switch adds a boot dependency | flag fetch fails ⇒ must default to v2, never block | default-on, cached, 5-second timeout; a unit test pins the default |
+| 🟡 Pre-existing v3 tenant-isolation hole becomes more visible | v4 proves tenancy per route; v3 still does not | schedule the v3 security task separately; do not widen the hole (no new v3 routes) |
+| 🟡 Suite budgets | app ≤ 2 min, API `test:full` ≤ 5 min | Tier 3 decision-only; per-file mongod already cut the API suite to ~26 s |
+
+---
+
+## Open questions for the user
+
+1. **Kill-switch (D10):** Firebase Remote Config flag per screen (recommended; dependency present, needs init check) or release-only cutover?
+2. **Validation library (D7):** zod (recommended) or celebrate/Joi?
+3. **First screen posture:** start with a non-money screen (recommended) so the first loop proves the method before a ledger command is involved?
+4. **v3 security task:** schedule the tenant-isolation fix for v3 as its own tasks_NN (recommended, independent of this project)?
+5. **Figma:** images only, or is there a live file whose frames can be pulled through the Figma MCP?
+6. **dip-web:** stays out of scope until a v4 read model is useful to it — confirm.
+
+---
+
+## Decision log
+
+| Date | Decision | By |
+| --- | --- | --- |
+| 2026-09-03 | D1 (api_v4 thin layer), D3 (strangler), D4 (Figma images + sessions), scope = new structure + visuals | user |
+| 2026-09-03 | Plan the plan only; screens are planned one at a time in their own sessions | user |
+
+---
+
+## References
+
+- House TDD guides: [app](../tdd-testing-guide.md) · [API](../../oms_api/tdd-testing-guide.md) · tasks_12 design record `../../tasks/tasks_12_tdd_testing/`
+- Prior art absorbed here: `../../tasks/tasks_02_major/03-bff-composite-endpoints.md` (BFF conventions, security requirements §11), `04-cursor-pagination-infinite-scroll.md`; `../../tasks/tasks_04_design-system/` (tokens, typography, colours, clipping); `../../learning/api-pattern-problems/` (perf roadmap); `../../tasks/tasks_13_db_architecture/` (financial write-path plan — independent, but v4 commands must not pre-empt its transaction work)
+- API repo governance: `AI.md`, `.ai/agents/versioning-agent.md`, `docs/strategy/api_v3_refactor_plan.md` (how v3 was introduced — v4 follows the same mount pattern), `SEAMS.md`, `docs/bug-museum.md`
