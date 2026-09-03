@@ -87,7 +87,7 @@ Happens in the closing minutes of the previous screen's Step 5, or in a stand-al
 | **Inputs** | spec §2, §3, §4, §6; pulled fixture; the app ritual in [[01-tdd-workflow#1.3 The loop, per step                                                           | 01 §1.3]]; the app foundations merged |
 | **Owner**  | Opus execution subagent under a brief; Fable reviews the Tier 3 red commit before the component is written; the user starts it with "start screen <slug>" |
 
-**Outputs:** one PR in `dzzlo_oms_app`: Tier 1 → Tier 2 → Tier 3 (red commits first), the v2 screen folder, the navigator pointed at it behind its `screen_v2_<slug>` toggle (default on, D10), screenshots (light, dark, 200 % font) in the PR, `yarn test` green, CI green.
+**Outputs:** one PR in `dzzlo_oms_app`: Tier 1 → Tier 2 → Tier 3 (red commits first), the v2 screen folder, the navigator pointed at it behind its `screen_v2_<role>_<slug>` toggle (default on, D10), screenshots (light, dark, 200 % font) in the PR, `yarn test` green, CI green.
 **Gate:** PR merged; `bash dzzlo_oms_api/scripts/release_gate.sh` green from the workspace root.
 
 ---
@@ -98,7 +98,7 @@ Happens in the closing minutes of the previous screen's Step 5, or in a stand-al
 2. Version bump + release notes row: "Screen X redesigned (v4)".
 3. Staged rollout: TestFlight/internal track first; Play staged 20 % → 100 % over 48 h.
 4. Watch for 7 days: Crashlytics for the v2 screen, the v4 endpoint's p95 and error rate, support tickets.
-5. Flip `screen_v2_<slug>` off on the superadmin DB-Actions page against staging, foreground the app, confirm the v1 screen renders, flip it back on. Record the check in the PR.
+5. Flip `screen_v2_<role>_<slug>` off on the superadmin DB-Actions page against staging, foreground the app, confirm the v1 screen renders, flip it back on. Record the check in the PR.
 
 **Gate:** no P1 for 7 days. The next screen's Step 1 may run during this window; its Step 4 may not.
 

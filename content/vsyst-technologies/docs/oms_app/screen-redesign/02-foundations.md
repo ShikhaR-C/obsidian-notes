@@ -110,11 +110,11 @@ The validator is written in-house (D7, decided 2026-09-03). It is a small schema
 Executes before F-API-7 so the docs step can describe it. Follows the DB-driven version gate on local branch `feature/db-driven-version-gate` line for line: config in a `counters` doc, an in-process 60-second cache with an invalidate hook, superadmin `GET/POST /sadmin/all/<name>`. If that branch is merged first, reuse its helper shape; if not, the toggle helper is written the same way so the two can share a base later.
 
 - **Red.**
-  - `test/api_v4/lib/appFeatures.test.js` (unit, over `helpers/appFeatures.js`): missing doc → `{}`; a doc `{ doc_name: "app_features", data: { screen_v2_orders: false } }` → that map; non-boolean values dropped; DB error → last cached value, else `{}`; cache honoured for 60 s and dropped by `invalidateAppFeaturesCache()`.
-  - `test/api_v4/screens/app_features.test.js` (house idiom): `GET /api/v4/app/features` with a dealer bearer → `200 { success: true, data: { features: { … }, updatedAt } }`; customer bearer → `200`; no bearer → `401`; a superadmin bearer → `200` (the one v4 route every role may read); after `POST /sadmin/all/app_features { screen_v2_orders: false }` the next v4 read returns `false` (proves the invalidate hook); unknown or `$`-prefixed keys in the POST body → `400`.
+  - `test/api_v4/lib/appFeatures.test.js` (unit, over `helpers/appFeatures.js`): missing doc → `{}`; a doc `{ doc_name: "app_features", data: { screen_v2_dealer_orders: false } }` → that map; non-boolean values dropped; DB error → last cached value, else `{}`; cache honoured for 60 s and dropped by `invalidateAppFeaturesCache()`.
+  - `test/api_v4/screens/app_features.test.js` (house idiom): `GET /api/v4/app/features` with a dealer bearer → `200 { success: true, data: { features: { … }, updatedAt } }`; customer bearer → `200`; no bearer → `401`; a superadmin bearer → `200` (the one v4 route every role may read); after `POST /sadmin/all/app_features { screen_v2_dealer_orders: false }` the next v4 read returns `false` (proves the invalidate hook); unknown or `$`-prefixed keys in the POST body → `400`.
   - `test/api_v3/collections/sadmin/app_features.test.js`: `GET/POST /sadmin/all/app_features` behave like the existing `diesel_limit` pair (same auth, same envelope) — pinned as current sadmin behaviour, not redesigned.
   - Capture `app_features` in `test/api_v4/temp/fixtures.captures.js` so the app's Tier 2 test reads the real shape.
-- **Green.** `helpers/appFeatures.js` (`getAppFeatures`, `invalidateAppFeaturesCache`, `APP_FEATURES_DOC`), `api_v4/routes/app.js` + `controllers/app.js` (`authorize("dealer", "customer", "superadmin")`), `api_v3/controllers/sadmin/app_features.js` + the two router lines. Keys are validated against `^screen_v2_[a-z0-9_]+$` (extend when a non-screen toggle is ever specified) so the doc cannot become a junk drawer.
+- **Green.** `helpers/appFeatures.js` (`getAppFeatures`, `invalidateAppFeaturesCache`, `APP_FEATURES_DOC`), `api_v4/routes/app.js` + `controllers/app.js` (`authorize("dealer", "customer", "superadmin")`), `api_v3/controllers/sadmin/app_features.js` + the two router lines. Keys are validated against `^screen_v2_(dealer|customer)_[a-z0-9_]+$` (extend when a non-screen toggle is ever specified) so the doc cannot become a junk drawer.
 - **Deliberately not:** per-company or per-role targeting (the read is behind the bearer, so it can be added later without a new mechanism); any toggle that is not a screen; touching `helpers/middlewares.js`.
 - **Done when** the v4 read, the sadmin write and the invalidate path are green under `yarn test:full`, the fixture is exported, and staging answers `GET /api/v4/app/features` with `{ features: {} }` before any screen is registered.
 
@@ -143,7 +143,7 @@ src/theme/
   provider/{ThemeProvider,useAppTheme}.js
 src/components/v2/             AppText · Box · Screen  (MoneyText, StatusChip only when a spec needs them)
 src/navigation/screenRegistry.js · useScreenFlag.js   (toggle-driven cutover, F-APP-4)
-src/screens/v2/                empty until the first screen
+src/screens/v2/<Role>/         empty until the first screen (Dealer/…, Customer/… — the role segment mirrors src/screens/{Role}/)
 .env.development/.testing/.production/.ci/.example   + API_VERSION_PATH_V4=/api/v4   ⚠️ approval
 ```
 
@@ -181,16 +181,16 @@ The toggles come from the house API (F-API-8), not Firebase Remote Config. The a
 
 - **Red.**
   - `src/store/apis/v4/__tests__/features.msw.test.js` (Tier 2): `v4_features` hits `<API_URL>/api/v4/app/features` with the bearer headers, unwraps `data.features` from the pulled `v4_app_features.json` fixture, tag `Features`; a 5xx retries twice and then leaves the previous data in place (never replaces a good map with an error).
-  - `src/navigation/__tests__/screenRegistry.test.js` (Tier 1): `resolveScreen("Orders")` → the v1 component when nothing is registered; v2 when registered and `screen_v2_orders` is `true` **or absent** (default on); v1 when it is `false`; unknown route throws in `__DEV__`.
+  - `src/navigation/__tests__/screenRegistry.test.js` (Tier 1): `resolveScreen("Dealer/Orders")` → the v1 component when nothing is registered; v2 when registered and `screen_v2_dealer_orders` is `true` **or absent** (default on); v1 when it is `false`; unknown route throws in `__DEV__`.
   - `src/navigation/__tests__/useScreenFlag.test.js`: returns `true` before any fetch has completed, `true` when the last fetch failed and nothing is cached, the cached value otherwise; re-fetch is triggered on `AppState` `active` and is de-duplicated within 60 s.
-- **Green.** `screenRegistry.js` (`register(route, { v1, v2 })`, `resolveScreen(route, features)`), `useScreenFlag.js` (a selector over the `v4_features` cache — no new slice, no new storage), one `useEffect` in `AppNavigatorContainer` that dispatches `v4_features.initiate()` after login and on foreground. Navigators are **not** rewritten now — a navigator file is switched to `resolveScreen` only for the route whose v2 screen is being shipped.
+- **Green.** `screenRegistry.js` (`register(roleRoute, { v1, v2 })`, `resolveScreen(roleRoute, features)` — keys are `<Role>/<Route>` such as `Dealer/Customers`, because `Orders`/`Invoices`/`Payments` are route names in both role trees), `useScreenFlag.js` (a selector over the `v4_features` cache — no new slice, no new storage), one `useEffect` in `AppNavigatorContainer` that dispatches `v4_features.initiate()` after login and on foreground. Navigators are **not** rewritten now — a navigator file is switched to `resolveScreen` only for the route whose v2 screen is being shipped.
 - **Deliberately not:** persisting the map across cold starts (default-on plus a fetch in the first seconds after login is enough for a kill-switch; revisit only if a real incident shows the gap); removing the dead `initRemoteConfig({})` call in `AppNavigatorContainer.js`, the `@react-native-firebase/remote-config` dependency and its `jest.setup.js` mock — that is a separate, gated deletion PR once D10 is live.
-- **Done when** the registry has zero entries, the tests are green, a dev build logs the fetched map once after login, and the runbook line "flip `screen_v2_<slug>` off on the superadmin DB-Actions page, foreground the app, the v1 screen renders" is written in `docs/testing.md` and proven once against staging with a throwaway key.
+- **Done when** the registry has zero entries, the tests are green, a dev build logs the fetched map once after login, and the runbook line "flip `screen_v2_<role>_<slug>` off on the superadmin DB-Actions page, foreground the app, the v1 screen renders" is written in `docs/testing.md` and proven once against staging with a throwaway key.
 
 ### F-APP-5 — Strings and error-code mapping
 
 - **Red.** `src/utils/__tests__/errorCodes.test.js`: every v4 `error_code` in the catalogue maps to user copy; unknown codes fall back to the existing `errorRTK` message; precedence with network errors unchanged.
-- **Green.** `src/utils/errorCodes.js`; `errorRTK` consults it; the convention `src/screens/v2/<Name>/strings.js` documented (the app has no i18n layer — one file per screen keeps copy testable and later translatable).
+- **Green.** `src/utils/errorCodes.js`; `errorRTK` consults it; the convention `src/screens/v2/<Role>/<Name>/strings.js` documented (the app has no i18n layer — one file per screen keeps copy testable and later translatable).
 
 ### F-APP-6 — Docs
 
