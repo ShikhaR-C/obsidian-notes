@@ -10,26 +10,26 @@
 
 Happens in the closing minutes of the previous screen's Step 5, or in a stand-alone 15-minute call. No backlog is pre-ranked; the user chooses, using this table as the tie-breaker.
 
-| Criterion | Ask | Where the evidence lives |
-| --- | --- | --- |
-| User pain | Which screen do dealers/customers complain about or avoid? | support, the user's own judgement |
-| Request fan-out | How many endpoints does the current screen fire on open, and are they serial? | app survey in [[00-overview#Current state|00 §Current state]]; grep `use…Query\|use…Mutation` in the screen folder |
-| Duplication retired | Does replacing it also retire a `Common/` read-only twin or a cloned detail sheet? | the triplicated Orders/Invoices/Payments lists; the four `_Invoice_` clones |
-| Shared components unlocked | Will this screen produce v2 components the next three screens reuse (list row, filter sheet, money cell, status chip)? | spec §6 component list of the previous screens |
-| Money risk | Does it write to the ledger? | if yes: the API command needs the closed-period and idempotency tests; prefer doing one non-money screen first |
-| Size | S (one read model, ≤ 2 actions) · M (one read model + commands) · L (several sheets/tabs) | L screens are split into sub-specs, each its own loop |
+| Criterion                  | Ask                                                                                                                    | Where the evidence lives                                                                                       |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| User pain                  | Which screen do dealers/customers complain about or avoid?                                                             | support, the user's own judgement                                                                              |
+| Request fan-out            | How many endpoints does the current screen fire on open, and are they serial?                                          | app survey in [[00-overview#Current state                                                                      | 00 §Current state]]; grep `use…Query\|use…Mutation` in the screen folder |
+| Duplication retired        | Does replacing it also retire a `Common/` read-only twin or a cloned detail sheet?                                     | the triplicated Orders/Invoices/Payments lists; the four `_Invoice_` clones                                    |
+| Shared components unlocked | Will this screen produce v2 components the next three screens reuse (list row, filter sheet, money cell, status chip)? | spec §6 component list of the previous screens                                                                 |
+| Money risk                 | Does it write to the ledger?                                                                                           | if yes: the API command needs the closed-period and idempotency tests; prefer doing one non-money screen first |
+| Size                       | S (one read model, ≤ 2 actions) · M (one read model + commands) · L (several sheets/tabs)                              | L screens are split into sub-specs, each its own loop                                                          |
 
 **Output:** the screen's name and size, the two session dates, and an empty `screens/NN-<slug>.md` copied from [[templates/screen-spec|the template]].
 
 ---
 
-## Step 1 — Plan the screen (discussion session 1: *what*)
+## Step 1 — Plan the screen (discussion session 1: _what_)
 
-| | |
-| --- | --- |
-| **Inputs** | Figma image(s) for the screen in `designs/<slug>/`; the current screen(s) on a device; the list of endpoints the current screen uses; the template |
-| **Owner** | the user decides; Fable facilitates and writes the spec live |
-| **Timebox** | 60–90 min; an L screen gets one session per sub-spec |
+|             |                                                                                                                                                    |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inputs**  | Figma image(s) for the screen in `designs/<slug>/`; the current screen(s) on a device; the list of endpoints the current screen uses; the template |
+| **Owner**   | the user decides; Fable facilitates and writes the spec live                                                                                       |
+| **Timebox** | 60–90 min; an L screen gets one session per sub-spec                                                                                               |
 
 **Agenda**
 
@@ -48,24 +48,24 @@ Happens in the closing minutes of the previous screen's Step 5, or in a stand-al
 
 ## Step 2 — Build the API (test-first)
 
-| | |
-| --- | --- |
-| **Inputs** | spec §5 verbatim; the v4 foundations ([[02-foundations]]) already merged; the API ritual in [[01-tdd-workflow#1.3 The loop, per step|01 §1.3]] |
-| **Owner** | Opus execution subagent under a written brief; Fable reviews the red commit before the green commit is written; the user starts it with "start API for <slug>" |
-| **Approvals** | anything outside `api_v4/` and `test/api_v4/` (a v3 service change, a model field, a package) is listed in the brief and approved before the agent runs |
+|               |                                                                                                                                                                |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| **Inputs**    | spec §5 verbatim; the v4 foundations ([[02-foundations]]) already merged; the API ritual in [[01-tdd-workflow#1.3 The loop, per step                           | 01 §1.3]] |
+| **Owner**     | Opus execution subagent under a written brief; Fable reviews the red commit before the green commit is written; the user starts it with "start API for <slug>" |
+| **Approvals** | anything outside `api_v4/` and `test/api_v4/` (a v3 service change, a model field, a package) is listed in the brief and approved before the agent runs        |
 
 **Outputs:** one PR in `dzzlo_oms_api` with the red commit(s) first, fixtures under `fixtures/api_v4/` committed, flow-map row in `docs/testing.md`, mutation-smoke note in the PR body, CI green, deployed to staging.
 **Gate:** PR merged **and** staging deployed **and** `yarn test:full` green in CI. The app work does not start against an unmerged API.
 
 ---
 
-## Step 3 — Design the screen (discussion session 2: *how it looks*)
+## Step 3 — Design the screen (discussion session 2: _how it looks_)
 
-| | |
-| --- | --- |
-| **Inputs** | the Figma image(s); the **real** v4 fixture for this screen (so the design is reviewed against real field lengths, empty arrays, long names); the design tokens in `src/theme/`; the design checklist below |
-| **Owner** | the user decides; Fable facilitates; the Figma MCP can pull frames or push refinements if a live file exists |
-| **Timebox** | 45–60 min |
+|             |                                                                                                                                                                                                             |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Inputs**  | the Figma image(s); the **real** v4 fixture for this screen (so the design is reviewed against real field lengths, empty arrays, long names); the design tokens in `src/theme/`; the design checklist below |
+| **Owner**   | the user decides; Fable facilitates; the Figma MCP can pull frames or push refinements if a live file exists                                                                                                |
+| **Timebox** | 45–60 min                                                                                                                                                                                                   |
 
 **Agenda**
 
@@ -82,12 +82,12 @@ Happens in the closing minutes of the previous screen's Step 5, or in a stand-al
 
 ## Step 4 — Build the screen (test-first)
 
-| | |
-| --- | --- |
-| **Inputs** | spec §2, §3, §4, §6; pulled fixture; the app ritual in [[01-tdd-workflow#1.3 The loop, per step|01 §1.3]]; the app foundations merged |
-| **Owner** | Opus execution subagent under a brief; Fable reviews the Tier 3 red commit before the component is written; the user starts it with "start screen <slug>" |
+|            |                                                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| **Inputs** | spec §2, §3, §4, §6; pulled fixture; the app ritual in [[01-tdd-workflow#1.3 The loop, per step                                                           | 01 §1.3]]; the app foundations merged |
+| **Owner**  | Opus execution subagent under a brief; Fable reviews the Tier 3 red commit before the component is written; the user starts it with "start screen <slug>" |
 
-**Outputs:** one PR in `dzzlo_oms_app`: Tier 1 → Tier 2 → Tier 3 (red commits first), the v2 screen folder, the navigator pointed at it (with the kill-switch if adopted), screenshots (light, dark, 200 % font) in the PR, `yarn test` green, CI green.
+**Outputs:** one PR in `dzzlo_oms_app`: Tier 1 → Tier 2 → Tier 3 (red commits first), the v2 screen folder, the navigator pointed at it behind its `screen_v2_<slug>` toggle (default on, D10), screenshots (light, dark, 200 % font) in the PR, `yarn test` green, CI green.
 **Gate:** PR merged; `bash dzzlo_oms_api/scripts/release_gate.sh` green from the workspace root.
 
 ---
@@ -98,7 +98,7 @@ Happens in the closing minutes of the previous screen's Step 5, or in a stand-al
 2. Version bump + release notes row: "Screen X redesigned (v4)".
 3. Staged rollout: TestFlight/internal track first; Play staged 20 % → 100 % over 48 h.
 4. Watch for 7 days: Crashlytics for the v2 screen, the v4 endpoint's p95 and error rate, support tickets.
-5. If the kill-switch exists: flip it once on staging to prove the fallback still renders.
+5. Flip `screen_v2_<slug>` off on the superadmin DB-Actions page against staging, foreground the app, confirm the v1 screen renders, flip it back on. Record the check in the PR.
 
 **Gate:** no P1 for 7 days. The next screen's Step 1 may run during this window; its Step 4 may not.
 
@@ -122,11 +122,11 @@ In the **next** release after Step 5's window closes:
 - Sessions are the only place scope grows. A feature idea raised outside a session goes into the spec's "open items" and waits for the next session.
 - Every repo-touching step waits for the user's explicit "start …" (house rule, see [[00-overview#Governance|00 §Governance]]).
 
-| Role | Does | Does not |
-| --- | --- | --- |
-| **User** | decides scope, agrees specs and designs, approves anything outside the additive folders, says "start", ships | write tests after code |
-| **Fable (main session)** | facilitates sessions, writes specs and briefs, reviews red commits, checks anchors and DoD, keeps the vault current | bulk implementation |
-| **Opus execution subagents** | red → green → refactor inside a brief; PR bodies; mutation smoke | change scope, touch files the brief does not list |
+| Role                         | Does                                                                                                                | Does not                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| **User**                     | decides scope, agrees specs and designs, approves anything outside the additive folders, says "start", ships        | write tests after code                            |
+| **Fable (main session)**     | facilitates sessions, writes specs and briefs, reviews red commits, checks anchors and DoD, keeps the vault current | bulk implementation                               |
+| **Opus execution subagents** | red → green → refactor inside a brief; PR bodies; mutation smoke                                                    | change scope, touch files the brief does not list |
 
 ---
 
@@ -135,6 +135,6 @@ In the **next** release after Step 5's window closes:
 `screens/README.md` is created with the first screen and holds one row per screen:
 
 | Screen | Size | Spec agreed | API PR | Design agreed | App PR | Shipped in | Old screen removed | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ------ | ---- | ----------- | ------ | ------------- | ------ | ---------- | ------------------ | ----- |
 
 The spec's status line and this table are the only two places status lives; both are updated at each gate.

@@ -2,7 +2,7 @@
 
 **Outcome:** after this doc is executed, a screen iteration ([[03-per-screen-playbook]]) touches only additive folders (`api_v4/…`, `test/api_v4/…`, `src/screens/v2/…`, `src/store/apis/v4/…`) and never has to build infrastructure. Every foundation piece is itself built **red → green → refactor**; none of it plans or builds a screen.
 **Effort:** Phase 1 (API) 3–5 dev-days · Phase 2 (app) 4–6 dev-days. Sequential: Phase 2's proof is a real `/api/v4/ping` from a dev build against staging.
-**Prerequisite:** Phase 0 in [[00-overview#Phase 0 — Prerequisites|00 §Phase 0]] (the three tasks_12 PRs merged, fixtures re-exported, D7/D10 decided).
+**Prerequisite:** Phase 0 in [[00-overview#Phase 0 — Prerequisites|00 §Phase 0]] (the three tasks_12 PRs merged, fixtures re-exported; D7 and D10 were both decided 2026-09-03 — house validator, house screen toggles, no new dependencies).
 **Approvals:** listed per step and collected in [[00-overview#Governance|00 §Governance]]. Nothing starts before the user says "start phase 1" / "start phase 2".
 
 ---
@@ -17,6 +17,7 @@ Repo `dzzlo_oms_api`, branch `api_v4_foundations` from `master` (after PR #35 is
 api_v4/
   index.js            router hub — api_key_v3() → protect → check_user_company_status() → routes → v4 error handler
   routes/             one file per screen group or resource; router.use(authorize(...)) at the top of each
+    app.js            GET /app/features — the screen-toggle read, all roles (F-API-8)
   controllers/        thin: validate → read model / command → respond
   readmodels/         one file per screen: compose(api_v3 services + presenters) + project fields per spec §2
   commands/           one file per resource: precondition → api_v3 service call → invalidation hint
@@ -53,14 +54,17 @@ fixtures/api_v4/      fixtures.meta.json + one JSON per capture
 - **Green.** `api_v4/index.js` (chain above, `GET /ping` as a real route), `api_v/api4.js`, the two mount lines. Confirm `jest.config.js` picks up `test/api_v4/**` without changes (only `testPathIgnorePatterns` exists today).
 - **Done when** the four mount cases and the boot assertion are green under `yarn test:full` and no v3 test changed.
 
-### F-API-2 — Envelope, errors, validation ⚠️ approval (new dependency: zod recommended, D7)
+### F-API-2 — Envelope, errors, validation (D7: house validator, no dependency)
+
+The validator is written in-house (D7, decided 2026-09-03). It is a small schema DSL, ~100–150 lines, plain objects in, `details` array out. **Rule:** v4 never imports a third-party validation library; when a route needs a shape the DSL cannot express, the DSL gains that rule test-first in the same PR.
 
 - **Red.** `test/api_v4/lib/respond.test.js`, `errors.test.js`, `validate.test.js` (unit) plus a probe route `GET|POST /api/v4/__probe/validate` mounted **only** in `test/dzzlo_oms_test.js` (the `__smoke/whoami` precedent):
   - `ok()` → `{ success: true, data, page?, meta: { generatedAt } }`
   - `ApiError("NOT_FOUND", 404)` through the v4 error handler → `{ success: false, error: <message>, error_code: "NOT_FOUND" }`; unknown errors → `500 INTERNAL` with no stack in the body
-  - `validate`: unknown body key → `400 VALIDATION` with `details: [{ path, message }]`; malformed ObjectId → `400`; `limit: "1000"` → coerced and clamped to 100 with `meta.limit` echoing the clamp; `$`-prefixed keys never reach the schema (sanitizeMongo runs earlier — pin it)
-- **Green.** The three lib modules and a router-level error handler at the end of `api_v4/index.js` (so `helpers/error.js` stays untouched).
-- **Done when** every envelope the app will ever see from v4 is pinned by a test.
+  - `validate.test.js`, one test per rule of the DSL: types `string` / `number` / `boolean` / `date` / `objectId` / `enum` / `array` / `object`; `required` vs optional (absent optional keys are simply absent in the output, never `undefined` placeholders); `min` / `max` as length for strings and arrays and as value for numbers and dates; `enum` membership; `items` for arrays (each element validated, path reported as `lines[2].qty`); `fields` for nested objects; **unknown keys rejected at every level**, not just the top; query-string coercion (`"1000"` → `1000`, `"true"` → `true`, `"2026-09-03"` → Date) applied to `query` and `params` only, never to `body`; an empty schema accepts `{}` and rejects any key; a schema is frozen after definition (`Object.freeze`) so a controller cannot mutate it
+  - through the probe route: unknown body key → `400 VALIDATION` with `details: [{ path, message }]` listing **every** failure, not just the first; malformed ObjectId → `400`; `limit: "1000"` → coerced and clamped to 100 with `meta.limit` echoing the clamp; `$`-prefixed keys never reach the schema (sanitizeMongo runs earlier — pin it)
+- **Green.** `lib/validate.js` (the DSL and the `validate({ body, query, params })` middleware), `lib/respond.js`, `lib/errors.js`, and a router-level error handler at the end of `api_v4/index.js` (so `helpers/error.js` stays untouched). `schemas/` files are plain objects built from the DSL, one export per route, so the app fixture author and the reviewer can read a route's contract without running anything.
+- **Done when** every envelope the app will ever see from v4 is pinned by a test and the mutation smoke proves the validator: delete the unknown-key check, exactly the unknown-key tests go red.
 
 ### F-API-3 — Tenancy helpers
 
@@ -99,7 +103,20 @@ fixtures/api_v4/      fixtures.meta.json + one JSON per capture
 - `AI.md` Active Development Rule → "New contracts are written inside `api_v4/`. `api_v3/` changes only as test-first bugfix PRs. `api_v2/`, `api_v1/`, `models/`, `helpers/` unchanged." `.ai/agents/versioning-agent.md` gains the `/api/v4` row (Active — screen read models + commands). `docs/ARCHITECTURE.md`'s three stale statements are corrected while there.
 - `.github/PULL_REQUEST_TEMPLATE.md`: one added line — "v4: one tenancy test per id the body accepts".
 - CI: no change (`test:full` already runs everything).
-- **Phase 1 done when:** `yarn test:full` green with the new harness/lib/contract suites; staging serves `GET /api/v4/ping` to a bearer; the release gate passes with two fixture sets; no v3 test changed; the PR body records every mutation smoke.
+- **Phase 1 done when:** `yarn test:full` green with the new harness/lib/contract suites; staging serves `GET /api/v4/ping` and `GET /api/v4/app/features` to a bearer; the release gate passes with two fixture sets; no v3 test changed; the PR body records every mutation smoke.
+
+### F-API-8 — Screen toggles (D10) ⚠️ approval (two additive v3 sadmin routes)
+
+Executes before F-API-7 so the docs step can describe it. Follows the DB-driven version gate on local branch `feature/db-driven-version-gate` line for line: config in a `counters` doc, an in-process 60-second cache with an invalidate hook, superadmin `GET/POST /sadmin/all/<name>`. If that branch is merged first, reuse its helper shape; if not, the toggle helper is written the same way so the two can share a base later.
+
+- **Red.**
+  - `test/api_v4/lib/appFeatures.test.js` (unit, over `helpers/appFeatures.js`): missing doc → `{}`; a doc `{ doc_name: "app_features", data: { screen_v2_orders: false } }` → that map; non-boolean values dropped; DB error → last cached value, else `{}`; cache honoured for 60 s and dropped by `invalidateAppFeaturesCache()`.
+  - `test/api_v4/screens/app_features.test.js` (house idiom): `GET /api/v4/app/features` with a dealer bearer → `200 { success: true, data: { features: { … }, updatedAt } }`; customer bearer → `200`; no bearer → `401`; a superadmin bearer → `200` (the one v4 route every role may read); after `POST /sadmin/all/app_features { screen_v2_orders: false }` the next v4 read returns `false` (proves the invalidate hook); unknown or `$`-prefixed keys in the POST body → `400`.
+  - `test/api_v3/collections/sadmin/app_features.test.js`: `GET/POST /sadmin/all/app_features` behave like the existing `diesel_limit` pair (same auth, same envelope) — pinned as current sadmin behaviour, not redesigned.
+  - Capture `app_features` in `test/api_v4/temp/fixtures.captures.js` so the app's Tier 2 test reads the real shape.
+- **Green.** `helpers/appFeatures.js` (`getAppFeatures`, `invalidateAppFeaturesCache`, `APP_FEATURES_DOC`), `api_v4/routes/app.js` + `controllers/app.js` (`authorize("dealer", "customer", "superadmin")`), `api_v3/controllers/sadmin/app_features.js` + the two router lines. Keys are validated against `^screen_v2_[a-z0-9_]+$` (extend when a non-screen toggle is ever specified) so the doc cannot become a junk drawer.
+- **Deliberately not:** per-company or per-role targeting (the read is behind the bearer, so it can be added later without a new mechanism); any toggle that is not a screen; touching `helpers/middlewares.js`.
+- **Done when** the v4 read, the sadmin write and the invalidate path are green under `yarn test:full`, the fixture is exported, and staging answers `GET /api/v4/app/features` with `{ features: {} }` before any screen is registered.
 
 ---
 
@@ -113,8 +130,8 @@ Repo `dzzlo_oms_app`, branch `app_v4_foundations` from `main` (after PR #48 is m
 src/utils/API/index.js         + export API_URL_V4 = `${API_URL}${API_VERSION_PATH_V4}`
 src/store/apis/v4/
   base.js                      v4Url(path) → absolute URL · shared v4 tag names
-  index.js                     injectEndpoints: v4_ping
-  __tests__/ping.msw.test.js
+  index.js                     injectEndpoints: v4_ping · v4_features (F-APP-4)
+  __tests__/ping.msw.test.js · features.msw.test.js
 src/test/
   testUtils.js                 renderScreen(ui, { preloadedState, route, params, handlers })
   msw/handlers/v4.js           v4Ok(slug, fixture) · v4Fail(slug, status, error_code)
@@ -125,7 +142,7 @@ src/theme/
   adapters/{toPaperTheme,toNavigationTheme}.js
   provider/{ThemeProvider,useAppTheme}.js
 src/components/v2/             AppText · Box · Screen  (MoneyText, StatusChip only when a spec needs them)
-src/navigation/screenRegistry.js · useScreenFlag.js
+src/navigation/screenRegistry.js · useScreenFlag.js   (toggle-driven cutover, F-APP-4)
 src/screens/v2/                empty until the first screen
 .env.development/.testing/.production/.ci/.example   + API_VERSION_PATH_V4=/api/v4   ⚠️ approval
 ```
@@ -158,11 +175,17 @@ src/screens/v2/                empty until the first screen
 - **Deliberately not:** restyling any existing screen; custom fonts; neon theme; redux-persist for theme (tasks_04 Phase 6 items stay deferred).
 - **Done when** parity tests are green and the app looks pixel-identical before/after on the device (screenshot pair in the PR).
 
-### F-APP-4 — Screen registry and cutover
+### F-APP-4 — Screen registry and toggle-driven cutover (D10)
 
-- **Red.** `src/navigation/__tests__/screenRegistry.test.js`: `resolveScreen("Orders")` → the v1 component when nothing is registered; v2 when registered and the flag is on; v1 when the flag is off; unknown route throws in `__DEV__`. `useScreenFlag(slug)` returns `true` when Remote Config is unavailable, throws, or times out (default-on, 5 s), and reads the cached value otherwise.
-- **Green.** `screenRegistry.js` (`register(route, { v1, v2 })`, `resolveScreen`) and `useScreenFlag.js` (Remote Config adapter behind an interface, or a static map if D10 is decided as release-only). Navigators are **not** rewritten now — a navigator file is switched to `resolveScreen` only for the route whose v2 screen is being shipped. Verify the `@react-native-firebase/remote-config` mock in `jest.setup.js` and that Remote Config is initialised at boot (it is a dependency; initialisation is unverified).
-- **Done when** the registry has zero entries, the tests are green, and flipping the flag on staging is documented.
+The toggles come from the house API (F-API-8), not Firebase Remote Config. The app fetches them once after login and again on every foreground; the navigator never waits for that fetch.
+
+- **Red.**
+  - `src/store/apis/v4/__tests__/features.msw.test.js` (Tier 2): `v4_features` hits `<API_URL>/api/v4/app/features` with the bearer headers, unwraps `data.features` from the pulled `v4_app_features.json` fixture, tag `Features`; a 5xx retries twice and then leaves the previous data in place (never replaces a good map with an error).
+  - `src/navigation/__tests__/screenRegistry.test.js` (Tier 1): `resolveScreen("Orders")` → the v1 component when nothing is registered; v2 when registered and `screen_v2_orders` is `true` **or absent** (default on); v1 when it is `false`; unknown route throws in `__DEV__`.
+  - `src/navigation/__tests__/useScreenFlag.test.js`: returns `true` before any fetch has completed, `true` when the last fetch failed and nothing is cached, the cached value otherwise; re-fetch is triggered on `AppState` `active` and is de-duplicated within 60 s.
+- **Green.** `screenRegistry.js` (`register(route, { v1, v2 })`, `resolveScreen(route, features)`), `useScreenFlag.js` (a selector over the `v4_features` cache — no new slice, no new storage), one `useEffect` in `AppNavigatorContainer` that dispatches `v4_features.initiate()` after login and on foreground. Navigators are **not** rewritten now — a navigator file is switched to `resolveScreen` only for the route whose v2 screen is being shipped.
+- **Deliberately not:** persisting the map across cold starts (default-on plus a fetch in the first seconds after login is enough for a kill-switch; revisit only if a real incident shows the gap); removing the dead `initRemoteConfig({})` call in `AppNavigatorContainer.js`, the `@react-native-firebase/remote-config` dependency and its `jest.setup.js` mock — that is a separate, gated deletion PR once D10 is live.
+- **Done when** the registry has zero entries, the tests are green, a dev build logs the fetched map once after login, and the runbook line "flip `screen_v2_<slug>` off on the superadmin DB-Actions page, foreground the app, the v1 screen renders" is written in `docs/testing.md` and proven once against staging with a throwaway key.
 
 ### F-APP-5 — Strings and error-code mapping
 
@@ -173,15 +196,23 @@ src/screens/v2/                empty until the first screen
 
 - `docs/testing.md`: Tier 3 section, v4 fixtures, `test:watch`; delete the stale "untracked files" caveat (open item #4 in the app guide). Vault: update `../tdd-testing-guide.md` §5 (Tier 3 no longer absent) and `../../oms_api/tdd-testing-guide.md` §1 (v4 contract set).
 - `.github/PULL_REQUEST_TEMPLATE.md`: "Tier 3 decision tests written red-first" line.
-- **Phase 2 done when:** `yarn test` green inside 2 minutes; `renderScreen` proven; parity screenshots attached; registry and flag tests green; a dev build pings `/api/v4` on staging; release gate PASS.
+- **Phase 2 done when:** `yarn test` green inside 2 minutes; `renderScreen` proven; parity screenshots attached; registry and toggle tests green; a dev build pings `/api/v4` on staging and logs the features map; F-WEB-1 merged; release gate PASS.
+
+### F-WEB-1 — Toggle control on the superadmin DB-Actions page (repo `dip-web`, own PR)
+
+The only dip-web work in this project. Runs in parallel with Phase 2 once F-API-8 is on staging; must be merged before the first screen ships (Step 5 of the playbook flips a toggle on staging).
+
+- **Red.** RTL + MSW per the web TDD guide: `src/pages/superadmin/db/ImpActions.test.js` (or a sibling `AppFeatures.test.js` if the page is split) renders the toggle list from a mocked `GET /sadmin/all/app_features`, shows every `screen_v2_*` key with its current value, and a switch change issues `POST /sadmin/all/app_features` with the full map; a failed POST keeps the previous state and shows the existing error toast; a superadmin-only render (the page is already behind the superadmin route guard — pin, do not add).
+- **Green.** Two endpoints in `store/apis/sadmin/imp_actions.js` beside the `diesel_limit` pair; the list on `pages/superadmin/db/ImpActions.js` (or the version-gate card if that branch lands first — same page). Keys are read from the API, never hard-coded in the web, so a new screen needs no web change: registering a screen's key happens in the app PR, the superadmin sees it as soon as the API doc contains it, and the app's default-on covers the window in between.
+- **Done when** the web suite is green, the page flips a throwaway key on staging, and `GET /api/v4/app/features` reflects it within 60 s.
 
 ---
 
 ## Foundations decision log
 
-| Date | Item | Decision |
-| --- | --- | --- |
-| 2026-09-03 | Layouts above | drafted; awaiting "start phase 1" |
-| — | restyle re-validation (F-APP-3 step 0) | pending |
-| — | D7 validation library | pending (zod recommended) |
-| — | D10 kill-switch | pending (Remote Config recommended) |
+| Date       | Item                                   | Decision                                                                                                                                 |
+| ---------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-09-03 | Layouts above                          | drafted; awaiting "start phase 1"                                                                                                        |
+| —          | restyle re-validation (F-APP-3 step 0) | pending                                                                                                                                  |
+| 2026-09-03 | D7 validation library                  | **decided by user:** house validator (`lib/validate.js` schema DSL), no third-party library → F-API-2; the zod approval row is withdrawn |
+| 2026-09-03 | D10 kill-switch                        | **decided by user:** house screen toggles from the superadmin website, no Firebase Remote Config → F-API-8, F-APP-4, F-WEB-1             |

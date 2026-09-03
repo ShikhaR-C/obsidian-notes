@@ -17,7 +17,7 @@ designs/
 - If a **live Figma file** exists, record its URL and the frame links here — frames can then be read directly through the Figma MCP during a session instead of exporting images:
 
 | Screen slug | Figma frame URL | Last synced |
-| --- | --- | --- |
-| | | |
+| ----------- | --------------- | ----------- |
+|             |                 |             |
 
 - Frames are inputs to Step 1 (plan) and Step 3 (design) of [[../03-per-screen-playbook]]; decisions taken against them are written into the spec's §4, dated. The frame itself is never the spec.

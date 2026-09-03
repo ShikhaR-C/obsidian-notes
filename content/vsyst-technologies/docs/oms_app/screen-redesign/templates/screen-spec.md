@@ -84,7 +84,7 @@ Invalidation: which v4 read models must refetch (RTK tags): …
 - **Pure logic to extract first (Tier 1, TDD):** selectors/formatters/decisions this screen carries — list them; each is a `src/utils` or `src/helpers` function with its own `__tests__`.
 - **RTK Query endpoint (Tier 2, MSW):** `getScreen_<Name>` + `<verb>_<Resource>` mutations in `src/store/apis/v4/<slug>.js`, `providesTags`/`invalidatesTags` per §5.2.
 - **Screen test (Tier 3, RNTL) — decision cases only:** one test per row in §2 that is conditional, one per row in §3 (precondition true/false), loading/empty/error states, and the navigation on success. Uses the generated v4 fixture, never hand-rolled success bodies.
-- **Cutover:** route name stays the same; the screen is registered in `src/navigation/screenRegistry.js` as the v2 for its route, behind the `screen_v2_<slug>` kill-switch if D10 adopts one (default on); the old component is deleted in the release after.
+- **Cutover:** route name stays the same; the screen is registered in `src/navigation/screenRegistry.js` as the v2 for its route, behind the `screen_v2_<slug>` toggle (D10: house toggle managed from the superadmin DB-Actions page, default on); the old component is deleted in the release after.
 
 ## 7. Definition of done
 
