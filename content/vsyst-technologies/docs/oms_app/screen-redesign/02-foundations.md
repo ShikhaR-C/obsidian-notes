@@ -9,7 +9,7 @@
 
 ## Phase 1 — API foundations
 
-Repo `dzzlo_oms_api`, branch `api_v4_foundations` from `master` (after PR #35 is merged). One PR for the phase, one commit pair (red, green) per step.
+Repo `dzzlo_oms_api`, branch `api_v4_foundations` — equals `slave` @ `2ca0301` since Phase 0 (PR #35 merged there on 2026-09-03; the PR for this phase targets `slave`, not `master`). One PR for the phase, one commit pair (red, green) per step.
 
 ### Target layout
 
@@ -122,7 +122,7 @@ Executes before F-API-7 so the docs step can describe it. Follows the DB-driven 
 
 ## Phase 2 — App foundations
 
-Repo `dzzlo_oms_app`, branch `app_v4_foundations` from `main` (after PR #48 is merged). One PR for the phase.
+Repo `dzzlo_oms_app`, branch `app_v4_foundations` — equals `slave` @ `a7c32d7` since Phase 0 (PR #48 merged there on 2026-09-03; the PR for this phase targets `slave`, not `main`). One PR for the phase. F-WEB-1 goes on a new `web_v4_foundations` from dip-web `slave_dev` (`23ac5b0`), PR → `slave_dev`.
 
 ### Target layout
 

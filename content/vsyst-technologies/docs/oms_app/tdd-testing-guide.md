@@ -1,6 +1,6 @@
 # TDD Testing Guide — dzzlo_oms_app
 
-> **Status (verified 2026-09-01):** the entire TDD net lives on branch **`app_tdd`** (5 commits ahead of `main`, working tree clean, in sync with origin). **PR #48 is OPEN and unmerged** since 2026-07-10 — `main` has none of this. Suite: **16 files / ~337 tests, ~11 s** (budget ≤ 2 min). Built under tasks_12 (see `../tasks/tasks_12_tdd_testing/`), Phase 4 + 5.
+> **Status (verified 2026-09-03):** **PR #48 is MERGED into `slave`** (2026-09-03, merge commit `a7c32d7`; the user retargeted the PR from `main` to `slave` the same day, so `slave` leads `main` by 10 commits until the next release merge). Suite on `slave`: **16 files / 337 tests, ~10 s** locally (CI 1m16s; budget ≤ 2 min). Generated fixtures refreshed from API seed `v3_2026-09-03` (`9bb942f3`); cross-repo `release_gate.sh` printed **PASS** on 2026-09-03. Branch `app_v4_foundations` == `slave` (screen-redesign Phase 0 done). Built under tasks_12 (see `../tasks/tasks_12_tdd_testing/`), Phase 4 + 5.
 > **PR:** https://github.com/ShikhaR-C/dzzlo_oms_app/pull/48 · **Canonical daily guide in-repo:** `docs/testing.md` (on `app_tdd`)
 
 ## 1. What was added (tasks_12, Phases 4–5)
@@ -52,17 +52,17 @@ Gotchas (all real, all documented in `docs/testing.md`):
 
 PR checklist (enforced by the PR template): bugfix PRs contain the regression test written first · no test deleted/`.skip`'d without a written verdict · runtime budget respected (≤ 2 min) · fixtures refreshed if the API contract moved.
 
-## 5. Pending / known issues (as of 2026-09-01)
+## 5. Pending / known issues (as of 2026-09-03)
 
-1. **Merge PR #48** — open ~7 weeks; until merged, `main` has zero tests and CI protection.
-2. **Tier 3 absent** — RNTL installed but unused; `src/test/testUtils.js` + Login/NewOrder/Payments screen tests are the next build-out.
-3. **Fixtures stale by their own rule** — `fixtures.meta.json` says generated 2026-07-09 (> 14-day threshold); `yarn fixtures:pull` prints the STALE warning. Re-run seed + export in the API repo, then pull.
+1. ~~Merge PR #48~~ — **done 2026-09-03** into `slave` (`a7c32d7`). `main` receives it at the next release merge; until then `main` itself still has no tests or CI protection.
+2. **Tier 3 absent** — RNTL installed but unused; `src/test/testUtils.js` + Login/NewOrder/Payments screen tests are the next build-out (the screen-redesign foundations, F-APP-6, own this).
+3. ~~Fixtures stale~~ — **done 2026-09-03** (`9bb942f3`: pulled from API seed `v3_2026-09-03`; gate PASS).
 4. **`docs/testing.md` lines ~220–223 are stale** — they warn the test files are untracked; they've been tracked since commit `5f9f586a`. Delete that caveat on the next docs touch.
 5. **No `test:watch` script** — worth adding (`"test:watch": "APP_ENV=testing jest --watch"`) since watch mode is the documented TDD loop.
 6. `src/notes/Testing/apiTesting.js` is a legacy note, not part of the suite.
 
 ## References
 
-- In-repo runbook: `dzzlo_oms_app/docs/testing.md` (branch `app_tdd`) · fixture contract: `src/test/fixtures/generated/README.md`
+- In-repo runbook: `dzzlo_oms_app/docs/testing.md` (on `slave` since 2026-09-03) · fixture contract: `src/test/fixtures/generated/README.md`
 - Design + implementation record: `../tasks/tasks_12_tdd_testing/04-phase-4-app-foundation.md`, `05-phase-5-shared-fixtures-contract.md`, `07-phase-7-tdd-daily-workflow.md`
 - Siblings: [API guide](../oms_api/tdd-testing-guide.md) · [dip-web guide](../dip_web/tdd-testing-guide.md)

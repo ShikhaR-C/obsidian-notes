@@ -4,7 +4,7 @@
 >
 > **Status line:** Spec draft 2026-09-03 (eight rounds) → **Spec agreed 2026-09-03** (user; O‑2 "Latest Order wise" explicitly deferred to sub-spec `01b`, which must close before "start API for customers") → API red → API green (PR #) → Design agreed (date) → Screen red → Screen green (PR #) → Shipped in app vX.Y → Old screen removed (PR #)
 >
-> **Next gate:** the build waits for the foundations — "start phase 0" (merge the tasks_12 PRs, re-export fixtures), then Phase 1 and Phase 2 per [[../02-foundations]]. Nothing in either repo changes for this screen before "start API for customers".
+> **Next gate:** Phase 0 closed 2026-09-03 (tasks_12 PRs merged into `slave`/`slave_dev`, fixtures on seed `v3_2026-09-03`, gate PASS). The build now waits for "start phase 1" and "start phase 2" per [[../02-foundations]], then the `01b` filter-sheet session. Nothing in either repo changes for this screen before "start API for customers".
 >
 > Facts without a marker were read from the code on 2026-09-03 (paths inline). Former assumptions **A‑1…A‑8** are all decided (see §4). **O‑2** is the only open definition and it belongs to the filter-sheet sub-spec, which must close before "start API for customers". From here on, any change to §2, §3 or §5 follows [[../01-tdd-workflow#1.4 How discussion sessions feed the tests|01 §1.4]]: spec first, then the test, then the code, in one PR.
 

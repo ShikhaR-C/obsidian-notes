@@ -1,6 +1,6 @@
 # TDD Testing Guide — dzzlo_oms_api
 
-> **Status (verified 2026-09-01):** the TDD net lives on branch **`api_tdd`** (6 commits, working tree clean, in sync with origin). **PR #35 is OPEN and unmerged** since 2026-07-10 — and `master` has since moved **25 commits ahead** (2026-07-27 → 2026-08-31, including the month-ledger/credit-window work merged as **PR #36 on 2026-08-31**, which brought its own red-first test files). Merging #35 now requires reconciling the two lines. Active suite on `api_tdd`: **43 files / ~733 cases** (668 green under `test:full` at build time). Built under tasks_12 (see `../tasks/tasks_12_tdd_testing/`), Phases 1, 2, 5, 6.
+> **Status (verified 2026-09-03):** **PR #35 is MERGED into `slave`** (2026-09-03, merge commit `2ca0301`; the user retargeted the PR from `master` to `slave` the same day, so `slave` now leads `master` by 12 commits until the next release merge). No reconciliation was needed: `api_tdd` already sat on top of master's PR #36 ledger work, so the two test sets simply union. Suite on `slave`: **49 files — 778 passed / 47 skipped / 1 todo under `test:full`** (CI 2m21s). Fixtures re-exported on seed **`v3_2026-09-03`** (`9d5c61e`) and pulled into both front-ends; cross-repo `release_gate.sh` printed **PASS** on 2026-09-03. Branch `api_v4_foundations` == `slave` (screen-redesign Phase 0 done). Built under tasks_12 (see `../tasks/tasks_12_tdd_testing/`), Phases 1, 2, 5, 6.
 > **PR:** https://github.com/ShikhaR-C/dzzlo_oms_api/pull/35 · **Canonical runbook in-repo:** `docs/testing.md` (425 lines, on `api_tdd` only)
 
 ## 1. What was added (tasks_12)
@@ -79,17 +79,17 @@ afterAll(async () => {
 | **Touching legacy `/api/v2`**           | Frozen by policy — no new tests; if a v2 hotfix is ever unavoidable, record the decision in `docs/testing.md` §6 first.                                                                                                                                                                                                          |
 | **Release prep**                        | `yarn test:full` here, then `bash scripts/release_gate.sh`. **Green gate or no release — the release date moves, not the bar.** Every gate failure becomes either a regression test (real bug) or a test fix (flake = P1 bug in the safety net).                                                                                 |
 
-## 6. Pending / known issues (as of 2026-09-01)
+## 6. Pending / known issues (as of 2026-09-03)
 
-1. **Merge PR #35 — now a reconciliation job, not a click.** `master` is 25 commits ahead (PR #36 ledger/credit-window work + its 6 master-only test files: `dealer_custs/{duplicate_buckets,entry_window,month_rebuild,year_rollforward}`, `order_msts/credit_window`, `voc_msts/ledger`); `api_tdd` carries the 8 TDD-only suites + all infrastructure. The merge must union both test sets and re-validate the api_tdd suites against post-#36 behavior. Until merged, **`master` has no CI, no gate, no runbook, none of the new suites.**
-2. **Re-seed + re-export**: stale seed snapshot (`v3_2026-07-24`) and stale fixtures meta (`v3_2026-07-08`) — `yarn seed && yarn fixtures:export`, then pulls in both front-ends.
-3. **Skips without verdicts** (19 blocks) and the hardcoded date at `so_msts/index.test.js:260`.
+1. ~~Merge PR #35~~ — **done 2026-09-03** into `slave` (`2ca0301`). `master` receives it at the next release merge; until then `master` itself still has no CI, gate or runbook.
+2. ~~Re-seed + re-export~~ — **done 2026-09-03** (`9d5c61e`: seed `v3_2026-09-03`, six envelopes + meta; both front-ends pulled; gate PASS).
+3. **Skips without verdicts** (47 skipped + 1 `todo` in the 2026-09-03 gate run) and the hardcoded date at `so_msts/index.test.js:260`.
 4. **Legacy deletion** (73 files) approved in principle, still awaiting the explicit `git rm` go-ahead.
 5. **DIP (flow #14) untestable** until `helpers/db_conn.js` gets a lazy/injected `db_dip` connection ("Phase 2b") — dip-web mocks DIP via MSW meanwhile.
 6. **Stale docs**: `docs/strategy/tdd_strategy.md` (2026-03) predates all of this; `AI.md` still documents the ignored `202405_v2` suite and the renamed `--testPathPattern` flag (master fixed its own copy only).
 
 ## References
 
-- In-repo: `docs/testing.md` (branch `api_tdd`) · `scripts/release_gate.sh` · `fixtures/api_v3/`
+- In-repo: `docs/testing.md` (on `slave` since 2026-09-03) · `scripts/release_gate.sh` · `fixtures/api_v3/`
 - Design + implementation record: `../tasks/tasks_12_tdd_testing/` (00-overview, phases 1, 2, 5, 6, 7)
 - Siblings: [app guide](../oms_app/tdd-testing-guide.md) · [dip-web guide](../dip_web/tdd-testing-guide.md)
