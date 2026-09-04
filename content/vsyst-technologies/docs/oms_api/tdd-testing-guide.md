@@ -85,6 +85,7 @@ afterAll(async () => {
 1. ~~Merge PR #35~~ — **done 2026-09-03** into `slave` (`2ca0301`). `master` receives it at the next release merge; until then `master` itself still has no CI, gate or runbook.
 2. ~~Re-seed + re-export~~ — **done 2026-09-03** (`9d5c61e`: seed `v3_2026-09-03`, six envelopes + meta; both front-ends pulled; gate PASS).
 3. **Skips without verdicts** (47 skipped + 1 `todo` in the 2026-09-03 gate run) and the hardcoded date at `so_msts/index.test.js:260`.
+3b. **External-network flake (found 2026-09-04):** `api_v3/services/order_msts.js:54` (`getTransactionalSMSBalance`) calls `2factor.in` live during `collections/order_msts/index.test.js`; when the site returns HTML the async JSON parse throws unhandled and the whole suite file fails ("Unexpected token '<'") — seen in 2 of 4 gate runs, 0 assertions failing. Fix test-first: mock/guard the call so the suite never leaves the process (same class as the `api_v1_test` remote-DB hazard).
 4. **Legacy deletion** (73 files) approved in principle, still awaiting the explicit `git rm` go-ahead.
 5. **DIP (flow #14) untestable** until `helpers/db_conn.js` gets a lazy/injected `db_dip` connection ("Phase 2b") — dip-web mocks DIP via MSW meanwhile.
 6. **Stale docs**: `docs/strategy/tdd_strategy.md` (2026-03) predates all of this; `AI.md` still documents the ignored `202405_v2` suite and the renamed `--testPathPattern` flag (master fixed its own copy only).
