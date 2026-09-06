@@ -1,5 +1,8 @@
 # 01b — Customers · filter sheet (sub-spec of [[01-customers]])
 
+> **SUPERSEDED 2026-09-06** by the parent spec's decisions 52–55: the sheet is replaced by two always-visible tri-state chips (Verified, Has Trans.) under the search, a sort chip (direction toggle), a react-native-paper `Menu` on the sort button, and a header reset behind a confirmation. Kept for the record of O‑2 (decision 36) and the tri-state semantics, which survive in the chips.
+
+
 > Parent: [[01-customers]] (spec agreed 2026-09-03). Frame: `../designs/customers/02-filter-sheet.png`. Scope: the in-screen filter/sort bottom sheet of the dealer Customers screen — layout, states, copy, the tri-state control, and the one contract item the parent left open (**O‑2 "Latest Order wise"**). This sub-spec cannot change the parent's §5.1 except O‑2, and it does not.
 >
 > **Status line:** Session held **2026-09-04** (four decisions, all on the recommended option) → **O‑2 closed 2026-09-04** and copied into the parent's §5.1 → built with the parent screen (no separate API or PR).
