@@ -260,6 +260,8 @@ The toggles come from the house API (F-API-8), not Firebase Remote Config. The a
 
 ### F-APP-9 — Orientation and large screens (2026-09-07, "plan them and add them")
 
+> **See also [[04-orientation-decisions]]** — the 2026-09-10 questions answered with the measurements: why the v1 portrait pin cannot simply be removed (133 module-scope `Dimensions.get` files, 518 consumption sites, no test that would notice), why screens get one general width-class design rather than a per-orientation redesign, and where a two-pane list/filter layout would sit.
+
 **Facts.** Both platforms are portrait-locked today — iOS `UISupportedInterfaceOrientations` lists Portrait only (while `TARGETED_DEVICE_FAMILY = 1,2` already ships to iPad), Android `screenOrientation="portrait"` — and no screen in the app reads its orientation. The Customers v2 screen already lays out from `useWindowDimensions()` (F-APP-7: `tilesStack(fontScale, width)`, `sortMenuWidth`), so it is width-aware but has never been shown a width above 430.
 
 **Decisions.**

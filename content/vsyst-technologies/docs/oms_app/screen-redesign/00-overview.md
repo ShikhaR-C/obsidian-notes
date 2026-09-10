@@ -3,7 +3,7 @@
 > **Repos under change:** `dzzlo_oms_app` (new screens, one at a time) and `dzzlo_oms_api` (new `api_v4/` layer). `dip-web` is untouched until a v4 read model is useful to it — with one small exception: the screen-toggle control on the superadmin DB-Actions page (D10).
 > **Status:** Plan drafted 2026-09-03. Decisions D1–D4 and D10 confirmed by the user, and "non-money screens first" decided, in the drafting sessions (see §Decisions, §Decision log). **No repo code changes until the user says "start" for a named phase or screen** — this is a house rule, not a suggestion.
 > **What this is:** the _workflow, strategy and planning process_ for the project. It deliberately plans **no screen**. Each screen gets its own spec when the user opens its discussion session ([[03-per-screen-playbook]]).
-> **Companions:** [[01-tdd-workflow]] (how we test), [[02-foundations]] (one-time groundwork in both repos), [[03-per-screen-playbook]] (the repeatable loop), [[templates/screen-spec]] (the per-screen planning artifact).
+> **Companions:** [[01-tdd-workflow]] (how we test), [[02-foundations]] (one-time groundwork in both repos), [[03-per-screen-playbook]] (the repeatable loop), [[04-orientation-decisions]] (why v1 stays portrait-pinned, and what a wide window is designed for), [[05-landscape-chrome-and-keyboard]] (the chrome/keyboard height problem and the path out), [[templates/screen-spec]] (the per-screen planning artifact).
 
 ## Why this project, and why it is bigger than "new screens"
 
