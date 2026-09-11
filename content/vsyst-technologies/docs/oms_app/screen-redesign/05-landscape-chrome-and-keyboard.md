@@ -3,6 +3,7 @@
 > **What this is:** the research and the plan behind one question asked on **2026-09-10** — _"if we make them landscape now, the keyboard would eat up half of the screen; the header, search and filter would cover the other half, leaving near to no space for content."_ The question was right, and the measurements below say it is worse than half.
 > **Companions:** [[04-orientation-decisions]] (why v1 stays pinned; the three earlier questions), [[02-foundations#F-APP-9 — Orientation and large screens|02 §F-APP-9]] (the foundation), `dzzlo_oms_app/docs/testing.md` → "Window classes and orientation".
 > **Status:** research COMPLETE, path PROPOSED. Nothing is built. Nothing starts before the user says "start".
+> **Start here:** §5 (the composition matrix) and §6 (the yield ladder) are the two artifacts a screen actually uses. §1–4 are the evidence they rest on; §7 is the build order.
 
 ---
 
@@ -88,13 +89,86 @@ From the v1 survey — 59 screen directories: **12 forms · 31 lists · 4 detail
 - Both `TrnTab.js` files already set `tabBarHideOnKeyboard: true` — so **"chrome yields to the keyboard" is already house practice** at the navigator level. This work extends the same principle to the screen's own chrome bands. Customers is in the drawer stack, **not** the tab stack, so it has no yielding chrome at all today.
 - `src/components/TabBarAnimated/` imports `Keyboard` and `KeyboardAvoidingView`, uses neither, and is referenced by no navigator. Dead code, not prior art.
 
-## 5. The path
+## 5. The composition matrix
+
+**This is the organising artifact.** Decided once, applied to every screen — so a screen iteration asks "which cell am I in?" rather than re-litigating layout.
+
+### The two axes, and why neither is "orientation"
+
+The columns are **width class × height class**, never portrait/landscape. Orientation is not a design target: a phone on its side and a fold opened in landscape are both "landscape" and need _opposite_ treatments, because one is starved of height and the other is not. The codebase already votes this way — `isLandscape` is exposed by `useWindowClass()` and used by **zero screens**.
+
+|                   | `compact` < 600                              | `medium` 600–839                                       | `expanded` ≥ 840                                         |
+| ----------------- | -------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------- |
+| **tall** (≥ 500)  | phone portrait 390×844 · fold cover ~320×820 | fold open portrait ~690×840 · tablet portrait 768×1024 | fold open landscape ~840×690 · tablet landscape 1024×768 |
+| **short** (< 500) | rare — Flip cover, small floating window     | small phone landscape 667×375                          | **phone landscape 844×390 ← the hard case**              |
+
+**Only the bottom row is hard, and only one cell in it is common.** Every fold state is in the _tall_ row. That is the headline: **the fold is the payoff, not the problem** — unfolded you gain ~300 dp of width and keep your height.
+
+### The matrix
+
+Bands run across and eat height. Rails and sheets run down the edges and eat width. The rule is: **chrome lives on the axis that has room.**
+
+| Region           | compact / tall                 | medium / tall                                                    | expanded / tall                                      | expanded / short (+ medium/short)                               |
+| ---------------- | ------------------------------ | ---------------------------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| **Navigation**   | drawer + bottom tabs, as today | drawer + tabs                                                    | **navigation rail**, leading edge, destinations only | rail collapsed, or drawer only — no tabs                        |
+| **Header**       | shown, full                    | shown                                                            | shown                                                | **hidden while typing** (`headerShown: false`); shown otherwise |
+| **Search**       | band, full width               | band inside `Container` (640)                                    | band at top of the content pane                      | band — **never yields**                                         |
+| **Filters**      | chip band                      | shares one row with the summary (**decision 70, already built**) | **side sheet**, trailing edge, persistent, ≤ 400 dp  | **button + count badge** → modal sheet                          |
+| **Summary card** | card band                      | shares the row with filters                                      | top of the side sheet, or its own row                | **hidden**                                                      |
+| **List**         | full width, single column      | contained at `READABLE_WIDTH` 640                                | contained 640, leading pane                          | full height, full width                                         |
+| **Detail**       | pushed route                   | pushed route                                                     | **second pane — legitimate only here**               | pushed route — _never_ a pane                                   |
+| **Drawer**       | 60 % (today)                   | **capped** at a fixed max                                        | capped                                               | capped                                                          |
+
+Three cells carry the whole design:
+
+- **`compact / tall` is today.** Pixel-identical to what was signed off. `Container` is a plain full-width View in `compact`, so nothing moves.
+- **`expanded / tall` is the upside.** Rail + contained list + a real detail pane. This is the fold and the tablet, and the only cell where two-pane is sanctioned: Android calls two-pane _"not practical"_ at compact height, and Apple's size classes put standard and Pro iPhones at **compact width even in landscape**, so `UISplitViewController` collapses automatically there.
+- **`expanded / short` is the fight.** Everything that can go, goes.
+
+## 6. The yield ladder
+
+The matrix says **where** chrome lives. It cannot say **how much survives**, because two pressures shrink the list independently and only one of them is a window class:
+
+1. **Available height falls** — landscape, or the keyboard opening.
+2. **Chrome grows** — the text scale. Between `fontScale` 1.0 and 2.143 the chrome above the Customers list goes **175 pt → 406 pt**.
+
+A fixed `COMPACT_HEIGHT` threshold catches (1) and misses (2) entirely. Portrait 390×844 with a 291 pt keyboard leaves 553 pt of window — comfortably above 500, so **not** `compactHeight` — and yet at 2.143 the list gets 56 pt and renders **zero rows**. The threshold would say the window is fine while the screen is unusable.
+
+So the runtime rule is a **budget**, not a breakpoint:
+
+```
+listBudget = availableHeight − headerHeight − chromeHeight
+where availableHeight = windowHeight − keyboardInset
+
+yield the next region while listBudget < MIN_ROWS × rowHeight
+```
+
+Every input is already computable: `rowHeight` and each band come from `layout.js` at the live `fontScale`, `keyboardInset` from A1, `availableHeight` from A2.
+
+**The ladder** — the order regions surrender, derived from importance rather than assigned per screen:
+
+| Rank | Region                 | Why it goes here                                                                                        |
+| ---- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| 1    | Summary card           | Information, not a control. Nothing breaks without it.                                                  |
+| 2    | Filter chips           | Collapse to one button carrying a count — the state stays legible.                                      |
+| 3    | Header                 | Ours to hide, and Google's canonical compact-height move is to **drop** the top app bar, not shrink it. |
+| 4    | Navigation (tabs/rail) | Already house practice — both `TrnTab.js` files set `tabBarHideOnKeyboard: true`.                       |
+| —    | **Search**             | Never yields. It is why the keyboard is open.                                                           |
+| —    | **List**               | Never yields. It takes the whole remainder.                                                             |
+
+**Hide, never shrink.** M3 is explicit: _"Always use the default height of the app bar… Don't make an app bar shorter than its default height."_ iOS does compact its bars 44→32, but the system does that; you do not hand-tune it.
+
+**Latch on state, not scroll.** `enterAlways` / `exitUntilCollapsed` / iOS large-title collapse are all gesture-driven and instantly reversible — wrong here, because there is no scroll gesture while typing and any downward nudge re-steals the height. Latch on `(budget short ∧ keyboardVisible)`, restore on blur.
+
+**Open decision — `MIN_ROWS`.** Recommend **3** as the target with a floor of **2**: below about two and a half rows a list stops reading as a list. Needs a device look before it is fixed.
+
+## 7. The path
 
 Every step is red → green → mutation smoke, per [[01-tdd-workflow]]. No new npm packages.
 
 ### Phase A — the signal (foundation, no screen changes)
 
-**A1. `useKeyboardInset()`** — a house hook under `src/theme/provider/`. RN 0.84 core ships `Keyboard` listeners and `endCoordinates.height` but **no hook**, so this is house code. The contract below is settled, read from RN 0.84.1's own Android source (§8).
+**A1. `useKeyboardInset()`** — a house hook under `src/theme/provider/`. RN 0.84 core ships `Keyboard` listeners and `endCoordinates.height` but **no hook**, so this is house code. The contract below is settled, read from RN 0.84.1's own Android source (§10).
 
 - Listen to `keyboardDidShow` / `keyboardDidHide` on **both** platforms (add `keyboardWillShow`/`Hide` on iOS for animation timing).
 - Return the overlap to add to content that **already pays `insets.bottom`**:
@@ -103,7 +177,7 @@ Every step is red → green → mutation smoke, per [[01-tdd-workflow]]. No new 
 - The per-platform branch exists for exactly one reason, and it is NOT "one resizes and one overlays": it is that **Android's reported height is already net of the system bars and iOS's is not**. Worth ~34 pt in a 390 pt window.
 - Pin the branch with a test. It is the single most bug-prone line in the feature.
 
-**A2. Pure arithmetic in `src/theme/layout.js`** — a function turning `(height, keyboardInset)` into the usable height, beside `contentWidthOf` / `isCompactHeight`. React-free, so it gets a Tier-1 suite like `sizeClassOf`.
+**A2. Pure arithmetic in `src/theme/layout.js`** — `availableHeight(height, keyboardInset)` and the budget check, beside `contentWidthOf` / `isCompactHeight`. React-free, so it gets a Tier-1 suite like `sizeClassOf`.
 
 **A3. `useWindowClass()` exposes it**, so screens keep reading the window through the one hook the non-negotiable requires. This deliberately breaks `src/theme/__tests__/useWindowClass.test.js:124-134`, whose "exposes exactly the documented shape" assertion pins the key list to exactly six — that test is the change's own gate.
 
@@ -111,38 +185,44 @@ Every step is red → green → mutation smoke, per [[01-tdd-workflow]]. No new 
 
 **A5. Insets become a `renderScreen` option.** `INITIAL_METRICS` (`testUtils.js:69`) is a frozen constant, so a `{ width: 844, height: 390 }` landscape test today runs with **portrait insets**. Until this is fixed no landscape assertion is truthful, which makes it a prerequisite for every phase below, not a nicety.
 
-### Phase B — chrome yields (Customers as the reference)
+### Phase B — the yield ladder (Customers as the reference)
 
-**B1. Search-on-focus takes over** when `compactHeight ∧ keyboardVisible`: header hidden (`headerShown: false` — ours to hide), chips and summary card out, search bar plus results only. Latched on state, restored on blur. This is §2's sanctioned pattern and it is the phase that actually answers the question.
+**B1. Implement the ladder** from §6, latched on state. Fixes the `expanded / short` cell **and** the `fontScale` 2.143 portrait failure with one rule — they are the same defect seen from two directions.
 
 **B2. The list stops fighting the keyboard.** `listPadding` (`index.js:339`) is already the seam — `insets.bottom + spacing.md` gains the keyboard inset. Never `KeyboardAvoidingView` on a list. Fix the double-counted bottom inset in the same pass.
 
 **B3. Fix the card/row stacking disagreement** (§1.3) _before_ landscape is enabled, since enabling it is what makes the bug reachable.
 
-### Phase C — the wide-short layout
+### Phase C — the wide cells
 
-**C1. Chrome goes vertical** when the window is wide and short: filters into a **side sheet** on the trailing edge (max 400 dp), the list keeping full height. `index.js:448` already places the same chips/card in two arrangements under decision 70 — this is that pattern extended, not a new mechanism.
+**C1. Cap the drawer width.** `Drawer.js:70` is `width: '60%'` — a percentage. Unfolded that jumps ~192 → ~414 pt, and in landscape it would be 506 pt against M3's 360 dp cap. It is also the trigger for the logged drawer-flash-on-rotation bug (`react-native-drawer-layout` springs the closed offset to the new width). Small change, unblocks every wide cell, kills a known bug.
+
+**C2. Filters into a side sheet** for `expanded / tall`, trailing edge, ≤ 400 dp. `index.js:448` already places the same chips/card in two arrangements under decision 70 — this is that pattern extended, not a new mechanism.
+
+**C3. Navigation rail** for `expanded / tall`, destinations only. M3 forbids filters and sort in the rail: _"For sorting, filtering, or secondary navigation, use tabs or other components directly in the pane."_
 
 ### Phase D — per-screen judgement
 
 **D1.** Screens with 3+ inputs stay `orientation: 'portrait'`. A form has no landscape job on a phone; per-screen orientation exists precisely so that can be said. The 12 form directories are the default-portrait set.
 
-**D2.** The 17 search-above-list screens are the population that would benefit from B1 — but only once redesigned. They are v1; see [[04-orientation-decisions]] §Q1 for why they are not converted in place.
+**D2.** The 17 search-above-list screens are the population that would benefit from B1 — but only once redesigned. They are v1, and per the 2026-09-10 decision v1 is never unlocked.
 
-## 6. Honest limits
+**D3. Two-pane detail** is a per-screen design session, and only for `expanded / tall`. Not scheduled.
+
+## 8. Honest limits
 
 **Landscape on a phone will never beat portrait for search-and-browse.** Portrait with the keyboard open gives ~287 pt of list (2 rows at 1.0); landscape at its best gives ~134 pt (1 row). The goal is _usable_, not _better_.
 
 Which raises the real product question, and it is not a technical one: **which screens have a landscape job worth doing?** A wide ledger or invoice-line table genuinely wants landscape. A list of customer names you search mostly does not. Per-screen orientation is where that call gets made, screen by screen.
 
-## 7. Open questions
+## 9. Open questions
 
 1. ~~**Does landscape need to reach v1 at all?**~~ ✅ **DECIDED by the user 2026-09-10: landscape is for redesigned v2 screens only. v1 is never unlocked.** The portrait pin in the eight v1 stacks is permanent for the life of each v1 screen; a screen gains `orientation: 'all'` only by being redesigned, through `screenOptionsFor` in the registry. This retires the "unlock a chosen subset of v1" option floated in [[04-orientation-decisions]] §What follows — no registry extension for v1-only routes is needed, and no v1 screen is audited for landscape. The 133 module-scope `Dimensions.get` files and their 518 consumption sites are therefore left exactly as they are, and are deleted rather than fixed when their screen is replaced.
 2. **The portrait `fontScale` 2.143 keyboard failure** — split out as its own fix, or folded into this work? _(Asked of the user 2026-09-10; unanswered.)_ **Scope note:** this is a defect in an UNMERGED branch, not a live production bug. Customers v2 is not on `slave` (PRs #49/#50/#51 all open on 2026-09-10), so no user can reach the screen. It should be fixed before the merge queue drains, but nobody is hitting it today.
 
 ---
 
-## 8. The keyboard contract, settled from RN 0.84.1 source
+## 10. The keyboard contract, settled from RN 0.84.1 source
 
 Web research stalled repeatedly, so this was answered from `node_modules/react-native/ReactAndroid/` directly — which is the authority anyway. **The model this plan started from was wrong, and the correction matters.**
 
