@@ -195,7 +195,7 @@ Every step is red → green → mutation smoke, per [[01-tdd-workflow]]. No new 
 
 ### Phase C — the wide cells
 
-**C1. Cap the drawer width.** `Drawer.js:70` is `width: '60%'` — a percentage. Unfolded that jumps ~192 → ~414 pt, and in landscape it would be 506 pt against M3's 360 dp cap. It is also the trigger for the logged drawer-flash-on-rotation bug (`react-native-drawer-layout` springs the closed offset to the new width). Small change, unblocks every wide cell, kills a known bug.
+**C1. Cap the drawer width — BUILT and SEEN on device 2026-09-13 (user: "i agree for drawer width in 05. apply suggested fix"): `drawerWidth(width, height) = min(round(0.6 × min(width, height)), 360)` in `src/theme/layout.js`, read at render by both `Drawer.js` files; sized from the SHORTER side so rotation never changes it, which is what removes the flash.** `Drawer.js:70` is `width: '60%'` — a percentage. Unfolded that jumps ~192 → ~414 pt, and in landscape it would be 506 pt against M3's 360 dp cap. It is also the trigger for the logged drawer-flash-on-rotation bug (`react-native-drawer-layout` springs the closed offset to the new width). Small change, unblocks every wide cell, kills a known bug.
 
 **C2. Filters into a side sheet** for `expanded / tall`, trailing edge, ≤ 400 dp. `index.js:448` already places the same chips/card in two arrangements under decision 70 — this is that pattern extended, not a new mechanism.
 

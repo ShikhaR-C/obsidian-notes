@@ -58,7 +58,7 @@ Both were checked against the repo on 2026-09-12.
 - react-native-screens 4.24.0 applies a screen's `orientation` by setting `activity.requestedOrientation` (`ScreenWindowTraits.kt:79`) — the exact API Android 16 ignores on displays ≥ 600 dp wide.
 - Therefore on any **Android 16 device with a ≥ 600 dp display** — every Galaxy Z Fold unfolded, the Pixel Fold unfolded, the Z TriFold unfolded, every Android tablet — **v1 rotates today.** The 518-site arithmetic in 04 Q1 is reachable in production on those devices, and the "which way it breaks depends on launch orientation" race is live. On Android 15 and below the pin still holds.
 
-**Decision needed (user):** add the one-line opt-out to the activity now, or accept v1 in landscape on those devices. Recommendation: **add it.** It costs one manifest line, restores 04's "v1 stays pinned" on Android 16, and buys exactly one cycle — the opt-out disappears when `targetSdkVersion` moves to 37, so the redesign has a real deadline rather than an aspirational one. v2 routes are unaffected either way: they declare `'all'` and are built for it.
+**DECIDED 2026-09-13 (user): accept the platform default — no opt-out is added.** v1 rotates and resizes on ≥ 600 dp Android displays exactly as the OS decides, is not audited for it, and is fixed only by being replaced. The original recommendation, not taken, stays for the record: add the one-line opt-out to the activity now, or accept v1 in landscape on those devices. Recommendation was: **add it.** It costs one manifest line, restores 04's "v1 stays pinned" on Android 16, and buys exactly one cycle — the opt-out disappears when `targetSdkVersion` moves to 37, so the redesign has a real deadline rather than an aspirational one. v2 routes are unaffected either way: they declare `'all'` and are built for it.
 
 ### 3.2 iOS still opts out of iPad multitasking, and that opt-out is going away
 
@@ -66,7 +66,7 @@ Both were checked against the repo on 2026-09-12.
 - On iPadOS ≤ 18 this key is what kept v1 out of Split View / Slide Over / Stage Manager windows — the same protection as the Android pin, for width instead of orientation. On iPadOS 26 it is deprecated and reported by developers as ignored in the betas; whether the shipped release honours it for existing apps must be **checked on the iPad simulator**, which needs the user's login (see [[app-screen-redesign-plan]] note).
 - If it is ignored, v1 receives arbitrary window sizes on iPad and its module-scope constants are wrong from the first resize.
 
-**Decision needed (user):** whether the iPad matters commercially before v1 is gone. If yes, the honest options are the same as Android's: none. There is no opt-out to add. The mitigation is to schedule the screens dealers actually open on an iPad earlier in the redesign order. If no, record it and move on.
+**DECIDED 2026-09-13 (user): leave iOS as it is.** `UIRequiresFullScreen` stays in the plist; when iPadOS stops honouring it, v1 takes whatever window it is given — full screen or resized — and is not audited for it. The redesign order is not changed for the iPad. The original framing, for the record: whether the iPad matters commercially before v1 is gone; if yes, the honest options are the same as Android's — none, there is no opt-out to add, and the only mitigation would have been to schedule the screens dealers open on an iPad earlier.
 
 ---
 
@@ -76,23 +76,24 @@ Every device in the question is one of **nine window shapes**, and the shape —
 
 ### 4.1 Device → window cell (dp, approximate; verify on device before fixing any number)
 
-| Device / state                              | Window ≈ (w × h)    | Width class          | Height     | Treatment (05 §5)                                        |
-| ------------------------------------------- | ------------------- | -------------------- | ---------- | -------------------------------------------------------- |
-| Phone upright · Flip open · Fold cover      | 390–412 × 780–950   | compact              | tall       | **today** — bands, full-width list                       |
-| Phone on its side                           | 780–950 × 360–412   | medium / expanded    | **short**  | yield ladder; no rail, no card; search + list            |
-| Flip cover screen (Z Flip 7, Razr)          | 350–450 × 350–490   | compact              | **short**  | ladder; best-effort only, never a design target          |
-| Fold open, upright                          | 690–830 × 750–840   | medium / expanded    | tall       | `Container` 640; filters + card share a row (decision 70) |
-| Fold open, on its side · Tri-fold open      | 750–1100 × 690–830  | expanded             | tall       | rail + contained list + side sheet; detail pane later    |
-| iPad full screen (either way)               | 744–1366 × 744–1366 | medium / expanded    | tall       | same as Fold open                                        |
-| iPad Split View ⅓ · Slide Over              | 320–375 × full      | compact              | tall       | **today's phone layout**, unchanged                      |
-| iPad Split View ½                           | 500–680 × full      | compact / medium     | tall       | boundary case; `Container` handles it                    |
-| iPadOS 26 free window, dragged short        | anything × < 500    | any                  | **short**  | ladder — same code path as the phone on its side         |
+| Device / state                         | Window ≈ (w × h)    | Width class       | Height    | Treatment (05 §5)                                         |
+| -------------------------------------- | ------------------- | ----------------- | --------- | --------------------------------------------------------- |
+| Phone upright · Flip open · Fold cover | **320**–430 × 533–950 | compact           | tall      | **today** — bands, full-width list; 320 is the floor, see below |
+| Phone on its side                      | 780–950 × 360–412   | medium / expanded | **short** | yield ladder; no rail, no card; search + list             |
+| Flip cover screen (Z Flip 7, Razr)     | 350–450 × 350–490   | compact           | **short** | ladder; best-effort only, never a design target           |
+| Fold open, upright                     | 690–830 × 750–840   | medium / expanded | tall      | `Container` 640; filters + card share a row (decision 70) |
+| Fold open, on its side · Tri-fold open | 750–1100 × 690–830  | expanded          | tall      | rail + contained list + side sheet; detail pane later     |
+| iPad full screen (either way)          | 744–1366 × 744–1366 | medium / expanded | tall      | same as Fold open                                         |
+| iPad Split View ⅓ · Slide Over         | 320–375 × full      | compact           | tall      | **today's phone layout**, unchanged                       |
+| iPad Split View ½                      | 500–680 × full      | compact / medium  | tall      | boundary case; `Container` handles it                     |
+| iPadOS 26 free window, dragged short   | anything × < 500    | any               | **short** | ladder — same code path as the phone on its side          |
 
 Three things the table makes visible:
 
 - **Every fold state is tall.** Unfolding only ever adds width. The fold and the tri-fold are the payoff, not the problem (05 §5 said this; the table shows the tri-fold lands in the same cell).
 - **The short row now has three entrants** (phone on its side, Flip cover, a dragged iPad window) and one mechanism — the ladder. Nothing device-specific is needed.
 - **No new width class is needed.** M3's `large` / `extra-large` exist for a third pane and desktop-density layouts. Until a screen wants a third pane, a 13-inch iPad in landscape is `expanded` with a contained 640 pt column and a side sheet, and that is correct.
+- **The compact floor is 320, not 390** (corrected 2026-09-13, user). iPad Slide Over and Split View ⅓ are 320 pt wide; iPhone Display Zoom turns a 390 pt phone into 320 pt; Android's Display size at "Largest" turns a 411 dp phone into ~316 dp; and `sw320dp` is still Android's smallest phone bucket (we ship `minSdkVersion 24`). Every compact design is checked at 320 first. `tilesStack` already answers it by the width rule — the row that is full at 1× on 390 is over-full at 320, so it stacks at 1× — and the harness gets a `PHONE_NARROW` preset (320 × 693) so nothing about 320 is assumed.
 
 ### 4.2 The third axis: text scale and weight
 
@@ -113,11 +114,11 @@ Text is not a window class, but it is the second pressure on every cell (05 §6:
 
 The 05 §7 phases stand unchanged. This doc adds a Step 0 in front and a Phase E behind.
 
-**Step 0 — platform decisions, before any build (user's call, §3).** (a) Android compat opt-out: add or accept. (b) iPad: confirm `UIRequiresFullScreen` behaviour on the iPadOS 26 simulator; decide whether iPad moves screens up the redesign order. Neither touches v2 code. Both are cheaper today than after the next release.
+**Step 0 — platform decisions: DECIDED 2026-09-13, nothing to build.** The user chose the platform default for v1 on both Android and iPad (§3): no manifest opt-out, no plist change, no reordering. On a large screen v1 is full screen and rotates as the OS decides, until each screen is replaced.
 
 **Phase A → C — exactly as in 05 §7.** The keyboard signal, the ladder on Customers, the drawer cap, the side sheet, the rail.
 
-**Phase E — the shape harness.** Extend `withWindow` in `src/test/` with named presets that _are_ the table in §4.1: `PHONE`, `PHONE_SIDE`, `FLIP_COVER`, `FOLD_OPEN`, `FOLD_OPEN_SIDE`, `TABLET`, `TABLET_THIRD`, `WINDOW_SHORT`. Each preset carries its own insets (05 A5 — until then a landscape test runs on portrait insets and is not truthful). A v2 screen's Tier 3 suite asserts its **decisions** (which regions are shown, which arrangement) across presets × `fontScale` {1.0, 1.3, 2.143}. Layout is never asserted, per `AI.md`. Rendering at each preset is the gate, not a nicety: it is the only thing that stops a screen shipping with a cell nobody looked at.
+**Phase E — the shape harness.** Extend `withWindow` in `src/test/` with named presets that _are_ the table in §4.1: `PHONE` (390 × 844), `PHONE_NARROW` (320 × 693), `PHONE_SIDE`, `FLIP_COVER`, `FOLD_OPEN`, `FOLD_OPEN_SIDE`, `TABLET`, `TABLET_THIRD`, `WINDOW_SHORT`. Each preset carries its own insets (05 A5 — until then a landscape test runs on portrait insets and is not truthful). A v2 screen's Tier 3 suite asserts its **decisions** (which regions are shown, which arrangement) across presets × `fontScale` {1.0, 1.3, 2.143}. Layout is never asserted, per `AI.md`. Rendering at each preset is the gate, not a nicety: it is the only thing that stops a screen shipping with a cell nobody looked at.
 
 **Phase D — per-screen judgement, as in 05,** with one added line in the [[03-per-screen-playbook]] Step 3 template: _"Which cell of §4.1 does this screen do anything different in? If none, say so."_
 
@@ -125,12 +126,12 @@ The 05 §7 phases stand unchanged. This doc adds a Step 0 in front and a Phase E
 
 Automated tests cover decisions. These cover the things tests cannot see. One pass per screen, at sign-off, using the two rigs already set up ([[ios-simulator-driving]], [[android-emulator-driving]]):
 
-| Rig                              | Sequence                                                                                         |
-| -------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Pixel 10 Pro Fold AVD            | cover → open → rotate → open keyboard → AX-L (2.143) → Bold Text on → fold back with sheet open |
-| iPhone 17e simulator             | portrait → AX-L → keyboard → rotate                                                              |
-| iPad simulator (needs user login) | full → Split View ⅓ → Split View ½ → Stage Manager window dragged short → AX-L                   |
-| Real Z Fold / Z Flip (when available) | the AVD sequence, plus Flip cover screen if the tester has it enabled                        |
+| Rig                                   | Sequence                                                                                        |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Pixel 10 Pro Fold AVD                 | cover → open → rotate → open keyboard → AX-L (2.143) → Bold Text on → fold back with sheet open |
+| iPhone 17e simulator                  | portrait → AX-L → keyboard → rotate                                                             |
+| iPad simulator (needs user login)     | full → Split View ⅓ → Split View ½ → Stage Manager window dragged short → AX-L                  |
+| Real Z Fold / Z Flip (when available) | the AVD sequence, plus Flip cover screen if the tester has it enabled                           |
 
 Two items are not on any rig and are named so they are not forgotten: **Motorola Razr cover** (any app runs there by default) and **Android 16 large-screen behaviour on a real Fold**, which the AVD reproduces only if its image is Android 16 or later.
 
@@ -141,13 +142,13 @@ Two items are not on any rig and are named so they are not forgotten: **Motorola
 - Does not add a fourth or fifth width class. A third pane earns `large`; nothing does yet.
 - Does not add a hinge / posture library. Deferred with two-pane (05 D3).
 - Does not treat the Flip cover screen as a design target. It must not crash; it is otherwise the ladder's smallest case.
-- Does not touch v1 beyond the two manifest-level decisions in §3. v1 is never audited for shape (settled 2026-09-10).
+- Does not touch v1 at all. §3 was decided for the platform default on 2026-09-13; v1 is never audited for shape (settled 2026-09-10, reaffirmed 2026-09-13).
 - Does not retire `CustomHeader` or adopt the native search bar (05 §3, still off the table).
 
 ## 6. Open questions
 
-1. **§3.1 — Android compat opt-out:** add now, or accept v1 landscape on Folds and tablets until each screen is replaced?
-2. **§3.2 — iPad:** does the shipped iPadOS 26 honour `UIRequiresFullScreen` for this app? Needs the iPad simulator with the user's login. And does the iPad matter commercially before v1 is gone?
+1. ~~**§3.1 — Android compat opt-out:** add now, or accept v1 landscape on Folds and tablets until each screen is replaced?~~ ✅ **DECIDED 2026-09-13: accept.** No opt-out; platform default.
+2. ~~**§3.2 — iPad:** does the shipped iPadOS 26 honour `UIRequiresFullScreen` for this app? And does the iPad matter commercially before v1 is gone?~~ ✅ **DECIDED 2026-09-13: leave as is.** Whatever iPadOS gives v1, it gets; no reordering. (Whether the shipped iPadOS 26 still honours the key is now only a curiosity, not a decision input.)
 3. **`MIN_ROWS`** (05 §6): 3 with a floor of 2, pending a device look — unchanged.
 4. **05 §9.2** — the portrait 2.143 keyboard failure on the unmerged Customers v2: own fix or folded into Phase B? Still unanswered from 2026-09-10.
 
