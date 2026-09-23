@@ -58,12 +58,12 @@ Proposal for the design session (Step 3), **not** a decision — it would change
 
 ## 5. API contract — what this sub-spec fixes in the parent
 
-`sort: "latestOrder"` — key = newest `so_msts.on_dt` per `cust_id` over **all time**; customers with no sales order ever sort **last in both directions**; ties by `cust_id` ascending (parent rule). Composition item 5 of the parent becomes one aggregate over `so_msts` filtered by `dealer_id` (tenant) and `cust_id ∈ relations`, grouped by `cust_id`: `{ lastOnDt: max(on_dt), fyCount: sum(on_dt in current FY ? 1 : 0) }` — `hasTrans` reads `fyCount > 0`, `latestOrder` reads `lastOnDt`. Indexes `{ dealer_id: -1, on_dt: -1 }` and `{ cust_id: 1, on_dt: -1 }` exist on `so_msts`.
+`sort: "latestOrder"` — key = newest `so_msts.on_dt` per `cust_id` over **all time**; customers with no sales order ever are the **earliest value** — last when newest first, **first when oldest first**, so the direction arrow mirrors the list (parent decision 82 of 2026-09-23, amending 36's "last in both directions"); ties by `cust_id` ascending (parent rule). Composition item 5 of the parent becomes one aggregate over `so_msts` filtered by `dealer_id` (tenant) and `cust_id ∈ relations`, grouped by `cust_id`: `{ lastOnDt: max(on_dt), fyCount: sum(on_dt in current FY ? 1 : 0) }` — `hasTrans` reads `fyCount > 0`, `latestOrder` reads `lastOnDt`. Indexes `{ dealer_id: -1, on_dt: -1 }` and `{ cust_id: 1, on_dt: -1 }` exist on `so_msts`.
 
 API tests (replace the parent's `it.todo`):
 
 - [ ] `sort: "latestOrder", dir: "desc"` → the customer with the newest sales order first; `asc` → oldest first; pinned against seeded `on_dt` values
-- [ ] a relation with **no** sales order ever sorts last under both directions
+- [ ] a relation with **no** sales order ever sorts last descending and **first ascending** — `asc` is `desc` reversed (decision 82; was: last under both directions); an ascending walk whose page 1 is all never-ordered relations pages on through the null cursor key
 - [ ] all-time: a relation whose only sales order is dated in the previous FY sorts by that date **and** still reads `hasTrans: false`
 - [ ] two relations with the same newest `on_dt` → `cust_id` ascending
 - [ ] keyset paging on `latestOrder`: pages disjoint, order stable after a new SO is inserted for a customer already on page 1
