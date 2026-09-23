@@ -21,6 +21,7 @@ This knowledge base collects the material behind the technology work: DZZLO OMS 
 - [[vsyst-technologies/docs/oms_api/RELEASE_NOTES_v1.78|OMS API]] — API package updates, hotfixes, and release notes
 - [[vsyst-technologies/docs/oms_app/package-update-plan|OMS App]] — App package updates and React Native upgrade plans
 - [[vsyst-technologies/docs/dip_web/atlas_search_vehicles_plan|DIP Web]] — Atlas search and web editor plans
+- [[vsyst-technologies/docs/dzzlo_ro_web/00-split-from-dip-web-plan|DZZLO RO Web]] — Dealer-only RO DIP-METER web app split from DIP Web (plan, 2026-09-22)
 
 ### Correspondence
 
