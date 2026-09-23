@@ -22,6 +22,7 @@ This knowledge base collects the material behind the technology work: DZZLO OMS 
 - [[vsyst-technologies/docs/oms_app/package-update-plan|OMS App]] — App package updates and React Native upgrade plans
 - [[vsyst-technologies/docs/dip_web/atlas_search_vehicles_plan|DIP Web]] — Atlas search and web editor plans
 - [[vsyst-technologies/docs/dzzlo_ro_web/00-split-from-dip-web-plan|DZZLO RO Web]] — Dealer-only RO DIP-METER web app split from DIP Web (plan, 2026-09-22)
+- [[vsyst-technologies/docs/github_workflow/00-github-workflow|GitHub Workflow]] — Issue → branch → PR → review → merge → release tag across all four repos, TDD throughout, with the naming formats and a FigJam AI prompt (draft, 2026-09-23)
 
 ### Correspondence
 
