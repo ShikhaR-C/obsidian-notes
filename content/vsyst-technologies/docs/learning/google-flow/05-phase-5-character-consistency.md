@@ -89,6 +89,8 @@ Within a single continuous moment, **Scene Extension** generates the next clip *
 
 **Scenebuilder** ("Jump To") is the timeline where you extend, re-time, and stitch shots together into a scene. Use it to keep continuity *inside* a beat; use Vids (Phase 8) to assemble *separate* beats into the final cut.
 
+> **When the seam fights you.** Extend *re-generates the last second* of your clip and hands back one merged **720p** file, and a clip started from a saved last frame inherits that frame's softness. Both have fixes — the join-on-a-still recipe above all — in [[10-deep-dive-scene-continuity]].
+
 > **The honest limit.** Even with all four layers, identity can still **drift** — a slightly different jawline, a shifting shirt logo, hands doing hand things. Mid-2026 Veo 3.1 is *dramatically* better than a year ago ("identity consistency is better than ever"), but it is not a locked 3D model of your actor. Practical rules: (1) keep clips short — drift compounds with length; (2) favour Ingredients + start-frame over pure text; (3) hide the hardest continuity cuts behind an edit or a B-roll shot in Vids; (4) for a face that must be *pixel*-locked (regulated claims, a real named person), shoot real footage or composite — don't fake it. Knowing when *not* to use the tool is part of using it well.
 
 ## 7. Consistency Isn't Just Faces

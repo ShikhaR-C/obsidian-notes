@@ -142,8 +142,12 @@ Need it longer than 8 s?                  → Scene Extension / Scenebuilder
 | **Whisk**           | Remix a subject + scene + style image into a new image/video        |
 | **Ingredients**     | Up to 3 reference images that pin character/object/style consistency |
 | **Frames→Video**    | Give a first (± last) image; Veo animates from it                   |
-| **Scene Extension** | Grow a clip past 8 s by generating from its last frame              |
-| **Scenebuilder / "Jump To"** | Flow's timeline for extending/stitching shots              |
+| **Scene Extension** | Grow a clip past 8 s; re-generates from its **last second**, returns one merged **720p** file ([[10-deep-dive-scene-continuity]]) |
+| **Scenebuilder / "Jump To"** | Flow's timeline for extending/stitching shots; *Jump To* = cut to a new shot in the same scene, context kept from the last frame |
+| **180° rule**       | Keep every camera on one side of the line between your two subjects, so looks and movement stay consistent ([[10-deep-dive-scene-continuity]] §5.4) |
+| **30° rule**        | Consecutive shots of one subject differ by ≥ 30° or two shot sizes, or the cut reads as a jump cut |
+| **Cut on action**   | Cut *during* a movement so the join hides inside it — the best seam-hider in AI video |
+| **J-cut / L-cut**   | Audio leads / lags the picture cut; buries Extend's re-generated seam audio |
 | **Credits**         | The coins each render costs; ~1,000/month on AI Pro                 |
 | **RAG**             | AI that reads *your* documents before answering (Phase 7)          |
 | **NotebookLM**      | Google's tool that turns your docs into a queryable knowledge base  |
@@ -164,10 +168,15 @@ Need it longer than 8 s?                  → Scene Extension / Scenebuilder
 | Dialogue rushed or cut off                | Line too long — ≤20 words, one breath                                    |
 | Blew the monthly budget                   | You Quality-rendered tests — draft on Lite, lock on Quality only         |
 | Character drifts over a long clip         | Keep clips short; use start-frame + ingredient; hide cuts in the edit    |
+| Extend "changed" the end of my clip / seam jumps | It re-shoots the last second and merges at 720p — end on a hold, keep the prompt, delete & re-extend ([[10-deep-dive-scene-continuity]]) |
+| Clip made from a saved last frame looks soft / different colour | Join on a clean Imagen still (last frame of A = first frame of B), same tier & resolution, upscale once ([[10-deep-dive-scene-continuity]]) |
 | Ingredient consistency is weak            | Reference photo is blurry/busy — use sharp, plain-background stills      |
 | Ingredient reference blurry / low-res     | Regenerate a clean plain-background still in Imagen; sharp refs only     |
 | Gem writes off-brand / wrong facts        | Add the missing info to the NotebookLM notebook; re-ground ([[07-phase-7-custom-rag-brand-brain]]) |
 | Voice timbre changes between clips        | Describe voice identically, or cut a locked VO in Vids                   |
+| Cuts feel jumpy or random                 | Break the 30° rule less, motivate each cut (look / sound / action), cut on action ([[10-deep-dive-scene-continuity]] §5–6) |
+| Stitched piece looks like a patchwork (each clip a different look, room, sound) | Freeze one Look Sentence + style ingredient, one still per location + props bible, one camera personality; then hero-clip grade + one music bed, Veo ambience ducked ([[10-deep-dive-scene-continuity]] §7) |
+| Transition looks "AI" (dissolve smears the face) | Never dissolve across identity — straight cut on action, or a 6-frame dip ([[10-deep-dive-scene-continuity]] §6.5) |
 
 ## 9. Sources (web-verified 2026-07-15)
 
@@ -179,6 +188,9 @@ Primary (Google):
 - [Veo 3.1 Ingredients to Video — The Keyword (blog.google)](https://blog.google/innovation-and-ai/technology/ai/veo-3-1-ingredients-to-video/)
 - [5 tips for using Flow — The Keyword](https://blog.google/innovation-and-ai/products/flow-video-tips/)
 - [Create videos in Google Flow — Flow Help](https://support.google.com/flow/answer/16353334)
+- [Edit videos & build scenes in Flow — Flow Help (Extend, trim)](https://support.google.com/flow/answer/16935718)
+- [Veo on the Gemini API — Extend limits, first/last frame, resolutions (read 2026-09-25)](https://ai.google.dev/gemini-api/docs/veo)
+- [Bringing new Veo 3.1 updates into Flow — The Keyword](https://blog.google/innovation-and-ai/products/veo-updates-flow/)
 - [Manage your Google Flow credits — Flow Help](https://support.google.com/flow/answer/16526234)
 - [Everything new in Google AI subscriptions (I/O 2026) — The Keyword](https://blog.google/products-and-platforms/products/google-one/google-ai-subscriptions/)
 - [NotebookLM as a source in the Gemini app — Workspace Updates](https://workspaceupdates.googleblog.com/2026/01/take-notebooks-further-notebooklm-gemini.html)

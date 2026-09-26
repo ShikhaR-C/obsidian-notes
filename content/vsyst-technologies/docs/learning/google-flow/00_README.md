@@ -110,6 +110,7 @@ So you calibrate expectations before spending a coin:
 | 7     | [[07-phase-7-custom-rag-brand-brain]] — NotebookLM + a Gemini Gem = your brand's memory  | Advanced     |
 | 8     | [[08-phase-8-pro-workflow-and-playbooks]] — the full pipeline + per-content-type recipes | Capstone     |
 | —     | [[09-reference]] — prompt library, camera cheat-sheet, credit table, glossary, sources   | Reference    |
+| —     | [[10-deep-dive-scene-continuity]] — past 8 s: what Extend really does, why the last-frame trick goes soft, the fixes; how a director breaks a scene into shots, which transition goes where, and the cohesion stack that makes a stitched cut look like one film | Deep dive    |
 
 Start with [[01-phase-1-the-big-picture]].
 
