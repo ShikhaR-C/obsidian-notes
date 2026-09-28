@@ -1,5 +1,7 @@
 # Plan: Migrate from OneSignal → FCM + Firebase In-App Messaging (FIAM)
 
+> **Remote Config kill-switches: DEFERRED 2026-09-27** — `@react-native-firebase/remote-config` is out of the app (`tasks_17_remote_config_removal`); until it returns, a rollout flag such as `push_backend` rides `/api/v4/features` like the screen toggles. The phases below stay as written.
+
 > Companion to `FIREBASE_INTEGRATION_PLAN.md`, `FIREBASE_ANALYTICS_PLAN.md`, and `FIREBASE_NOTIFICATIONS_FCM_VS_ONESIGNAL.md`. The comparison doc decided: **drop OneSignal if notifications are only transactional (dev-composed)**, which is the case for DZZLO OMS today. This plan is the concrete cut-over.
 
 This plan **folds in the conclusions of `docs/learning/system-design/09-async-queues.md`** — the existing `sendNotifyToExternalIDs` fires-and-forgets to OneSignal, silently losing notifications on error, and blocks business operations waiting for OneSignal. The migration to FCM is the right moment to **also** move push delivery behind a BullMQ `notifications` queue so we fix both problems at once.

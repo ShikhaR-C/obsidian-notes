@@ -1,5 +1,7 @@
 # Notifications: FCM + Firebase In-App Messaging vs OneSignal
 
+> **Remote Config: DEFERRED 2026-09-27** — `@react-native-firebase/remote-config` is out of the app (`tasks_17_remote_config_removal`); the "Remote Config + A/B test" row below describes what Firebase offers, not what the app ships today. The comparison stays as written.
+
 > Companion to `FIREBASE_INTEGRATION_PLAN.md` and `FIREBASE_ANALYTICS_PLAN.md`. The integration plan mentions "Cloud Messaging (FCM) — could replace OneSignal." This doc answers: **can it actually?** Short answer — yes for basic push, but you lose meaningful features. Use this to decide whether to drop, keep, or run both.
 
 ---

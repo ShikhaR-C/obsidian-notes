@@ -1,5 +1,7 @@
 # Plan: Re-add Firebase — Crashlytics, Analytics, Performance Monitoring & Remote Config. DONE ✅
 
+> **Remote Config: DEFERRED 2026-09-27** — the `@react-native-firebase/remote-config` package is out of the app (`tasks_17_remote_config_removal`); the screen toggles ride `/api/v4/features`. Nothing below is deleted: the Remote Config steps stay for when it comes back.
+
 ## Context
 
 The app (`in.vsyst.dzzlooms`) previously had Firebase for phone auth (removed). The Firebase project `dzzlo-oms` config files are still present on both platforms, but all Firebase code/plugins are commented out and no `@react-native-firebase/*` packages are installed. The app runs **React Native 0.84.1** / **React 19.2.3**.

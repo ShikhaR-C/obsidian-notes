@@ -1,5 +1,7 @@
 # Plan: Firebase Analytics — Event Instrumentation for DZZLO OMS
 
+> **Remote Config: DEFERRED 2026-09-27** — the app no longer ships `@react-native-firebase/remote-config` (`tasks_17_remote_config_removal`); the Remote Config / A/B-test triggers mentioned below wait for it to come back. Analytics itself is unchanged.
+
 > Companion to `FIREBASE_INTEGRATION_PLAN.md`. That plan installs `@react-native-firebase/analytics` and wires global screen tracking inside every `NavigationContainer`. **This** plan focuses exclusively on **what events to fire, where, and with which parameters** — across Customer, Dealer, Auth and Common screens. Assume Firebase is already initialized and `logScreenView` is already called on every navigation change (Step 6 of the integration plan).
 
 ---

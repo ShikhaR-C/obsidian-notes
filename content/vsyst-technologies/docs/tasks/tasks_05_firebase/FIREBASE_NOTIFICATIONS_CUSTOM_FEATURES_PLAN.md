@@ -1,5 +1,7 @@
 # Plan: Build OneSignal's Value-Add Features In-House (on FCM + FIAM + BullMQ)
 
+> **Remote Config kill-switches: DEFERRED 2026-09-27** — `@react-native-firebase/remote-config` is out of the app (`tasks_17_remote_config_removal`); until it returns, a kill-switch or rollout flag rides `/api/v4/features` like the screen toggles. The designs below stay as written.
+
 > Companion to `FIREBASE_NOTIFICATIONS_MIGRATION_PLAN.md`. That plan gets us off OneSignal for **transactional** push. This plan builds the **marketing / growth** layer OneSignal would have given us — segmentation, campaigns, delivery reporting, journeys, templates, in-app + multi-channel — on top of our own stack: MongoDB + BullMQ + Firebase Admin SDK + FIAM.
 >
 > Two rules of the road:
