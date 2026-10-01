@@ -26,6 +26,14 @@ This knowledge base collects the material behind the technology work: DZZLO OMS 
 - [[vsyst-technologies/docs/tasks/tasks_20_staff_attendance/00-overview|Staff attendance]] — Dealers' staff (existing DZZLO users) check in with the DZZLO OMS app, only from their own approved phone and only at the outlet (GPS); dealers manage it in dzzlo_ro_web; package approvals, dealer terms (plan, 2026-10-01)
 - [[vsyst-technologies/docs/tasks/tasks_21_api_security_hardening/00-overview|API security hardening]] — Bring the older v2, v3 and DIP v1 routes up to the v4 pattern, in four waves; gates tasks_19's cut and tasks_20's attendance (plan, 2026-10-01)
 
+### On this device only
+
+> **View locally only.** These three sets of notes are kept on one computer. They are not in the repository and not on the website, so the links below open only on that computer, in the local copy of the vault. Read them there; do not commit or publish them.
+
+- [[vsyst-technologies/docs/tasks/tasks_18_data_archival/00-overview|Data archival]] — Closed financial years from the database to S3, access to old data, costs, logs, and telling the clients apart in API calls (plan, 2026-10-01) — _local only_
+- [[vsyst-technologies/docs/tasks/tasks_19_dip_web_superadmin_only/00-overview|DIP Web — superadmin only]] — Remove the dealer sign-in and dealer screens from DIP Web so it is the staff console only (plan, 2026-10-01) — _local only_
+- [[vsyst-technologies/docs/learning/dpdp-act/00_README|DPDP Act]] — The Digital Personal Data Protection Act 2023 and Rules 2025 for DZZLO: what the law requires, where the app and the API stand, and a phase-wise plan (study, 2026-10-01) — _local only_
+
 ### Correspondence
 
 - [[vsyst-technologies/correspondence/IOCL_Mehta_09072026/DZZLO-OMS-Design-Philosophy|IOCL — Mehta]] — DZZLO OMS design philosophy and HAS legacy material
