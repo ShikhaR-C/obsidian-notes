@@ -24,6 +24,7 @@ This knowledge base collects the material behind the technology work: DZZLO OMS 
 - [[vsyst-technologies/docs/dzzlo_ro_web/00-split-from-dip-web-plan|DZZLO RO Web]] — Dealer-only RO DIP-METER web app split from DIP Web (plan, 2026-09-22)
 - [[vsyst-technologies/docs/github_workflow/00-github-workflow|GitHub Workflow]] — Issue → branch → PR → review → merge → release tag across all four repos, TDD throughout, with the naming formats and a FigJam AI prompt (draft, 2026-09-23)
 - [[vsyst-technologies/docs/tasks/tasks_20_staff_attendance/00-overview|Staff attendance]] — Dealers' staff (existing DZZLO users) check in with the DZZLO OMS app, only from their own approved phone and only at the outlet (GPS); dealers manage it in dzzlo_ro_web; package approvals, dealer terms (plan, 2026-10-01)
+- [[vsyst-technologies/docs/tasks/tasks_21_api_security_hardening/00-overview|API security hardening]] — Bring the older v2, v3 and DIP v1 routes up to the v4 pattern, in four waves; gates tasks_19's cut and tasks_20's attendance (plan, 2026-10-01)
 
 ### Correspondence
 
