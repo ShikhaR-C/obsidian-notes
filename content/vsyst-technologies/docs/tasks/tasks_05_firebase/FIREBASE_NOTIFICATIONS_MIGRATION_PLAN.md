@@ -4,11 +4,16 @@
 
 > Companion to `FIREBASE_INTEGRATION_PLAN.md`, `FIREBASE_ANALYTICS_PLAN.md`, and `FIREBASE_NOTIFICATIONS_FCM_VS_ONESIGNAL.md`. The comparison doc decided: **drop OneSignal if notifications are only transactional (dev-composed)**, which is the case for DZZLO OMS today. This plan is the concrete cut-over.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — none of the 8 added files exists on either side and every OneSignal piece in §1 is still in place (checked row by row); rollout Phase 1's `push_backend` flag is ⏸ with Remote Config, and the marker's "rides `/api/v4/features`" cannot work as the API stands — the toggle map keeps only `screen_v2_*` booleans (`T09-N1` in tasks_09). New: the push identity is not cleared on sign-out (`T05-N1`, in the integration plan). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 This plan **folds in the conclusions of `docs/learning/system-design/09-async-queues.md`** — the existing `sendNotifyToExternalIDs` fires-and-forgets to OneSignal, silently losing notifications on error, and blocks business operations waiting for OneSignal. The migration to FCM is the right moment to **also** move push delivery behind a BullMQ `notifications` queue so we fix both problems at once.
 
 ---
 
 ## 1. Current OneSignal Footprint
+
+**Status (2026-10-01):** ✅ still accurate, with two corrections: the app declares only `ONESIGNAL_APP_ID` (`src/types/env.d.ts:7`, `.env.example:13`) — `ONESIGNAL_REST_API_ID` is API-side (API `.env.example:56`); and the v3 sender has 11 call sites in 7 files (v2: 11 in 6, v1: 8 in 7 — 30 in all, not "26"). `AppNavigatorContainer.js` imports `getResult` as `runOneSignal` (`:20-22`, called at `:91`).
 
 ### Client — `dzzlo_oms_app`
 
@@ -33,17 +38,23 @@ This plan **folds in the conclusions of `docs/learning/system-design/09-async-qu
 
 ### Known problems (from `system-design/09-async-queues.md`)
 
+**Status (2026-10-01):** ⬜ not fixed — the `fetch` is awaited inside the business operation (`api_v3/controllers/App/notification.js:37-44`), a failure is only `console.log`ged, `FirstResponse.json()` is never awaited; no retry, no DLQ.
+
 - `await sendNotifyToExternalIDs(...)` is **synchronous** inside request handlers → business op (e.g. linking a dealer customer) blocks on OneSignal latency.
 - Error path is `catch (err) { console.log(...) }` — **notifications are silently lost** when OneSignal is down or the POST fails.
 - No retries, no DLQ, no observability into what went out vs what failed.
 
 ### In-app messaging usage
 
+**Status (2026-10-01):** ✅ still one flow — `setupInAppMessages` (`src/helpers/OneSignal/index.js:43-79`); it is also today's "update available" prompt (`T09-N2` in tasks_09).
+
 Only **one** FIAM-equivalent flow today: prompt user to update the app when `app_version` trigger is stale. Any other in-app message needs reimplementing in FIAM.
 
 ---
 
 ## 2. Target Architecture
+
+**Status (2026-10-01):** ⬜ none of it exists.
 
 ```
 ┌──────────────────── oms_api ────────────────────┐       ┌───────── Firebase ─────────┐
@@ -85,6 +96,8 @@ Key shifts from today:
 
 ### Step S1 — Install SDK & service account
 
+**Status (2026-10-01):** ⬜ `firebase-admin`, `bullmq` and `ioredis` are absent from the API's `package.json`; its `.env.example` carries only the OneSignal settings (`:54-57`).
+
 ```bash
 cd dzzlo_oms_api
 npm i firebase-admin bullmq ioredis
@@ -101,6 +114,8 @@ npm i firebase-admin bullmq ioredis
 - Remove `ONESIGNAL_APP_ID`, `ONESIGNAL_REST_API_ID` from `.env.example` (keep in running `.env` until rollout completes).
 
 ### Step S2 — Initialize admin SDK once
+
+**Status (2026-10-01):** ⬜ no `lib/firebaseAdmin.js`.
 
 `dzzlo_oms_api/lib/firebaseAdmin.js`:
 
@@ -119,6 +134,8 @@ module.exports = admin;
 ```
 
 ### Step S3 — Add `fcm_tokens` collection + register route
+
+**Status (2026-10-01):** ⬜ no `fcm_tokens` model in `models/` and no `/fcm/register` route.
 
 Schema (Mongoose or native):
 ```js
@@ -140,6 +157,8 @@ Route `POST /api/fcm/register` body `{ token, platform, app_version }` — requi
 Route `DELETE /api/fcm/register` — unregisters on logout (pass the device's current token).
 
 ### Step S4 — Replace `sendNotifyToExternalIDs` (keep signature)
+
+**Status (2026-10-01):** ⬜ the function still POSTs to OneSignal (`api_v3/controllers/App/notification.js:9-45`).
 
 `api_v3/controllers/App/notification.js` — **keep the same function name + signature** so the 26 callers don't change:
 
@@ -171,6 +190,8 @@ exports.sendNotifyToExternalIDs = async ({
 No caller (26 files) needs to change.
 
 ### Step S5 — Worker (`workers/pushWorker.js`)
+
+**Status (2026-10-01):** ⬜ no `workers/` or `queues/` folder.
 
 Follows the pattern from `system-design/09-async-queues.md` §Step 6:
 
@@ -239,9 +260,13 @@ Register in `ecosystem.config.js` as a separate PM2 app (per §Step 6 Option B) 
 
 ### Step S6 — `sadmin/notifs.js` (broadcast / admin sends)
 
+**Status (2026-10-01):** ⬜ unchanged (`api_v3/routes/sadmin/notifs.js`, mounted `api_v/api3.js:61`).
+
 Admin broadcast endpoint that currently loops over user ids → switch to a **topic** (`/topics/all`, `/topics/dealers`, `/topics/customers`) subscribed on the client (Step C4) and use `admin.messaging().send({ topic, notification, data })`. Cuts one-to-many sends from N FCM calls to 1.
 
 ### Step S7 — Retain OneSignal briefly (dual-send)
+
+**Status (2026-10-01):** ⬜ no dual-send; its Remote Config flag is ⏸ and needs a new home — `T09-N1` in tasks_09.
 
 During rollout, the function can **dual-send** (keep the OneSignal POST + enqueue FCM) behind a feature flag (Remote Config — already on the integration-plan roadmap). Once FCM delivery metrics look healthy for ~1 week, flip the flag and delete the OneSignal branch.
 
@@ -251,6 +276,8 @@ During rollout, the function can **dual-send** (keep the OneSignal POST + enqueu
 
 ### Step C1 — Packages
 
+**Status (2026-10-01):** ⬜ none of the three packages; `react-native-onesignal ^5.4.1` is still in `package.json:54`.
+
 ```bash
 cd dzzlo_oms_app
 yarn add @react-native-firebase/messaging @react-native-firebase/in-app-messaging @notifee/react-native
@@ -258,6 +285,8 @@ yarn remove react-native-onesignal
 ```
 
 ### Step C2 — iOS: enable FCM, delete OneSignal bits
+
+**Status (2026-10-01):** ⬜ the NSE target, `ios/Podfile:73-74` and the app-group entitlement (`ios/dzzlo_oms_app/dzzlo_oms_app.entitlements:9`) are all still there.
 
 - Xcode → Signing & Capabilities on the main target → ensure **Push Notifications** and **Background Modes → Remote notifications** are on.
 - Upload the APNs auth key (`.p8`) to Firebase console → Cloud Messaging.
@@ -268,9 +297,13 @@ yarn remove react-native-onesignal
 
 ### Step C3 — Android: nothing to do
 
+**Status (2026-10-01):** ⬜ waits on C1.
+
 `google-services.json` is already in place (integration plan §Current State). `@react-native-firebase/messaging` auto-registers the required `<service>` and `<receiver>` via manifest merging. Remove the OneSignal `<receiver>` entries that the OneSignal SDK's merged manifest contributed — just uninstall the package.
 
 ### Step C4 — Replace `src/helpers/OneSignal/` with `src/helpers/Messaging/`
+
+**Status (2026-10-01):** ⬜ `src/helpers/Messaging/` is absent; `src/helpers/OneSignal/index.js` is still the helper.
 
 Create `src/helpers/Messaging/index.js` (same export shape so callers don't change):
 
@@ -360,9 +393,13 @@ messaging().setBackgroundMessageHandler(async (_msg) => {
 
 ### Step C5 — Startup wiring
 
+**Status (2026-10-01):** ⬜ `src/navigation/AppNavigatorContainer.js:20-22` still imports from `helpers/OneSignal`.
+
 `AppNavigatorContainer.js` already calls `getResult({ dispatch })`. Re-point that import from `src/helpers/OneSignal` to `src/helpers/Messaging`. No other call sites.
 
 ### Step C6 — FIAM for the "update app" prompt
+
+**Status (2026-10-01):** ⬜ the OneSignal in-app update prompt is still live (`src/helpers/OneSignal/index.js:43-79`); app PR #47 proposes a third path — `T09-N2` in tasks_09.
 
 - Delete `setupInAppMessages` from client code entirely.
 - In Firebase console → Messaging → In-App Messaging → create a campaign:
@@ -380,9 +417,13 @@ messaging().setBackgroundMessageHandler(async (_msg) => {
 
 ### Step C7 — Logout
 
+**Status (2026-10-01):** ⬜ not built; the current sign-out does not clear the push identity either — `T05-N1` (in the integration plan).
+
 Call `unregisterFcmToken.initiate({ token: currentToken })` on logout **before** clearing session, then `await messaging().deleteToken()` to invalidate.
 
 ### Step C8 — Clean up constants / env
+
+**Status (2026-10-01):** ⬜ `ONESIGNAL_APP_ID` is still in `src/constants/system.js:7,18`, `src/types/env.d.ts:7` and `.env.example:13`.
 
 - Delete `ONESIGNAL_APP_ID` from `src/constants/system.js` and `src/types/env.d.ts`.
 - Remove `ONESIGNAL_APP_ID` from `dzzlo_oms_app/.env.example`.
@@ -390,6 +431,8 @@ Call `unregisterFcmToken.initiate({ token: currentToken })` on logout **before**
 ---
 
 ## 5. Data-payload compatibility
+
+**Status (2026-10-01):** ⬜ applies at migration time; `setNotification` is still fed from OneSignal's `additionalData` (`src/helpers/OneSignal/index.js:26-30`).
 
 The Redux `setNotification` reducer currently reads `OneSignal`'s `notification.additionalData`. Keep **the same key names** in the FCM `data` payload so downstream navigation logic is unchanged.
 
@@ -403,6 +446,8 @@ Server-side producers already pass `jsonData` — it lands in FCM `data` directl
 
 ## 6. Rollout phases
 
+**Status (2026-10-01):** ⬜ none of the phases; Phases 1 and 3 hinge on a `push_backend` flag that is ⏸ with Remote Config and has no home yet (`T09-N1` in tasks_09).
+
 | Phase | Scope                                                                                                                | Exit gate                                                              |
 | ----- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
 | 0     | Integration-plan Step 1-5 landed (Firebase app + analytics + crashlytics wired)                                      | App runs with Firebase initialised                                     |
@@ -415,6 +460,8 @@ Server-side producers already pass `jsonData` — it lands in FCM `data` directl
 ---
 
 ## 7. Verification
+
+**Status (2026-10-01):** ⬜ nothing to verify yet.
 
 1. **Token registration:** on fresh install, `fcm_tokens` collection gets one entry with correct `user_id`, `platform`, `app_version`.
 2. **Transactional push:**
@@ -431,6 +478,8 @@ Server-side producers already pass `jsonData` — it lands in FCM `data` directl
 ---
 
 ## 8. Files touched — summary
+
+**Status (2026-10-01):** ⬜ 0 of 8 added, 0 of 7 modified, 0 of 7 deleted.
 
 ### Added
 

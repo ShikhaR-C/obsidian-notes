@@ -3,6 +3,9 @@
 > Stream all server logs (PM2, Nginx, system) and server stats (CPU, memory, disk) to AWS CloudWatch.
 > One-time setup on EC2. No code changes needed.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Nothing in this setup lives in either repo, so all seven steps are ❔; the API runbook (last changed 2026-05-03) still lists "Ship PM2 and nginx logs to CloudWatch Logs" as a follow-up (`docs/runbook.md:340-341,627`), which suggests Steps 2–5 have not been done. The runbook describes two servers, so the agent and its role would go on both — `X-OPS-1` in [07](./07-resilience-ops.md). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Prerequisites
@@ -14,6 +17,8 @@
 ---
 
 ## Step 1: Create IAM Role for CloudWatch
+
+**Status (2026-10-01):** ❔ AWS console — not verifiable from the repos.
 
 **Where:** AWS Console → IAM → Roles
 
@@ -30,6 +35,8 @@
 ---
 
 ## Step 2: Install CloudWatch Agent
+
+**Status (2026-10-01):** ❔ on the servers — not verifiable; the runbook's open follow-up (`docs/runbook.md:627`) suggests not yet.
 
 SSH into your EC2 instance:
 
@@ -50,6 +57,8 @@ amazon-cloudwatch-agent-ctl -a status
 ---
 
 ## Step 3: Create Agent Configuration
+
+**Status (2026-10-01):** ❔ no agent config in either repo. The runbook's disk-full steps are for Ubuntu (`snap`, `apt`, `/home/ubuntu` — `docs/runbook.md:520-560`), so the Ubuntu paths under "Adjustments for Your Setup" apply, not `/home/ec2-user` and `/var/log/messages`.
 
 Create the config file:
 
@@ -169,6 +178,8 @@ Paste this configuration (adjust paths if your setup differs):
 
 ## Step 4: Start the Agent
 
+**Status (2026-10-01):** ❔ on the servers — not verifiable from the repos.
+
 ```bash
 # Load the config and start
 sudo amazon-cloudwatch-agent-ctl \
@@ -193,6 +204,8 @@ sudo systemctl enable amazon-cloudwatch-agent
 
 ## Step 5: Verify in AWS Console
 
+**Status (2026-10-01):** ❔ AWS console — not verifiable from the repos.
+
 1. Go to **CloudWatch → Log groups** — you should see the `/dzzlo/*` groups appearing within 1-2 minutes
 2. Go to **CloudWatch → Metrics → Custom Namespaces → Dzzlo/Server** — server stats should appear within 2-3 minutes
 3. Click into any log group → check that log entries are flowing
@@ -200,6 +213,8 @@ sudo systemctl enable amazon-cloudwatch-agent
 ---
 
 ## Step 6: Set Up Log Metric Filters & Alarms
+
+**Status (2026-10-01):** ❔ AWS console — not verifiable; the runbook still asks for a `disk_used_percent > 80` alarm per instance as a follow-up (`docs/runbook.md:580`), so Filter 4 is not known to exist.
 
 **Where:** CloudWatch → Log groups → select group → Metric filters
 
@@ -237,6 +252,8 @@ sudo systemctl enable amazon-cloudwatch-agent
 ---
 
 ## Step 7: (Optional) Export Old Logs to S3
+
+**Status (2026-10-01):** ❔ optional; not verifiable from the repos.
 
 For long-term archival at low cost:
 

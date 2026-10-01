@@ -4,9 +4,14 @@
 
 > **Vertical-SaaS lens:** an order or voucher is not a generic row — creating one triggers the domain's real business rules (credit limits, company gates, ledger effects). The only acceptable design is that partner writes flow through the identical service the app uses; a forked "partner version" would silently drift into a weaker second set of business rules. Idempotency is equally domain-driven: a partner's retry must never double-charge a dealer's credit or double-book an order.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 7 checklist items — no partner endpoints, attribution fields, `idempotency_keys` model or Idempotency-Key handling (grep; `api_v4/controllers/users.js:26` records that v4 has none). v4 now ships the allow-list validator and a scrubbed error envelope that §3.4–3.5 design from scratch (T11-N4). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 3.1 Contracts (design-first)
+
+**Status (2026-10-01):** ⬜ to do — "counterparty validated against the tenant's relations" is exactly v4's `assertRelation` (`api_v4/lib/tenancy.js:121-138`: one indexed `exists`, the same 403 for unrelated and unknown ids) — reuse it (T11-N3).
 
 `POST /partner/orders` — scope `orders:write`; headers `Authorization: Bearer …`, `Idempotency-Key: <uuid>`:
 
@@ -35,6 +40,8 @@ Contract rules:
 
 ## 3.2 Reuse, don't fork — service extraction
 
+**Status (2026-10-01):** ⬜ to do — case 1 applies: orders `createMstTrn` (`api_v3/services/order_msts.js:755`), vouchers three creators (`api_v3/services/voc_msts.js:700,764,848`); all take the tenant ids as input, so the controller sets them from the credential. Where rules live across v3/v4 is X-V4-2 (tasks_02).
+
 Read the existing v3 order/voucher create controllers first. Two cases:
 
 1. **Logic already in a service** → partner controller calls it directly. Done.
@@ -57,6 +64,8 @@ exports.createOrder = asyncHandler(async (req, res) => {
 Attribution fields (`created_via: 'partner_api'`, `api_client_id`) are added to the documents **additively** (new optional fields on `order_msts`/`voc_msts`) so support and reporting can distinguish app writes from partner writes.
 
 ## 3.3 Idempotency — model + middleware
+
+**Status (2026-10-01):** ⬜ to do — no Idempotency-Key handling anywhere (grep `idempoten` → comments only); the 48 h TTL index would be the first TTL index in `models/` (none today).
 
 `api_v3/models/idempotency_keys.js`:
 
@@ -98,11 +107,15 @@ Notes:
 
 ## 3.4 Strict input validation
 
+**Status (2026-10-01):** ⬜ to do — reuse the house validator `api_v4/lib/validate.js` (D7: unknown keys rejected at every level, every failure in `details[]`, schemas frozen, output on `req.valid`, `:424-446`) instead of picking a library (T11-N4).
+
 - **Allow-list** validation per endpoint (use whatever the repo already uses — express-validator/joi/manual — match it): every field explicitly declared with type/range; **unknown fields rejected**, not stripped silently (partners should learn about their bugs at integration time, and internal fields like statuses/rates must be unsettable).
 - `sanitizeMongo` is already global — partner router inherits it; validation still re-checks types so operators like `$gt` die at the schema level too.
 - Validated output lands on `req.validatedBody`; controllers never touch `req.body` directly.
 
 ## 3.5 Partner-safe error contract
+
+**Status (2026-10-01):** ⬜ to do — v4 already answers `{ success: false, error, error_code }` from a frozen catalogue and scrubs 500s (`api_v4/lib/errors.js:10-50,105-134`); this nested shape differs — decide which one partners get (T11-N4).
 
 Single envelope, stable machine-readable codes, zero internals:
 
@@ -126,6 +139,8 @@ A partner-scoped error handler maps `ErrorResponse` instances to this table; unk
 
 ## 3.6 Testing
 
+**Status (2026-10-01):** ⬜ to do — none exist.
+
 - **Happy paths:** both endpoints create documents identical (minus attribution fields) to app-created ones; domain side effects (credit check, ledger) fire — assert against the same fixtures the app tests use.
 - **Tenant forcing (critical):** payload smuggling `co_id`/`company` fields → 400; created doc's `co_id` always = credential's.
 - **Idempotency:** same key+body twice → one document, second response replayed with `Idempotent-Replay: true`; same key different body → 422; two concurrent same-key requests (Promise.all) → one 201, one 409/replay; different clients same key → two documents.
@@ -133,6 +148,8 @@ A partner-scoped error handler maps `ErrorResponse` instances to this table; unk
 - **Error mapping:** force a domain failure (over credit limit) → 422 stable code, no stack text in body.
 
 ## Phase 3 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 7 — verified absent at `6d41ce5`.
 
 - [ ] Field lists confirmed from existing v3 create services; DTOs documented.
 - [ ] Service extraction done (if needed) with app-path regression tests green **first**.

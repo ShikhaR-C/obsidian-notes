@@ -1,20 +1,43 @@
 # Remote Config removal — the package, the boot fetch, the mock, and the pod
 
-**Status:** **BUILT 2026-09-27 — two commits on app `release/v1_79`, NOT pushed: red `bcfd1ebf`, green `ad40ed71` (PR #55 carries them once pushed).** Suite 160 / 3634 in 12.7 s (was 159 / 3629). Smokes green (§10). The five tasks_05 vault notes carry their "DEFERRED 2026-09-27" markers, nothing deleted (C‑3). Firebase console: the user's (C‑2). Emulator boot check: green (§10).
+**Status:** ✅ **2026-10-01:** shipped in app v1.79 — `bcfd1ebf` (red) and `ad40ed71` (green) are ancestors of app `main` `ea7e7222` (tag `v1.79`; PR #55 → #50 → #49, merged 2026-09-30); the store rollout of 1.79 (Android 105 / iOS 4, `303eec8e`) is ❔. — _was:_ **BUILT 2026-09-27 — two commits on app `release/v1_79`, NOT pushed: red `bcfd1ebf`, green `ad40ed71` (PR #55 carries them once pushed).** Suite 160 / 3634 in 12.7 s (was 159 / 3629). Smokes green (§10). The five tasks_05 vault notes carry their "DEFERRED 2026-09-27" markers, nothing deleted (C‑3). Firebase console: the user's (C‑2). Emulator boot check: green (§10).
 **Created:** 2026-09-27, from the user: "we want to remove @react-native-firebase/remote-config package. plan how to remove it."
 **Scope:** One repo, `dzzlo_oms_app`. Two JS files, one Jest mock, the dependency (`package.json` + `yarn.lock`), the iOS lockfile and one Podfile comment, two doc lines, one vault line. **Nothing in the API, nothing in `dip-web`.** The other four Firebase packages (`app`, `analytics`, `crashlytics`, `perf`) stay exactly as they are, with their native config files.
 **Why:** Remote Config came in with the rest of Firebase on `0fb53e29` (tasks_05 `FIREBASE_INTEGRATION_PLAN.md`) as the future feature-toggle channel. The toggle channel was then built **server-side** instead: `GET /api/v4/features` → `screen_v2_<role>_<route>` → `resolveScreen` (tasks_12; `docs/testing.md` → "The toggles"). What is left of Remote Config in the app is `initRemoteConfig({})` — **empty defaults**, then a `fetchAndActivate()` **network round-trip on every cold start** (interval 0 in dev, 1 h in release) — and `getRemoteValue`, exported and **imported by nothing** (it never has been, in any commit since `0fb53e29`). The package costs a native module on both platforms, one boot request, a mock in every Jest run and a Firebase surface nobody reads.
 **Source:** app `release/v1_79` @ `bc94a345`, every file below opened 2026-09-27; PR #55 is open on that branch. Suite at that tree: **159 suites / 3629 tests, 12.3 s.** The working tree carries unrelated uncommitted work (`companyList.js`, `vocTypes.js`, `CustSettings.js`, `helpers/RowDivider/`, two test files) — this plan touches none of those files.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Done and shipped: all 9 rows of §8 are on `main` as planned (`ad40ed71`: 9 files, +12 / −103; `bcfd1ebf`: the test), and the config test runs in the 173-suite / 3,819-test run CI passed at `ea7e7222` (run 36779552256); 3 items stay ❔ — the store rollout, the Firebase console (C‑2) and the Android `firebase-config` classpath check. Correction: the toggle route is `GET /api/v4/app/features`, not `/api/v4/features` as written below and in the test's header (`src/utils/__tests__/firebaseModules.config.test.js:6`), and it carries screen toggles only — see `T09-N1` in tasks_09. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
+## Status roll-up (2026-10-01)
+
+| Item | Status | What exists now (evidence) | What is left / next step |
+| --- | --- | --- | --- |
+| Package + lockfile (§2) | ✅ | `package.json:35-38` lists four `@react-native-firebase/*` at 24.0.0; `yarn.lock` keeps only the web SDK's `@firebase/remote-config*` | — |
+| `src/utils/firebase.js` (§2) | ✅ | seven wrappers, no Remote Config section (`src/utils/firebase.js:1-74`) | — |
+| `AppNavigatorContainer.js` (§2) | ✅ | imports `setUser, tagEnv` only (`:31`); mount effect without `initRemoteConfig` (`:90-96`) | — |
+| `jest.setup.js` mock (§2) | ✅ | mocks only app / analytics / crashlytics / perf (`jest.setup.js:3-29`) | — |
+| iOS pod + Podfile comment (§2) | ✅ | `ios/Podfile.lock` has no `RNFBRemoteConfig`; `FirebaseRemoteConfig` 12.10.0 stays via Performance (`:87-95`); comment at `ios/Podfile:25-29` | — |
+| Android (§2) | ❔ | autolinking only, nothing to edit | the `firebase-config` classpath check needs a Gradle run; none is recorded |
+| The two app docs (§2) | ✅ | `docs/testing.md:67` and `docs/todos/PRODUCTION_RELEASE_CHECKLIST.md:538` say "deferred" | — |
+| Vault markers (§2, C‑3) | ✅ | the five tasks_05 notes carry "DEFERRED 2026-09-27" | the markers route kill-switches to the toggles, which keep screen keys only — `T09-N1` in tasks_09 |
+| Config test (§4) | ✅ | `src/utils/__tests__/firebaseModules.config.test.js:41-64`, five cases; 173 / 3,819 green in CI at `ea7e7222` | its header (`:6`) names `/api/v4/features` — an in-repo comment |
+| Release | ❔ | v1.79 = Android 105 / iOS 4 (`303eec8e`; `android/app/build.gradle:89-90`) | store rollout state — the user |
+| Firebase console (C‑2) | ❔ | outside the repos | the user |
+
 ---
 
 ## 1. The one-paragraph answer
+
+**Status (2026-10-01):** ✅ done as written — bridge module, JS and boot fetch are gone; the SDK pods stay (`ios/Podfile.lock:87-95`).
 
 Remove the package and everything that exists **only** because of it: the Remote Config section of `src/utils/firebase.js`, one import and one call in `AppNavigatorContainer.js`, the mock in `jest.setup.js`, the `package.json` line — then re-run `pod install` so `Podfile.lock` drops `RNFBRemoteConfig`. **The Firebase Remote Config SDK itself stays in the binary on both platforms**, because Performance Monitoring depends on it (`Podfile.lock`: `FirebasePerformance → FirebaseRemoteConfig → FirebaseABTesting`, and `FirebaseCrashlytics → FirebaseRemoteConfigInterop`), so the Podfile's `FirebaseABTesting` modular-headers line stays and only its comment changes. What leaves is the React Native **bridge module**, its JS, and the boot fetch. One red config test — same shape as `androidText.config.test.js`, pinned off disk — says the app has no Remote Config, and keeps saying it. In the notes and docs the word is **deferred** (C‑3): nothing that planned for Remote Config is deleted; each place it is named says the package is out of the app since 2026-09 and points here.
 
 ---
 
 ## 2. Inventory — every touchpoint, and what happens to it
+
+**Status (2026-10-01):** ✅ every REMOVE / REGENERATE / CLEAN / DEFER row is on `main` `ea7e7222` (roll-up above); the Android row's classpath check is ❔.
 
 **REMOVE** = goes. **REGENERATE** = a tool rewrites it. **CLEAN** = a stale comment or doc line. **KEEP** = untouched, and why.
 
@@ -40,6 +63,8 @@ Remove the package and everything that exists **only** because of it: the Remote
 
 ## 3. Order of work
 
+**Status (2026-10-01):** ✅ steps 1–5 done on 2026-09-27 (§10); the commits reached `main` through PR #55 → #50 → #49, merged 2026-09-30.
+
 1. **Red** — the config test in §4, committed alone: `test(firebase): the app has no Remote Config — package, module, mock, pod (red)`. 4 of its 5 cases fail on the unchanged tree.
 2. **Green** — one commit: `yarn remove`, the three source/setup edits, the Podfile comment, `pod install`, the two doc lines — `chore(firebase): remove @react-native-firebase/remote-config — deferred; toggles ride /api/v4/features`.
 3. **Smoke** (§4) — three mutations, each reverted; results in the commit body and the PR #55 body.
@@ -51,6 +76,8 @@ Where the two commits land: **`release/v1_79` (C‑1)** — PR #55 carries them.
 ---
 
 ## 4. Red → green
+
+**Status (2026-10-01):** ✅ the test is on `main` with its five cases (`src/utils/__tests__/firebaseModules.config.test.js:41-64`); the suite CI ran at `ea7e7222` is 173 / 3,819, all green (run 36779552256).
 
 **Test:** `src/utils/__tests__/firebaseModules.config.test.js` — Tier 1, off disk, beside the module it guards. The `src/utils/__tests__/` folder exists. Same family as `androidText.config.test.js`, `locales.config.test.js`, `orientation.config.test.js`, `keyboard.config.test.js`: *config no import graph protects, pinned off disk*. Header comment says why a JS test reads `package.json`, `jest.setup.js` and `Podfile.lock`: nothing else in the suite would notice the package coming back, and one `jest.mock` of a missing module takes the whole suite down.
 
@@ -79,6 +106,8 @@ Not smoked by re-inserting the mock: with the package gone, the mock crashes set
 
 ## 5. Test verdicts (for the PR body)
 
+**Status (2026-10-01):** ✅ holds — `ad40ed71` deletes no test file (its 9 files are the ones in §8).
+
 - **No test is deleted or skipped.** The `jest.mock` in `jest.setup.js` is setup, not a test; it leaves with the module it stubs.
 - `__tests__/App.test.tsx` still renders the boot spinner; it never asserted on Remote Config (it only saw the mocked `fetchAndActivate` resolve `false`).
 - `docs/testing.md` mock list updated so the doc matches `jest.setup.js` again.
@@ -86,6 +115,8 @@ Not smoked by re-inserting the mock: with the package gone, the mock crashes set
 ---
 
 ## 6. Calls — answered 2026-09-27
+
+**Status (2026-10-01):** ✅ C‑1 and C‑3 carried out; C‑2 is the user's (❔).
 
 The user, in one line: "calls - land commits in release/v1_79 branch. leave firebase console to me. all notes and docs files should update remote-config as deferred. do not delete any plan, just update deferred". Each call keeps its recommendation and carries the answer.
 
@@ -97,6 +128,8 @@ The user, in one line: "calls - land commits in release/v1_79 branch. leave fire
 
 ## 7. What is deliberately NOT in this plan
 
+**Status (2026-10-01):** ✅ held — the four packages stay at 24.0.0, and `firebase.json`, `android/app/google-services.json` and `ios/GoogleService-Info.plist` are unchanged since 1.78 (`git diff 7fb8389d ea7e7222` is empty for all three).
+
 - The other four `@react-native-firebase/*` packages, the three gradle plugins, `firebase.json`, the plist and the json — untouched.
 - The `/api/v4/features` toggle system and `useFeaturesRefresh` — untouched; it is the reason this can go.
 - Dropping `FirebaseRemoteConfig` / `FirebaseABTesting` / `FirebaseRemoteConfigInterop` from the Pods — not possible while Performance Monitoring and Crashlytics stay; the binary keeps the SDK, the app stops driving it.
@@ -107,6 +140,8 @@ The user, in one line: "calls - land commits in release/v1_79 branch. leave fire
 ---
 
 ## 8. Expected diff
+
+**Status (2026-10-01):** ✅ matches — `ad40ed71` is 9 files, +12 / −103; `bcfd1ebf` is the 65-line test.
 
 | File                                                  | Change                                                            |
 | ----------------------------------------------------- | ----------------------------------------------------------------- |
@@ -121,6 +156,8 @@ The user, in one line: "calls - land commits in release/v1_79 branch. leave fire
 | `src/utils/__tests__/firebaseModules.config.test.js`  | new, ~60 lines                                                    |
 
 ## 9. What "execute" runs
+
+**Status (2026-10-01):** ✅ executed on 2026-09-27 (§10).
 
 ```sh
 # red
@@ -146,7 +183,13 @@ git commit -m 'chore(firebase): remove @react-native-firebase/remote-config — 
 
 ## 10. Rounds (dated)
 
+**Status (2026-10-01):** the last round is 2026-09-27; since then the two commits shipped in v1.79 (the Status line at the top).
+
 - **2026-09-27, emulator boot (§3 step 4):** `react-native run-android --no-packager` against `emulator-5554` (Pixel_10_Pro_Fold, API 37), Metro on `APP_ENV=testing`, `adb reverse 8081`: BUILD SUCCESSFUL in 2 m 1 s (473 tasks; the RNFB config module is no longer in the generated `PackageList`). Cold start, logcat: `RNFBCrashlyticsInit: initialization successful`, `FirebaseCrashlytics: Saved version control info`, Analytics (`FA`) up, `ReactNativeJS: Running "dzzlo_oms_app"`, `App Version: 1.79`, the stored dealer session still valid (`expirationTime 11 days`), then `[v4] ping { version: v4 }` and `[v4] features { screen_v2_dealer_customers: true }` — the toggle channel that replaced Remote Config, answering. No `[firebase] … failed` warning, no `RemoteConfig` line anywhere in the log. Screen (inner display `-d 4619827259835644672`, 2076 × 2152 — the outer panel captures black while the fold is open): the dealer's Orders list with live data (Pending 4 / History 11), i.e. login, navigation and the v3 API all fine on the new binary. Metro stopped by its own PID afterwards (the "Fast Refresh disconnected" banner is that); the emulator kept its app.
 - **2026-09-27, executed:** the user: "execute". HEAD had moved to `18a136e6` (the user committed the pending customers work; tree clean); every anchor in §2 re-verified there. **Red `bcfd1ebf`** — `src/utils/__tests__/firebaseModules.config.test.js`, 4 / 5 red (the four-package set, the helper, the mock, the pod; the version case green). **Green `ad40ed71`** — 9 files, +12 / −103: `yarn remove` (yarn.lock also dropped `p-defer`, `react-native-fetch-api`, `text-encoding`, `web-streams-polyfill` — pulled by nothing else), the two source edits, the mock, the Podfile comment, `pod install` (Podfile.lock: exactly the `RNFBRemoteConfig` block, the `Firebase/RemoteConfig` subspec, its source / checkout / checksum lines and the Podfile checksum; `FirebaseRemoteConfig`, `FirebaseRemoteConfigInterop`, `FirebaseABTesting` still present at 12.10.0; `project.pbxproj` unchanged), `docs/testing.md` and the release checklist say "deferred". Config test 5 / 5; `yarn test` **160 / 3634** in 12.7 s. Lint on the touched files: one error, `AppNavigatorContainer.js` `react-hooks/exhaustive-deps` (`dispatch` in the mount effect) — pre-existing at `18a136e6` (the repo carries 447 lint errors), left alone. **Smoke:** (a) dependency line back → 1 / 5 red, the four-package case; (b) pre-green Podfile.lock back → 1 / 5, the pod case; (c) `getRemoteValue` export back → 1 / 5, the helper case; each reverted, tree clean, 0 / 5. Survivors of `rg remote-config|RemoteConfig`: yarn.lock's `@firebase/remote-config*` (web SDK via `firebase@12.10.0`), Podfile.lock's `FirebaseRemoteConfig*` (via Performance / Crashlytics), the Podfile comment, `docs/testing.md`'s "deferred", the new test — as §9 expected. **Vault (C‑3):** one dated "DEFERRED 2026-09-27" line under the title of each of the five tasks_05 notes that name Remote Config (`FIREBASE_INTEGRATION_PLAN`, `FIREBASE_ANALYTICS_PLAN` — added to the four the plan listed, it names Remote Config triggers — and the three `FIREBASE_NOTIFICATIONS_*`); nothing deleted. Not pushed. Emulator boot: the entry above this one.
 - **2026-09-27, calls answered:** the user: "calls - land commits in release/v1_79 branch. leave firebase console to me. all notes and docs files should update remote-config as deferred. do not delete any plan, just update deferred." C‑1 → two commits on `release/v1_79`, PR #55; C‑2 → the user's; C‑3 → every note and doc line marks Remote Config **deferred** with nothing deleted. §1, §2 (four rows), §3, §6, §7 and the green commit subject carry the answers. **Waits for "execute".**
 - **2026-09-27, planned:** survey of the repo (`rg` over everything but `node_modules` / `ios/Pods`; `git log -S`): two importers, one mock, one dependency line, the iOS lock; `getRemoteValue` never imported in any commit; `initRemoteConfig` only ever called with `{}`; the toggle system found server-side in `/api/v4/features`; `Podfile.lock` shows `FirebasePerformance → FirebaseRemoteConfig → FirebaseABTesting`, so the SDK pods stay. Suite baseline 159 / 3629 in 12.3 s. Plan written; **waits for "execute" and C‑1 … C‑3.**
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+No new task belongs to this folder. Related: `T09-N1` in tasks_09 — a home for non-screen flags, i.e. the kill-switches the tasks_05 markers send to the toggles, because the toggle map keeps only `screen_v2_<role>_<slug>` booleans (API `helpers/appFeatures.js:31-38`).

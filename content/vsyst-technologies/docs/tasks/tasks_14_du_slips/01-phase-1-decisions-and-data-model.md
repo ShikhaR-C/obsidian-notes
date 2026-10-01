@@ -3,11 +3,16 @@
 **Blocks:** everything.
 **Gated on:** (a) explicit approval to edit `models/so_msts.js`, `package.json` and the `.env` files in `dzzlo_oms_api`; (b) one physical measurement of a real DU slip.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 8 definition-of-done items — `models/so_msts.js` has no `du_slips` (schema `:24-45`, indexes `:47-53` plus the named v4 index at `:63-66`). The gate stands; §1's premise changed in part — `AI.md` now says new contracts go in `api_v4/` (`:85-86`) while still keeping `models/` unchanged without approval (`:87`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. The `models/` problem — read this before writing any code
 
-`dzzlo_oms_api/AI.md:83-87` and `docs/strategy/api_v3_refactor_plan.md:18` both say: **"Write ONLY inside `api_v3/` — no edits to `api_v2/`, `api_v1/`, `models/`, or `helpers/`."**
+**Status (2026-10-01):** ⏸ waits on the user's approval (unchanged). Precedents added since: `models/user_prefs.js` (`d2639ee`), four named v4 indexes (`a09e28f`), a one-line `models/dealer_msts.js` fix (`8b9f116`). The env list in the action box is now five files — `.env.ci` is tracked and CI copies it (`.github/workflows/test.yml:36`).
+
+~~`dzzlo_oms_api/AI.md:83-87` and~~ `docs/strategy/api_v3_refactor_plan.md:18` ~~both say~~ says: **"Write ONLY inside `api_v3/` — no edits to `api_v2/`, `api_v1/`, `models/`, or `helpers/`."** (2026-10-01: `AI.md:85-87` now reads "New contracts are written inside `api_v4/`. `api_v3/` changes only as test-first bugfix PRs — v3 is frozen for features. `api_v2/`, `api_v1/` and `models/` stay unchanged." — the `models/` gate this section is about is unchanged; where the endpoints live is §7 question 6 in the overview.)
 
 I checked whether there's a legal way around it. There isn't:
 
@@ -40,6 +45,8 @@ The rule is routinely relaxed with permission, and there's a documented process:
 ---
 
 ## 2. D4 — the schema
+
+**Status (2026-10-01):** ⬜ to do — no `du_slips` field or subdocument (`git grep du_slip` → 0). Since API-1, new `so_msts` indexes are named and built on Atlas before the declaration ships (`models/so_msts.js:63-66`, `scripts/perf/atlas-indexes.js:1-15`) — name the partial index and add it to that script.
 
 ### 2.1 Shape
 
@@ -112,6 +119,8 @@ so_mst_Schema.index(
 
 ### 2.3 What breaks if you add this field naively
 
+**Status (2026-10-01):** ⬜ still true — the invoice read moved to `api_v3/services/invs.js:651-657`, and a second unprojected read at `:747-753` feeds the invoice lists (T14-N2); `legacy_credit_presenter` is at `helpers/middlewares.js:167`; `editSalesOrder` (`api_v3/services/so_msts.js:175-265`) is unchanged.
+
 ⚠️ **`api_v3/services/invs.js:659-665`** does:
 
 ```js
@@ -128,6 +137,8 @@ SalesOrder.find({ $or: [{inv_id}, {gst_inv_id}, {cs_reimb_inv_id}] }).lean()
 
 ## 3. Product rules to confirm
 
+**Status (2026-10-01):** ⏸ waits on the user (unchanged). The predicate now reads at `src/screens/Dealer/Orders/components/OneOrder.js:203-206`; v4 has no membership-scope gate for DPrimary / DAdmin (T14-N4).
+
 | Rule | Proposed | Rationale |
 | --- | --- | --- |
 | Max slips per SO | **6** | A DU slip is one delivery. >2 means a multi-nozzle fill or a retake; 6 is generous headroom and bounds the embedded array. Enforce server-side. |
@@ -140,6 +151,8 @@ SalesOrder.find({ $or: [{inv_id}, {gst_inv_id}, {cs_reimb_inv_id}] }).lean()
 ---
 
 ## 4. The measurement that gates the capture spec
+
+**Status (2026-10-01):** ⏸ waits on a physical measurement of a real slip — not a repo task.
 
 **Every pixel target in Phase 3 derives from one unmeasured number: the printed cap-height of text on a real DU slip.** The working assumption is ~2.0–2.3 mm, derived from ESC/POS Font A (12×24 dot cell at a 180 dpi head on 58/80 mm thermal roll). If your dealers' dispensers print smaller or larger, every number scales linearly.
 
@@ -186,6 +199,8 @@ Electronic retention is expressly permitted (CGST s.35(1) proviso; **Rule 56(15)
 ---
 
 ## 5. Definition of done
+
+**Status (2026-10-01):** ⬜ 0 of 8 — no approval recorded, no schema, no failing leak test; `docs/strategy/cross_version_edits_plan.md:5` still reads "Draft — not yet started".
 
 - [ ] Approval recorded for the three protected-file edits (§1)
 - [ ] `du_slips` schema merged into `models/so_msts.js`, additive, with the partial index

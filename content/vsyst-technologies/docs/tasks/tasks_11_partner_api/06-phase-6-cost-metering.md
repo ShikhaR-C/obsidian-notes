@@ -4,9 +4,14 @@
 
 > **Vertical-SaaS lens:** this is the expansion-revenue engine. Vertical SaaS pricing power comes from owning the workflow: an API order write is worth more than a generic API call because it carries credit checks, ledger effects, and delivery orchestration. Pricing is therefore **per business action** (an order placed, a voucher created), not per HTTP request — and the API line item rolls into the tenant's existing subscription invoice, one bill, which is exactly the convenience that keeps vertical-SaaS churn low.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 6 checklist items — no price book, quota counters, roll-up job, draft invoices or reconciliation (grep at `6d41ce5`). The API has no scheduler dependency (no cron or agenda in `package.json`), which §6.4 needs. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 6.1 Pricing model
+
+**Status (2026-10-01):** ⬜ to do — no `partner_pricing` schema; the prices themselves are a commercial decision (not assessed).
 
 **Unit = one billable business action** (Phase 5's `billable_unit`). Different actions price differently:
 
@@ -49,6 +54,8 @@ Append-only by rule: historical invoices stay reproducible because the roll-up p
 
 ## 6.2 The metering hook — where, and why it can't be bypassed
 
+**Status (2026-10-01):** ⬜ to do — needs Phase 5's meter. Precedents for the structural guard: the v4 hub refuses at boot a route module without roles (`api_v4/index.js:35-54`), and `test/api_v4/lib/conventions.test.js` fails the build on banned patterns in source.
+
 **There is no separate "billing middleware" to forget.** The meter *is* Phase 5's `partner_meter`, mounted **router-level** in `routes/partner/index.js` before any route (Phase 2 chain). Consequences:
 
 1. Any future partner route added under the router is metered automatically — no per-route opt-in to forget.
@@ -57,6 +64,8 @@ Append-only by rule: historical invoices stay reproducible because the roll-up p
 4. Monthly reconciliation (6.4) cross-checks `partner_usage` billable counts against attributed documents (`order_msts` where `created_via: 'partner_api'`) — a drift between the two is an alert, making the meter **tamper-evident**, not just present.
 
 ## 6.3 Quota tracking — cheap counters, not per-request aggregations
+
+**Status (2026-10-01):** ⬜ to do — a Mongo `$inc` counter shared by both servers would also serve as the shared limiter store that T11-N5 needs.
 
 Running `count()` on `partner_usage` per request would melt under load. Instead a tiny counter collection, atomically incremented by the meter on billable calls:
 
@@ -73,6 +82,8 @@ PartnerQuotaCounters.updateOne(
 - **v1 semantics:** soft quota — calls over `included` still succeed and accrue overage; response carries `X-Quota-Remaining` so well-behaved partners self-regulate. Hard-block (429 `QUOTA_EXCEEDED`) is a per-client flag, default **on** only for `sandbox`-tier production credentials (i.e. not-yet-upgraded trials).
 
 ## 6.4 Monthly roll-up → draft invoice
+
+**Status (2026-10-01):** ⬜ to do — the repo has no scheduler (no cron or agenda dependency; `ecosystem.config.js` declares one app and no worker), so the "existing scheduler" option does not exist — choose one.
 
 A scheduled job (reuse the repo's existing scheduler if present — cron/agenda; open question) on the 1st, 00:30 IST, for the prior **IST calendar month**:
 
@@ -109,6 +120,8 @@ db.partner_usage.aggregate([
 
 ## 6.6 Testing
 
+**Status (2026-10-01):** ⬜ to do — none exist.
+
 - Pricing math: fixture usage docs → expected line items across included/overage boundaries, both units, each tier, `overage_multiplier` applied.
 - Idempotent job: run twice → identical single invoice doc.
 - Price-book versioning: usage spanning a price change → month billed at month-start price.
@@ -117,6 +130,8 @@ db.partner_usage.aggregate([
 - Reconciliation alert fires on a manufactured drift (delete one usage doc).
 
 ## Phase 6 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 6 — verified absent at `6d41ce5`.
 
 - [ ] `partner_pricing` price book (append-only) + initial doc with agreed prices.
 - [ ] Tier table confirmed commercially; `api_clients.tier`/`monthly_quota` wired to it.

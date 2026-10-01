@@ -1,5 +1,8 @@
 # Search Implementation Plan — API (`dzzlo_oms_api`)
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: none of the 9 files to create exists and none of the 12 edit targets has search code from this plan (§12) — no `/search` route, Atlas Search index, `_search/buildSearchStage.js`, `helpers/searchRateLimit.js`, `ATLAS_SEARCH` toggle or search test. Search arrived another way — escaped `$regex` on four v3 list endpoints (`7c06b0a`, `2e4fd0d`) and an in-memory `q` in `POST /api/v4/screens/customers` — so the plan should be re-targeted at the v4 read-model pattern (T03-N2 in 00_README); sections: 2 🟡 · 8 ⬜, and the §1 audit re-checked. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 Scope: add fast, full-text + field-filter + date-range search for `veh_msts`,
 `order_msts`, and `dealer_msts`. All new code lives inside `api_v3/` per the
 active dev rule. Prefer MongoDB Atlas Search when the cluster supports it, and
@@ -8,6 +11,8 @@ fall back to `$text` / `$regex` compound indexes otherwise.
 ---
 
 ## 1. Existing list / filter patterns (audit)
+
+**Re-checked (2026-10-01):** still accurate, with moved lines — `getPSOrdersPagination` / `getPSOrdersFilter` are at `api_v3/services/order_msts.js:1085,1092`, and `veh_msts` still has no list route (`api_v3/routes/collections/veh_msts.js:9-11`). New since: escaped `$regex` search on `GET /api/v3/veh_trns/paginated` (`api_v3/services/veh_trns.js:463-468`, with a `$facet` data/meta page at `:511`), the driver list (`dvr_msts.js:419-426`), the user list (`users.js:188-195`) and the sadmin vehicle list (`veh_trns.js:349-355`); `order_msts` gained `v4_dealer_cust_status_ondt` (`models/order_msts.js:82-85`); `express-rate-limit` is imported at `dzzlo_oms.js:19`, but the global limiter is commented out (`:87-95`).
 
 Relevant files read:
 
@@ -58,6 +63,8 @@ Relevant files read:
 ---
 
 ## 2. Atlas Search index definitions
+
+**Status (2026-10-01):** ⬜ no search index definition in the repo (no `createSearchIndex`, no `scripts/search/*.json`) and no code queries one (`$search`: 0 hits).
 
 Create three Atlas Search indexes via the Atlas UI (Database -> Search ->
 Create Index -> JSON editor) or via `mongosh` `createSearchIndex`. Use
@@ -162,6 +169,8 @@ Rationale:
 
 ## 3. Route additions
 
+**Status (2026-10-01):** ⬜ no `/search` route in any API version; no `helpers/searchRateLimit.js` (3.4) — the per-user limiter that exists covers `/api/v4/screens/*` only (`api_v4/lib/rateLimit.js:30-52`). The security note still applies to v3: its routes apply no `protect` (see `X-SEC-1` in tasks_01).
+
 ### 3.1 Edit `dzzlo_oms_api/api_v3/routes/collections/veh_msts.js`
 
 ```js
@@ -222,6 +231,8 @@ exports.searchLimiter = rateLimit({
 
 ## 4. Controller methods
 
+**Status (2026-10-01):** ⬜ no `SearchVehicles` / `SearchOrders` / `SearchDealers` controller exists.
+
 ### 4.1 Edit `dzzlo_oms_api/api_v3/controllers/collections/veh_msts.js`
 
 ```js
@@ -266,6 +277,8 @@ exports.SearchDealers = asyncHandler(async (req, res) => {
 ---
 
 ## 5. Service methods (aggregation pipelines)
+
+**Status (2026-10-01):** ⬜ no `_search/buildSearchStage.js` and no `search*` service; the nearest shipped code is this plan's fallback shape — an escaped `$regex` `$or` plus a `$facet` data/meta page in `listPaginated` (`api_v3/services/veh_trns.js:463-468,511`) — without the Atlas branch.
 
 Create `dzzlo_oms_api/api_v3/services/_search/buildSearchStage.js` with a shared
 helper. Then add service methods to each existing service file.
@@ -668,6 +681,8 @@ exports.searchDealers = async ({ query, user }) => {
 
 ## 6. Fallback indexes (when `ATLAS_SEARCH !== "true"`)
 
+**Status (2026-10-01):** ⬜ none of these indexes: `veh_msts` still has only `cust_id` and `veh_reg_no` (`models/veh_msts.js:31-32`); `dealer_msts` has no `city` / `state` index.
+
 The fallback path in §5 searches with **escaped `$regex`** (substring
 semantics), not `$text` — so do **not** create `$text` indexes for it: they
 would never be queried and would only add write/storage overhead. What the
@@ -715,6 +730,8 @@ dealer_mst_Schema.index(
 
 ## 7. Validation, sanitization + authorization
 
+**Status (2026-10-01):** 🟡 met by the one search in v4 — tenant from the token (`scopeFilter`), `q` limited to 1–60 characters by the house validator (`api_v4/schemas/customers.js:48`), escaped before it becomes a `RegExp` (`api_v4/readmodels/customers.js:72,87`), id keys refused in the body. The v3 list searches escape their input too, but predate the v4 auth, tenant-scoping and input rules — see `X-SEC-1` in tasks_01.
+
 - **Authorization (most important):** all three routes sit behind the existing
   `api_v3` auth middleware, and the services force tenant scope from
   `req.user` (dealer → own `dealer_id`, customer → own `cust_id`).
@@ -740,9 +757,11 @@ dealer_mst_Schema.index(
 
 ## 8. Rate limiting
 
+**Status (2026-10-01):** 🟡 the v4 screens limiter keys on the user, as suggested here (`api_v4/lib/rateLimit.js:32-36`; 300 a minute, counted per process — see `X-OPS-1` in tasks_01), and covers the Customers search; the v3 list searches have no limiter, and the global one this section relies on does not exist (corrected below).
+
 `helpers/searchRateLimit.js` exposes `searchLimiter` (60 req/min per IP).
-It is mounted only on the three `/search` routes — existing global
-`rateLimit` in `dzzlo_oms.js` still applies. For authenticated routes consider
+It is mounted only on the three `/search` routes — ~~existing global
+`rateLimit` in `dzzlo_oms.js` still applies~~ **(2026-10-01: there is no global limiter — it has been commented out since `892c33a`, 2026-04-08, `dzzlo_oms.js:87-95`; see SEC-2 in tasks_01)**. For authenticated routes consider
 keying on user id:
 
 ```js
@@ -758,6 +777,8 @@ before relying on the limiter.
 ---
 
 ## 9. Index creation / deploy steps
+
+**Status (2026-10-01):** ⬜ no `scripts/createSearchIndexes.js` and no `ATLAS_SEARCH` env toggle (`.env.example` has none). The index script that does exist, `scripts/perf/atlas-indexes.js`, builds the four v4 B-tree indexes and runs under mongosh (see `X-REL-2` in tasks_01).
 
 ### Atlas Search (recommended)
 
@@ -801,6 +822,8 @@ before relying on the limiter.
 ---
 
 ## 10. Unit test strategy
+
+**Status (2026-10-01):** ⬜ no `search.test.js`; the searches that shipped are tested — the v4 `q` (`test/api_v4/screens/customers.test.js:536-543,889`, `test/api_v4/lib/customersModel.test.js:73-79`) and the v3 lists (`test/api_v3/collections/vehs/veh_trns.test.js`, `test/api_v3/features/sadmin/index.test.js`). The test mongod is now 8.2.1 (`package.json:23-27`) and still has no `$search`.
 
 `mongodb-memory-server` does NOT support Atlas Search (`$search`). Tests must
 exercise the fallback path. Strategy:
@@ -861,6 +884,8 @@ Nodes** require M10+), index backfill wait time, and staging smoke tests.
 ---
 
 ## 12. Files to create / edit (quick index)
+
+**Status (2026-10-01):** ⬜ none of the 9 files to create exists, and none of the 12 edit targets carries search code from this plan.
 
 Create:
 

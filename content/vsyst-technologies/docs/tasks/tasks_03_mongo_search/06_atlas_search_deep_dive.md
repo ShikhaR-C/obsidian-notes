@@ -3,6 +3,9 @@
 > The focused playbook for adding production-grade search to DZZLO OMS using Atlas Search.
 > This file assumes you've read `05_mongodb_search_guide.md` and decided Atlas Search is the right tool.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research — no tasks to mark. Facts about our code re-checked: no Atlas Search index exists and there is no `backend/atlas-search/` folder (the API repo has no `backend/` directory); the one place index definitions are versioned is `scripts/perf/atlas-indexes.js`, a mongosh script for the four v4 B-tree indexes, run by hand rather than through CI (see `X-REL-2` in tasks_01); the "M10/M20" tier is ❔, though an in-repo comment calls the cluster an Atlas M10 (`helpers/db_conn.js:8`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Table of contents

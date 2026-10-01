@@ -5,9 +5,14 @@
 
 > This phase is a near-direct generalization of `api_v3/controllers/sadmin/diesel_limit.js` + `helpers/dieselQtyLimit.js` (from the merged-in slave commits). Read those two files first — the controller/cache code below is the same shape with an allow-list and a multi-key `$set`.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — none of the three new files, the two mounts or the `app_settings` doc exists (git grep for `app_settings`, `settingsCache`, `getAppSettings`: 0), and 0 of 8 acceptance items hold; branch from `master` (1.5.5), Phase 0 is moot. Since this was written the same cached-`counters` reader was built for the D10 toggles (`helpers/appFeatures.js:40-106`) and again on PR #34 (`helpers/versionGate.js`, unmerged), and the superadmin guard this phase leans on is a prerequisite: superadmin endpoints require a superadmin bearer (see `X-SEC-2` in tasks_01). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Storage — `counters` doc `app_settings`
+
+**Status (2026-10-01):** ⬜ no `app_settings` doc and no doc comment in `models/counters.js` (`:7-12`); the `counters` docs in use are `states`, `units`, `hsns`, `diesel_limit` and `app_features`.
 
 Reuse the proven key-value pattern: `units`/`hsncodes` (`api_v3/controllers/sadmin/units_hsns.js`) and `diesel_limit` (`helpers/dieselQtyLimit.js` → `{ doc_name: "diesel_limit", data: {...} }`, present after the Phase 0 merge) all live this way. No new model, no migration. **Use a separate `app_settings` doc** — do not co-mingle with the existing `diesel_limit` doc (overview decision 6).
 
@@ -30,7 +35,11 @@ Record it in the model doc comment only — `models/counters.js`:
 
 ## 2. Endpoints
 
+**Status (2026-10-01):** ⬜ neither endpoint exists.
+
 ### 2a. Superadmin write + admin read — `api_v3/controllers/sadmin/settings.js` (new)
+
+**Status (2026-10-01):** ⬜ absent; the closest built shape is the D10 write, `api_v3/controllers/sadmin/app_features.js:30-70` (whole-body validation first, per-key `$set`, `strict: false`, cache invalidation).
 
 Mirror `units_hsns.js` style (`asyncHandler`, `counters.findOneAndUpdate`, `ErrRes`).
 
@@ -84,7 +93,7 @@ exports.update_settings = asyncHandler(async (req, res, next) => {
 });
 ```
 
-Mount in `api_v3/routes/sadmin/index.js` (these inherit the existing superadmin protection at the sadmin mount):
+Mount in `api_v3/routes/sadmin/index.js` (these inherit the existing superadmin protection at the sadmin mount) _(2026-10-01: superadmin endpoints require a superadmin bearer — see `X-SEC-2` in tasks_01)_:
 
 ```js
 const { get_settings, update_settings } = require("../../controllers/sadmin/settings");
@@ -93,6 +102,8 @@ router.put("/settings", update_settings);
 ```
 
 ### 2b. App read (authenticated, NOT superadmin) — `api_v3/controllers/settings.js` (new)
+
+**Status (2026-10-01):** ⬜ absent; the app-readable counterpart that exists is `GET /api/v4/app/features` (bearer, company status and role gate — `api_v4/routes/app.js:10-14`), which could host settings the same way but cannot answer before login.
 
 **Critical (overview decision 3):** this must live *outside* the `/sadmin` guard so any dealer/customer app can read it.
 
@@ -128,6 +139,8 @@ router.use("/settings", require("./collections/settings"));
 
 ## 3. Cached server-side reader — `helpers/settingsCache.js` (new)
 
+**Status (2026-10-01):** ⬜ no `settingsCache`; the pattern exists twice — `helpers/appFeatures.js:40-106` (60 s TTL, invalidated on write, a DB error serves the last value) and PR #34's `helpers/versionGate.js` (unmerged). One shared cached-`counters` reader would avoid a third copy.
+
 The version middleware (Phase 2) runs on **every request** — it must never do a per-request DB read. Provide an in-process cached snapshot with a short TTL, same spirit as the existing `refDataCache`/`userCache`.
 
 ```js
@@ -159,6 +172,8 @@ module.exports = { getAppSettings, bustSettingsCache };
 ---
 
 ## 4. Phase 1 acceptance
+
+**Status (2026-10-01):** ⬜ 0 of 8; the third item depends on `X-SEC-2` in tasks_01 (superadmin endpoints require a superadmin bearer).
 
 - [ ] `PUT /api/v3/sadmin/settings` with `{ "page_size": 25 }` as superadmin → `200`, doc upserted, other keys untouched.
 - [ ] `PUT /api/v3/sadmin/settings` with `{ "bogus": 1 }` → `400 Unknown setting: bogus`.

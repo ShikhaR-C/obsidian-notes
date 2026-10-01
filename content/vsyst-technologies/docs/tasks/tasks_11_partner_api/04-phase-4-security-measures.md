@@ -4,11 +4,16 @@
 
 > **Vertical-SaaS lens:** tenants trust DZZLO as their system of record for commercially sensitive data — orders, credit limits, payment flows between real dealers and customers. On a multi-tenant partner API, one weak control is not "a bug," it is a potential **cross-tenant incident** affecting every company on the platform, and in an industry vertical, reputational damage travels fast between the exact customers we sell to. Security here is a product feature we will put in the partner docs, not an internal afterthought.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 9 checklist items and 0 of 10 security tests exist. The API still has no global rate limit and an open CORS policy (tasks_01 SEC-2, SEC-5), and its only principal-keyed limiter is the v4 screens valve (per user, in memory, per process); the tasks_01 hardening items X-SEC-1, X-SEC-2 and X-SEC-4 belong in this phase's go-live gate (T11-N6). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 4.1 Control catalog (control → where enforced)
 
 ### A. Transport
+
+**Status (2026-10-01):** ❔ TLS at the load balancer is not visible in the repos (ops can confirm); in code, `helmet()` runs globally with no `hsts` options, so library defaults apply (`dzzlo_oms.js:85`, defaults inferred).
 
 | Control | Enforcement point |
 | --- | --- |
@@ -17,6 +22,8 @@
 | No secrets in URLs | design rule: credentials/tokens travel only in headers/body — query strings land in proxy logs |
 
 ### B. Secret handling & rotation
+
+**Status (2026-10-01):** ⬜ to do — nothing exists. For the redaction rule: today's `logging()` stores no request headers but does store the full user document on every production request (`helpers/middlewares.js:250`).
 
 | Control | Enforcement point |
 | --- | --- |
@@ -40,6 +47,8 @@ Also: an **internal revoke** path (super-admin sets `status:'revoked'`) for comp
 
 ### C. Rate limiting & quotas (per-client, not per-IP)
 
+**Status (2026-10-01):** ⬜ to do — the v4 valve shows the keying pattern (by principal, not IP: `api_v4/lib/rateLimit.js:33-52`) but counts in memory per process, and production runs two servers — a partner quota needs a shared store (T11-N5).
+
 Two layers, both keyed by `client_id` (post-auth) — IP-keying is useless for B2B (one partner = one NAT) and dangerous (shared egress = collateral damage):
 
 ```js
@@ -61,11 +70,15 @@ const limiter = rateLimit({
 
 ### D. IP allow-list (optional, per client)
 
+**Status (2026-10-01):** ⬜ to do — confirm the `trust proxy` setting (`dzzlo_oms.js:57`) matches the deployed proxy chain before trusting `req.ip` (deployment topology is X-OPS-1 in tasks_01).
+
 - `api_clients.allowed_ips[]` (Phase 1), enforced inside `partner_auth` (Phase 2).
 - **Proxy trust:** derive caller IP via Express `trust proxy` configured to the actual LB hop count — never read `x-forwarded-for` naively (trivially spoofable if misconfigured). Verify the repo's existing `trust proxy` setting.
 - Recommended-not-required for partners with static egress; recorded in onboarding (Phase 7).
 
 ### E. Request signing (HMAC) + replay protection — opt-in hardening
+
+**Status (2026-10-01):** ⬜ to do — nothing exists.
 
 For partners handling high-value flows, an additional per-request signature (this is scheme C from Phase 1, layered on top of the bearer token):
 
@@ -84,6 +97,8 @@ Enforced by an optional middleware slotted after `partner_auth`, active when the
 
 ### F. Authorization recap (enforced in Phases 2–3, listed for completeness)
 
+**Status (2026-10-01):** ⬜ to do — v4 enforces the tenant rules for app users (tenant from the token, no ids in bodies, `assertRelation`: `api_v4/lib/tenancy.js`); reuse them for partners (T11-N3).
+
 - Scope per route (`partner_scope`) — least privilege.
 - Tenant forced from credential; `co_id` in payload rejected.
 - Tenant-status gate — suspended company blocks its partners.
@@ -91,15 +106,21 @@ Enforced by an optional middleware slotted after `partner_auth`, active when the
 
 ### G. Payload & parser hygiene
 
+**Status (2026-10-01):** ⬜ to do — the global `express.json({ limit: "1mb" })` (`dzzlo_oms.js:59`) parses bodies before any router, so the 100 kb cap needs the partner mount ahead of it (T11-N2); `sanitizeMongo` is global (`:82`).
+
 - `express.json({ limit: '100kb' })` on the partner router (Phase 2) — orders/vouchers are small; a 5 MB body is an attack, not a use case.
 - `sanitizeMongo` global (already in `dzzlo_oms.js`) + allow-list validation (Phase 3) → NoSQL-operator injection dies twice.
 - Reject non-JSON content types on write endpoints (415).
 
 ### H. CORS posture
 
+**Status (2026-10-01):** ⬜ to do — the global CORS middleware (`dzzlo_oms.js:98`) applies to every path, so `/partner/*` is not CORS-free unless mounted before it or excluded (T11-N2; the allow-list is tasks_01 SEC-5).
+
 Server-to-server surface: **no CORS allowances at all** for `/partner/*` — no partner origins added to the app's CORS config, no preflight support. A browser calling the partner API is by definition a leaked credential (secrets don't belong in front-ends); absence of CORS keeps browser-based misuse loudly broken.
 
 ### I. Abuse handling — lockout & auto-disable
+
+**Status (2026-10-01):** ⬜ to do — nothing exists.
 
 On the token endpoint (extends `registerAuthFailure` from Phase 2):
 
@@ -130,6 +151,8 @@ Counters are atomic `$inc`/`$set` on `api_clients` — no read-modify-write race
 
 ## 4.3 Security test plan (lands in CI)
 
+**Status (2026-10-01):** ⬜ 0 of 10 — no partner tests exist.
+
 - [ ] Cross-tenant forcing: 20+ payload variants (`co_id`, `company`, nested) → all 400, doc `co_id` always credential's.
 - [ ] Cross-surface tokens: app JWT ↔ partner routes both directions → 401.
 - [ ] Replay: same HMAC-signed request twice → second 401 `REPLAY_DETECTED`; stale timestamp → `SIGNATURE_EXPIRED`.
@@ -143,11 +166,15 @@ Counters are atomic `$inc`/`$set` on `api_clients` — no read-modify-write race
 
 ## 4.4 Operational security
 
+**Status (2026-10-01):** ⬜ to do — no alerting code in the repo; `docs/runbook.md` names CloudWatch alarms for the app API, which only ops can confirm (❔).
+
 - Alerts (wired via Phase 5 data + existing ops tooling): auth-failure spikes per client, 429 sustained >5 min, error-rate >5%, calls from unlisted IPs when allow-list set, first call from a new client in production.
 - Runbooks (written in Phase 7): compromised partner secret, compromised `PARTNER_JWT_SECRET` (rotate signing key → all tokens die in ≤15 min), emergency surface kill via `PARTNER_API_ENABLED=false`.
 - Review cadence: quarterly credential audit — unused clients (`last_used_at` > 90 d) flagged for revocation.
 
 ## Phase 4 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 9 — verified absent at `6d41ce5`; items 1 and 4 also need ops input (load balancer TLS, proxy configuration — ❔).
 
 - [ ] HSTS/TLS posture verified at LB + helmet config.
 - [ ] Rotation endpoint (72 h overlap) + internal revoke path; redaction list applied to all log writers.

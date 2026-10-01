@@ -2,9 +2,14 @@
 
 **Outcome:** the single source of truth (`src/config/events.js`) and a one-liner `track()` helper exist, and `firebase.js` gains user-context + breadcrumb helpers. Nothing in the UI changes yet, so this phase is risk-free to ship.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — 0 of 6 checklist items: no `src/config/events.js`, no `src/utils/analytics.js`, none of the new `firebase.js` helpers (the file still exports seven, `src/utils/firebase.js:8-74`), no `__tests__/events.test.js`. §1.3's kill switch and the `initRemoteConfig({ analytics_enabled: true })` item cannot be built as written — Remote Config left the app on 2026-09-27 (tasks_17), see `T10-N1`; the `SCREENS` values `Customers` and `DailySummary` now each name two implementations (`X-APP-4`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1.1 Create `src/config/events.js`
+
+**Status (2026-10-01):** ⬜ absent (no `src/config/` folder). The `SCREENS` route names still match the navigators, but `DLR_CUSTOMERS: 'Customers'` and `COMMON_DAILY_SUMMARY: 'DailySummary'` are each served by v1 or v2 (`src/navigation/Dealer/Main.js:53,63`) — carry the implementation as a param (`X-APP-4`).
 
 Modelled on `app-kavana-l/src/config/events.ts`, in JS with `Object.freeze` (project is JS per `AI.md`).
 
@@ -265,6 +270,8 @@ export const EVENT_TRIGGERS = Object.freeze({
 
 ## 1.2 Extend `src/utils/firebase.js`
 
+**Status (2026-10-01):** ⬜ none of the four helpers exists; `logError` still takes one argument (`src/utils/firebase.js:53-60`); `react-native-device-info` `^15.0.2` is still in `package.json:50`.
+
 Add four helpers and one backward-compatible extension; existing callers (middleware + `RestartContext`) are unaffected.
 
 ```js
@@ -369,6 +376,8 @@ export const setScreenAttr = screenName => {
 
 ## 1.3 Create `src/utils/analytics.js` (thin call-site layer)
 
+**Status (2026-10-01):** ⬜ `track()` not built; its Remote Config switch is ❌ as designed — `getRemoteValue` and `initRemoteConfig` no longer exist (`ad40ed71`, tasks_17); re-home the switch first (`T10-N1`).
+
 Keeps every call-site a one-liner and injects cross-cutting default params so we never repeat `role`/`company_id`. Gated by a Remote Config kill-switch.
 
 `role`/`company_id`/`app_version` are already attached to every event via `setDefaultEventParameters` (see 1.2), so `track()` does **not** re-inject them — it only adds the kill-switch and a dev log. This keeps it a true one-liner.
@@ -408,6 +417,8 @@ initRemoteConfig({ analytics_enabled: true });
 
 ## 1.4 Tests (`__tests__`)
 
+**Status (2026-10-01):** ⬜ `__tests__/events.test.js` absent.
+
 The app already has Jest (`jest.config.js`, `jest.setup.js`). Add a catalog sanity test — no Firebase mock needed since it only inspects the constants:
 
 ```js
@@ -439,10 +450,12 @@ describe('events catalog', () => {
 
 ## Phase 1 checklist
 
+**Status (2026-10-01):** ⬜ 0 of 6; the `initRemoteConfig` item is ❌ (annotated below).
+
 - [ ] `src/config/events.js` created (`EVENTS`, `SCREENS`, `SOURCES`, `EVENT_TRIGGERS`).
 - [ ] `firebase.js` gains `setUserContext`, `clearUserContext`, `logBreadcrumb`, `setScreenAttr`; `logError` extended with optional `name` arg (existing callers unaffected).
 - [ ] `src/utils/analytics.js` `track()` helper created with kill-switch.
-- [ ] `initRemoteConfig({ analytics_enabled: true })` default added.
+- [ ] `initRemoteConfig({ analytics_enabled: true })` default added. — ❌ 2026-10-01: Remote Config removed (`ad40ed71`, tasks_17); see `T10-N1`.
 - [ ] `__tests__/events.test.js` passes (`yarn test`).
 - [ ] `yarn lint` clean.
 

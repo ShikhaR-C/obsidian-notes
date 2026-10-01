@@ -4,6 +4,9 @@
 
 > Companion to `FIREBASE_INTEGRATION_PLAN.md`. That plan installs `@react-native-firebase/analytics` and wires global screen tracking inside every `NavigationContainer`. **This** plan focuses exclusively on **what events to fire, where, and with which parameters** — across Customer, Dealer, Auth and Common screens. Assume Firebase is already initialized and `logScreenView` is already called on every navigation change (Step 6 of the integration plan).
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ❌ Superseded by `tasks_10_analytics_events` (planned 2026-07-02 with a different naming rule — role as a default param, not a name prefix), and nothing from §6–§8 is built: the app emits one custom event (`api_call`, `src/store/middleware/rtkQueryPerfLogger.js:41-43`) plus the automatic screen views (`src/components/Error/RestartContext.js:31-45`). Two premises changed: the app has one `NavigationContainer`, and the Remote Config triggers in §1 are ⏸ (tasks_17). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Firebase Analytics — Quick Tutorial
@@ -60,6 +63,8 @@ All examples assume `import analytics from '@react-native-firebase/analytics';` 
 
 ## 3. Parameter Conventions for DZZLO OMS
 
+**Status (2026-10-01):** ❌ superseded by tasks_10's naming and user-property tables (`00-overview`); `src/utils/analyticsEvents.js` is absent. Note: `role` comes from `selectUserRole` (`src/store/selectors/auth.js:7`), not `selectUserScope`, and there is no `selectActiveCompanyId` (it is `selectCompanyId`, `:21`).
+
 Define once in `src/utils/analyticsEvents.js` (see §9) and reuse everywhere.
 
 ### Global params (attached to every event via `setDefaultEventParameters`)
@@ -91,6 +96,8 @@ Define once in `src/utils/analyticsEvents.js` (see §9) and reuse everywhere.
 ---
 
 ## 4. Screen Type Taxonomy — Where Events Live
+
+**Status (2026-10-01):** correction — one `NavigationContainer` (`src/components/Error/RestartContext.js:49-57`) wraps both role drawers (`src/navigation/AppNavigatorContainer.js:53-60`); and `Customers` (dealer) and `DailySummary` (both roles) are each served by a v1 and a v2 screen under one route name (`src/navigation/Dealer/Main.js:53,63,175-176,203-204`) — `X-APP-4` in tasks_10.
 
 The app has **no single `NavigationContainer`**. Instead, `AppNavigatorContainer.js` swaps between role-based trees:
 
@@ -132,6 +139,8 @@ AppNavigatorContainer
 
 ## 5. Screen Sources Inventory
 
+**Status (2026-10-01):** add — two v2 screens now sit beside their v1 twins: `src/screens/v2/Dealer/Customers/` and `src/screens/v2/Common/DailySummary/` (v1 stays in `src/screens/Dealer/Customers/` and `src/screens/Common/DailySummary/`).
+
 Relative to `dzzlo_oms_app/src/`.
 
 ### 5.1 Auth group (`screens/Login/` + `screens/Common/ValidateUser`)
@@ -161,7 +170,11 @@ Accounts · CompanyUsers · ContactUs · DailySummary · Help · Invites · Invo
 
 ## 6. Global Setup (one-time)
 
+**Status (2026-10-01):** ❌ superseded by tasks_10 Phase 1 (`setUserContext`) and Phase 2 (Slice F); nothing built — 0 `setDefaultEventParameters` calls, and the only user property is `proj_env` (`src/utils/firebase.js:13`).
+
 ### 6.1 Attach role / company / version to every event
+
+**Status (2026-10-01):** ❌ superseded by tasks_10 §1.2 (`setUserContext` via `setDefaultEventParameters`).
 
 In `App.js` after auth state is hydrated:
 
@@ -191,6 +204,8 @@ store.subscribe(() => {
 
 ### 6.2 Drawer / Tab events
 
+**Status (2026-10-01):** ❌ superseded — tasks_10 keeps only an optional `tab_switched` and relies on screen views for drawer navigation; no `screenListeners` exist (`drawerItemPress` / `tabPress`: 0 matches).
+
 Add to `navigation/Customer/Drawer.js` and `navigation/Dealer/Drawer.js`:
 
 ```js
@@ -217,6 +232,8 @@ Add to both `TrnTab.js` files:
 
 ### 6.3 Bottom-sheet helper
 
+**Status (2026-10-01):** ❌ superseded by tasks_10's sub-view `*_viewed` events; `src/hooks/useLogSheet.js` is absent.
+
 Because sheets aren't tracked by `logScreenView`, wrap every `BottomSheet` open with:
 
 ```js
@@ -235,6 +252,8 @@ export const useLogSheet = (sheetName, isVisible, params = {}) => {
 ---
 
 ## 7. Event Catalog by Group
+
+**Status (2026-10-01):** ❌ superseded (§7.1–§7.4) by tasks_10's `EVENTS` catalogue (`01-phase-1`: `object_action` names, role as a default param); none of these events is emitted.
 
 > Naming rules applied below:
 >
@@ -373,6 +392,8 @@ export const useLogSheet = (sheetName, isVisible, params = {}) => {
 ---
 
 ## 8. Implementation Steps (per screen)
+
+**Status (2026-10-01):** ❌ superseded by tasks_10 (`track()` in §1.3, the slices in Phase 2); Steps A–D not built (`src/utils/analyticsEvents.js` absent). Pattern 5 exists: `api_call` fires for every RTK Query call (`rtkQueryPerfLogger.js:41-43`).
 
 ### Step A — Add the helper utility
 
@@ -546,6 +567,8 @@ For each screen listed in §7:
 
 ## 10. Verifying in Firebase
 
+**Status (2026-10-01):** ❔ console work — carried by tasks_10 Phase 4.
+
 ### 10.1 Local DebugView (real-time — the fast loop)
 
 ```bash
@@ -594,6 +617,8 @@ Enable once in Project Settings → Integrations → BigQuery. Events land in `a
 
 ## 11. Rollout
 
+**Status (2026-10-01):** ❌ superseded by tasks_10's four phases (all ⬜).
+
 | Phase | Scope                                                                                                | Exit criteria                                       |
 | ----- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
 | 1     | §6 global setup + `utils/analyticsEvents.js` + auth events (login/signup/logout)                     | Login flow visible in DebugView                     |
@@ -607,6 +632,8 @@ Enable once in Project Settings → Integrations → BigQuery. Events land in `a
 ---
 
 ## 12. Files Touched (summary)
+
+**Status (2026-10-01):** ❌ superseded; of the eleven rows only the last exists — `rtkQueryPerfLogger.js` emits `api_call` (`:41-43`).
 
 | File                                                                                     | Change                                                                   |
 | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |

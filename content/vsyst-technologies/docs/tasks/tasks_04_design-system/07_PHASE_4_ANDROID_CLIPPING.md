@@ -1,5 +1,8 @@
 # Phase 4 — Android Text Clipping Fix + Uncapped Layout Migration
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Done for v2 in a stronger form than planned — the type scale F-APP-7 makes text set the box (no fixed height on a v2 text container, pairs stack, digits never wrap), and there is no `includeFontPadding` anywhere in the app — while the v1 punch list is superseded by D11. Of the 10 steps: 2 done, 1 partly, 2 to do, 4 dropped or superseded, 1 unverifiable. The device runs found two Android problems the plan did not foresee: Android 15's bounds-based line breaking (fixed app-wide, 🆕 below) and Bold Text tail clipping (open, 🆕 T04-N1); this doc also owns the hairline sweep 🆕 X-APP-6. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 **Goal**: Make the app render correctly at maximum system font scale (Android 2x + bold, iOS AX5) with **zero** text clipping on low-end devices.
 
 **Entry criteria**: Phase 2 complete. `<AppText>` shipped. `useContainerMinHeight` hook available.
@@ -17,6 +20,8 @@
 
 ## Why this phase is necessary
 
+**Status (2026-10-01):** ❔ #45660 is upstream and cannot be checked from the repos. Manifestations 2 and 3 are handled for v2 by F-APP-7; the two later findings are listed at the end of this doc.
+
 Per `01_RESEARCH.md §5`, the Android text clipping bug (GitHub [#45660](https://github.com/facebook/react-native/issues/45660)) is **not fixed upstream**. Reports span RN 0.73.9 → 0.78, and we're on 0.84.1 which is still affected. The bug has three manifestations:
 
 1. **Top/bottom trim** — ascenders/descenders of bold text clip when the native line box is shorter than the scaled glyph
@@ -28,6 +33,8 @@ Our uncapped font scaling decision means we hit all three at the largest user se
 ---
 
 ## Step 4.1 — Audit + fix `tokens/typography.js` ratios
+
+**Status (2026-10-01):** ⬜ the display roles are still 36 / 44, 45 / 52, 57 / 64 (`src/theme/tokens/typography.js:9-29`); no v2 code uses a display role yet. `titleLarge` is 22 / 28 in code, not 30 (ratio 1.27).
 
 Verify every variant: `lineHeight / fontSize >= 1.25`. Current values from Phase 1:
 
@@ -61,6 +68,8 @@ This is a deviation from M3 but worth it for Android safety. Displays are rare a
 
 ## Step 4.2 — Global grep for fixed-height text containers
 
+**Status (2026-10-01):** ❌ D11 — no v1 punch list is needed; v1 has 187 `height: N` literals in 114 files (not all on text). The two `height` literals in v2 are a stepper dash and a measure-only ghost, neither holding text.
+
 ```sh
 # This is the hunt list
 grep -rn "height: [0-9]" src/screens src/components | grep -v "node_modules\|SVG\|Image\|svg"
@@ -80,6 +89,8 @@ The audit found **48+** instances. Produce a spreadsheet with columns: file, lin
 
 ## Step 4.3 — Critical components migration (from audit)
 
+**Status (2026-10-01):** ❌ D11 — the eleven v1 files keep their fixed heights (lines moved, e.g. `src/screens/Login/AuthNavigator/Login.js:833`, `src/components/Input/IconInput.js:44`); the v2 screens were built to F-APP-7 instead.
+
 | File                                                 | Line | Current                       | Action                                                                          |
 | ---------------------------------------------------- | ---- | ----------------------------- | ------------------------------------------------------------------------------- |
 | `src/screens/Customer/Payments/index.js`             | 498  | `height: 40`                  | → `minHeight: 40, paddingVertical: 8`                                           |
@@ -97,6 +108,8 @@ The audit found **48+** instances. Produce a spreadsheet with columns: file, lin
 For inputs: verify icon + text + clear button still align vertically after the change. Use `alignItems: 'center'` on the row container.
 
 ## Step 4.4 — Row layout discipline
+
+**Status (2026-10-01):** ✅ for the v2 scope — `AI.md:72-76` ("digits never wrap; pairs stack"), applied in both v2 screens (money tiles stack by measured width, `src/screens/v2/Dealer/Customers/layout.js:171`; figures stay on one line with `numberOfLines={1}`); the top-20 v1 files are untouched by D11.
 
 Many rows use `flexDirection: 'row'` with children that each have implicit widths (icon, label, value). When the label grows at 2x scale, it pushes the value off-screen. Fix pattern:
 
@@ -130,6 +143,8 @@ Apply this across the top-20 text-density files (audit §Text-density hotspots) 
 
 ## Step 4.5 — Bold-text-on-Android audit
 
+**Status (2026-10-01):** 🟡 v2 still has three `fontWeight: '700'` literals (`src/screens/v2/Dealer/Customers/components/SortMenu.js:169`, `src/screens/v2/Common/DailySummary/components/OrderRow.js:238,256`), which the guard does not cover; v1 (289 bold or numeric weights) is untouched by D11. The OS Bold Text setting is T04-N1 below.
+
 Every `fontWeight: 'bold'` in Android preview mode at scale 2x is a potential clip site. After Phase 2's variant migration, most bolds are gone (they're now `titleMedium` / `titleSmall` with weight 500). Remaining manual `fontWeight: 'bold'` usages need to be audited:
 
 ```sh
@@ -144,6 +159,8 @@ For each:
 3. Verify no `includeFontPadding: false` on the same element
 
 ## Step 4.6 — `adjustsFontSizeToFit` use cases
+
+**Status (2026-10-01):** ❌ superseded — v2 text never shrinks (`AI.md:65-71`: only money figures in a fixed column may, never below 1×, and the Daily Summary card is undecided, `SummaryCard.js:107-108`); the header bar grows with the text instead of shrinking it (`src/navigation/Common/headerMetrics.js:33-37`, `3a0b83b1`).
 
 For legitimately constrained components (tab labels, navigation headers, button labels in tight row layouts), use `adjustsFontSizeToFit` with a safe floor:
 
@@ -161,6 +178,8 @@ For legitimately constrained components (tab labels, navigation headers, button 
 Candidates: bottom-tab labels, app-bar titles, chip labels. Not body text — body text should wrap.
 
 ## Step 4.7 — iOS `dynamicTypeRamp` bindings (optional polish)
+
+**Status (2026-10-01):** ⬜ 0 uses. Caution before adopting: v2's box maths assumes one linear `fontScale` for every role (`src/theme/scale.js:68-99`), which per-role ramps would break.
 
 On iOS specifically, set `dynamicTypeRamp` on AppText to tie into Apple's native Dynamic Type ramp. This makes iOS handle scaling more elegantly:
 
@@ -193,6 +212,8 @@ Hardcode these defaults inside `AppText.js` keyed by variant name. Consumers can
 
 ## Step 4.8 — Test matrix
 
+**Status (2026-10-01):** ❔ device-only; the recorded runs (02-foundations) used iOS simulators at AX-L (2.143×) and a Pixel Fold emulator, not a low-end phone (Q5).
+
 For the top-20 text-density screens + the 48 fixed-height files + the 5 canary screens, run this matrix:
 
 | Device                             | Font scale          | Bold text | Expected                                            |
@@ -209,9 +230,13 @@ Log any issues per screen. Fix loop until all pass.
 
 ## Step 4.9 — Performance re-check
 
+**Status (2026-10-01):** ❌ nothing to re-check: the v1 lists did not change (D11); the v2 lists' performance work lives in the redesign.
+
 Phase 2 changed the hierarchy (Box primitives add a few more views). Phase 4 adds `minHeight` + padding which changes layout calculation slightly. Re-run the existing FlatList / FlashList perf benchmarks (commits `1326ca29` in recent history show you've already migrated to FlashList on key screens) to confirm no regression on Orders, Payments, Products, Vehicles, Dealers, Customers lists.
 
 ## Step 4.10 — Document the pattern
+
+**Status (2026-10-01):** ✅ in `AI.md:65-76` and `docs/testing.md:440` ("Type scale — text sets the box"), not in a `src/theme/README.md`; v2 allows no `allowFontScaling={false}` exception at all.
 
 Append to `src/theme/README.md` a "Layout rules for uncapped font scaling" section:
 
@@ -225,6 +250,8 @@ Append to `src/theme/README.md` a "Layout rules for uncapped font scaling" secti
 
 ## Phase 4 deliverables
 
+**Status (2026-10-01):** 🟡 delivered for v2: the layout rules and their docs, the row discipline, the Android 15 text theme (unplanned). Not delivered: the display line heights, the iOS ramps, the device test logs; the v1 files are superseded.
+
 | Artifact                        | File path                              |
 | ------------------------------- | -------------------------------------- |
 | Updated typography line heights | `src/theme/tokens/typography.js`       |
@@ -235,6 +262,8 @@ Append to `src/theme/README.md` a "Layout rules for uncapped font scaling" secti
 | Test logs                       | Phase 4 retrospective in `10_TASKS.md` |
 
 ## Verification
+
+**Status (2026-10-01):** ❔ the device part was not run here. The grep below returns 273 lines at `ea7e7222` (209 outside `__tests__`); the two in v2 are a stepper dash and a measure-only ghost, neither holding text.
 
 ```sh
 # No fixed-height text containers (excluding known exceptions)
@@ -247,3 +276,14 @@ yarn android
 ```
 
 Manual: full test matrix from Step 4.8 executed on at least one physical low-end Android device.
+
+## New items from the 2026-10-01 review
+
+**Status (2026-10-01):** 🆕 one unplanned fix that is done, and two open tasks this phase owns. The same rows sit in the New tasks table of [00_README](./00_README.md).
+
+- 🆕 ✅ **Android 15 line breaking** — since Android 15, a TextView in an app targeting SDK 35+ breaks lines by glyph bounds while React Native measures advances, so a Hindi label measured to fit wrapped onto a hidden second line. The app theme routes `textViewStyle` to `useBoundsForWidth=false` for every React Native text (`android/app/src/main/res/values/styles.xml:9,30-32`, `fe8799d5`, 2026-09-08), pinned by `src/i18n/__tests__/androidText.config.test.js`.
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-APP-6 | 🆕 Sweep the remaining 34 `border*Width: 0.5` sites in 18 v1 files: stacked-row dividers onto `stackedRowDivider`, box outlines onto a whole-pixel width (`StyleSheet.hairlineWidth` or 1 dp); test-first per file (as `vocTypesDividers.test.js`), then a device look at a fractional density | The sub-pixel divider bug: at density 2.625 a 0.5 dp border is one device pixel, and Yoga's rounding lets the next row paint over it (`src/helpers/RowDivider/index.js:3-41`; fixed in the voucher-type and invoice-type sheets, `7233c26b`, `bc94a345`). 34 sites remain, e.g. `src/screens/Common/Accounts/index.js:725,776,807,1029,1098` and `src/screens/Customer/NewOrder/components.js:601,964,1459,1477`; 0 in v2, which draws `HAIRLINE` 1 (`src/theme/layout.js:32`) | app | M | — (`helpers/RowDivider` exists) |
+| T04-N1 | 🆕 Android Bold Text (`fontWeightAdjustment`) clips text tails on every screen, v1 and v2: React Native's Android text measurement ignores the weight adjustment, so the platform draws heavier text than was measured. Decide: carry a native patch that measures with the adjustment, track an upstream fix, or accept it | Seen on the device on 2026-09-08 (02-foundations, F-APP-10 amendment: "Process" and "Und" cut on the Orders screen). The code has no reading of it: 0 `fontWeightAdjustment` in the app, and `useBoldText` is always false on Android (`src/theme/provider/useBoldText.js:2-3`); no config switch exists | app | L | React Native upstream, or a decision to carry a patch |

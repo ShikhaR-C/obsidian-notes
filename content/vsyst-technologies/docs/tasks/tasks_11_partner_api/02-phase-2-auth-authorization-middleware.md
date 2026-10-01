@@ -4,9 +4,14 @@
 
 > **Vertical-SaaS lens:** the router *is* the product boundary. Everything partner-facing lives behind one mount point with one explicit middleware chain — so the security review, the metering, and the docs all describe a single, auditable surface.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 6 checklist items — no token endpoint, `partner_auth`, partner company gate, `partner_scope`, partner router or `PARTNER_API_ENABLED` (grep at `6d41ce5`). The v4 hub now puts `api_key_v3 → protect → check_user_company_status → requireRole` in front of every module with no pre-auth slot (`api_v4/index.js:69-84`), so the isolated mount needs a placement decision (T11-N1, T11-N2). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 2.1 Token endpoint — `POST /api/v3/partner/oauth/token`
+
+**Status (2026-10-01):** ⬜ to do — nothing exists. Limiter precedents: an IP-keyed limiter on the v3 auth routes (`api_v3/routes/auth/index.js`) and the v4 principal-keyed valve (`api_v4/lib/rateLimit.js:33-52`), both in memory per process.
 
 `api_v3/controllers/partner/token.js`:
 
@@ -47,6 +52,8 @@ exports.token = asyncHandler(async (req, res, next) => {
 Security notes: this endpoint gets its **own strict rate limit** (e.g. 10/min per IP+client_id — it's the brute-force target), uniform error body, and no distinction between "unknown client" and "bad secret".
 
 ## 2.2 `partner_auth` middleware
+
+**Status (2026-10-01):** ⬜ to do — the `userCache` pattern it mirrors is live (`api_v3/auth.js:6-57`); the global request logger still resolves every bearer without that cache (X-PERF-1 in tasks_01). No `api_v3/middleware/` folder exists.
 
 `api_v3/middleware/partner_auth.js` — mirrors the shape of `getUserFromToken` + `userCache`, but a separate trust domain:
 
@@ -91,6 +98,8 @@ Why check the DB (cached) when the token is already signed? **Revocation.** Susp
 
 ## 2.3 Tenant-status gate
 
+**Status (2026-10-01):** ⬜ to do — the existing gate reads the user's membership status (`helpers/middlewares.js:85-106`); companies have no status flag of their own, so there is nothing to reuse for a machine client (T11-N8).
+
 Partner variant of `check_user_company_status()` — the **owning tenant** must be active; a suspended/blocked company blocks its partners too (subscription lapse, fraud hold):
 
 ```js
@@ -104,6 +113,8 @@ exports.check_partner_company_status = asyncHandler(async (req, res, next) => {
 Reuse the exact status flags/helper the existing gate reads — do not invent a parallel notion of "active company."
 
 ## 2.4 `partner_scope` — least privilege
+
+**Status (2026-10-01):** ⬜ to do — v3's `scope()` helper exists (`api_v3/auth.js:93-105`) and v4 gates user roles only (`api_v4/lib/roles.js:26-39`); partner scopes need their own gate either way.
 
 Mirrors `scope()` from `api_v3/auth.js`:
 
@@ -119,6 +130,8 @@ exports.partner_scope = (...required) => (req, res, next) => {
 An orders-only credential gets `scopes: ['orders:write']` and receives a stable 403 on `/partner/vouchers` — least privilege is enforced per route, not per partner.
 
 ## 2.5 Router assembly & isolated mount
+
+**Status (2026-10-01):** ⬜ to do — rule 1: write the exemption from both app key checks explicitly (X-SEC-4 in tasks_01 puts one API-key middleware on every mount); rule 3: the global CORS middleware and 1 MB JSON parser also reach a new router (`dzzlo_oms.js:59,98`) — T11-N2.
 
 `api_v3/routes/partner/index.js`:
 
@@ -155,6 +168,8 @@ router.use('/partner', require('../api_v3/routes/partner'));
 
 ## 2.6 Testing (supertest matrix)
 
+**Status (2026-10-01):** ⬜ to do — `docs/testing.md:245` keeps a flow-map row "Partner API (tasks_11) — not yet implemented"; the in-process test app now mirrors production's chain (`test/dzzlo_oms_test.js:43-106`), so these cases would run through the real gates.
+
 | Case | Expect |
 | --- | --- |
 | No/malformed `Authorization` | 401 `UNAUTHENTICATED` |
@@ -169,6 +184,8 @@ router.use('/partner', require('../api_v3/routes/partner'));
 | `PARTNER_API_ENABLED=false` | 404 on all partner routes |
 
 ## Phase 2 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 6 — no partner route, middleware or `PARTNER_API_ENABLED` flag at `6d41ce5` (grep).
 
 - [ ] `POST /partner/oauth/token` with uniform errors + dedicated limiter.
 - [ ] `partner_auth` (aud/iss verify, cached live-client check, IP hook, `X-Request-Id`).

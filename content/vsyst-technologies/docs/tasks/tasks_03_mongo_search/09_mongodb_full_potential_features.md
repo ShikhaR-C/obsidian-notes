@@ -5,6 +5,9 @@
 > efficient. Each feature is paired with a concrete, DZZLO-specific use case,
 > an implementation sketch, and a rough effort rating.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research — no tasks to mark; the Tier 1 picks are tracked in the 00_README checklist. Facts about our code re-checked: of Sections A–D only aggregation is in use (v3 and v4 pipelines, `$facet` in `api_v3/services/so_msts.js:501` and `veh_trns.js:511`) plus one transaction helper (`helpers/transactions.js:4`, used by `veh_reqs`) — no change stream, TTL or partial index, `$jsonSchema` rule, geospatial index, time-series collection, `$merge` / `$out` or Atlas Search; the A6 note is corrected inline (`order_no` does not come from `counters`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Table of Contents
@@ -490,7 +493,8 @@ db.runCommand({
 Roll out with `validationAction: 'warn'` first to catch existing bad data.
 
 > ⚠️ The sketch above is illustrative and does **not** match the real
-> `order_msts` schema (`order_no` is a `Number` from the counters collection,
+> `order_msts` schema (`order_no` is a `Number` ~~from the counters collection~~
+> **(2026-10-01: the customer's `cust_podgt` + 1, `api_v3/services/order_msts.js:785-786`)**,
 > the status field is `order_status`, and line items live in `products`, not
 > `items`). Applying it verbatim with `validationAction: 'error'` would
 > reject every legitimate write. Derive the validator from the actual

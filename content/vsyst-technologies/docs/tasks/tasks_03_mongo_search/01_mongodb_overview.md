@@ -4,6 +4,9 @@
 >
 > Goal: By the end of this document, you should be able to reason about documents, collections, indexes, aggregation pipelines, and Mongoose — and map every concept back to the real entities in our codebase (`veh_msts`, `order_msts`, `dealer_msts`, `cust_msts`, `prod_msts`).
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research — no tasks to mark. Facts about our code re-checked: mongoose 9.4.1 on driver 7.1.1 (`yarn.lock:4456-4466`), "no `$jsonSchema` rules", the `veh_msts` indexes (`models/veh_msts.js:31-32`) and the §13.2 order shape still hold; two statements were wrong and are corrected inline (`order_no` does not come from `counters`; no TTL index exists), and the Atlas facts (tier, region, replica set, version) are ❔ — not visible from the repos. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Table of Contents
@@ -158,7 +161,7 @@ dealer_id: { type: ObjectId, ref: "dealer_msts" }
 
 ### Can `_id` be something other than an ObjectId?
 
-Yes. It can be a string, a number, or even an embedded document, as long as it is unique per collection. For `order_msts`, the app uses an auto-incrementing `order_no` field _in addition to_ `_id`, using the `counters` collection (see `models/counters.js`). The `_id` stays an `ObjectId`, and `order_no` is the human-friendly number shown in the app.
+Yes. It can be a string, a number, or even an embedded document, as long as it is unique per collection. For `order_msts`, the app uses an auto-incrementing `order_no` field _in addition to_ `_id`, ~~using the `counters` collection (see `models/counters.js`)~~ **(2026-10-01: not from `counters` — the order service reads the customer's `cust_msts.cust_podgt`, adds 1 and sets it back, `api_v3/services/order_msts.js:785-786,847`; `counters` holds settings documents such as `app_features`, `models/counters.js`)**. The `_id` stays an `ObjectId`, and `order_no` is the human-friendly number shown in the app.
 
 ---
 
@@ -459,7 +462,7 @@ Deletes documents automatically after N seconds:
 otp_Schema.index({ createdAt: 1 }, { expireAfterSeconds: 300 });
 ```
 
-Used in our project for OTPs, invites, session tokens — anything that should self-expire. (Atlas checks once per minute, so don't rely on second-level precision.)
+~~Used in our project for OTPs, invites, session tokens — anything that should self-expire.~~ **(2026-10-01: not used in our project — the API declares no TTL index anywhere; the OTP lives on the user document (`models/users.js:114-115`), and `logs` has no index at all.)** (Atlas checks once per minute, so don't rely on second-level precision.)
 
 ### 7.7 Text index
 
@@ -924,7 +927,7 @@ Key observations:
 
 1. **`products` is an embedded array**, not a separate collection. One query pulls an order and its line items in a single round-trip. In SQL you'd need an `orders` table joined to `order_lines`.
 2. **`dealer_id`, `cust_id`, `veh_id`** are references (`ObjectId + ref`), because these entities are shared across many orders and must be editable in one place.
-3. **`order_no`** is a sequential number generated via the `counters` collection with `$inc`. This is MongoDB's canonical way to implement auto-increment without a database sequence.
+3. **`order_no`** ~~is a sequential number generated via the `counters` collection with `$inc`~~ **(2026-10-01: is the customer's `cust_podgt` + 1, read and then set back without `$inc` — `api_v3/services/order_msts.js:785-786,847` — so it is not atomic, and `order_msts` has no unique index on it, `models/order_msts.js:57-85`; a `counters` document bumped with `$inc` would be the atomic way)**. This is MongoDB's canonical way to implement auto-increment without a database sequence.
 4. The `set` on `rate` is a Mongoose feature — it runs _before_ saving, rounding to two decimals.
 5. `{ timestamps: true }` gives `createdAt` / `updatedAt` automatically.
 

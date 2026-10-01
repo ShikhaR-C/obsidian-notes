@@ -4,9 +4,14 @@
 
 **Rule of thumb:** instrument at the **outcome** of an action (after the RTK Query mutation `.unwrap()` succeeds/fails), not on button press, so the event reflects what actually happened. The only press-time events are `*_viewed` for sub-views and pure navigation CTAs.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — 0 of 8 checklist items; no screen emits a business event (the only custom event is `api_call`, `src/store/middleware/rtkQueryPerfLogger.js:41-43`). Two things changed under the slices: the dealer Customers route and both Daily Summary routes now render v2 screens by default (`src/screens/v2/…`, toggles `screen_v2_*`), which Slices D and F must cover beside v1 until v1 is deleted; and v2 Customers searches on a 300 ms debounce with no submit (`src/screens/v2/Dealer/Customers/useScreenModel.js:27,92-101`), so "on submit" needs a rule for debounced search. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 2.0 Where to put the call
+
+**Status (2026-10-01):** ⬜ no call sites; the v2 screens keep their queries and mutations in screen models (`src/screens/v2/Dealer/Customers/useScreenModel.js`, `src/screens/v2/Common/DailySummary/useScreenModel.js`) — the natural seam there.
 
 RTK Query mutations are the natural seam. Pattern at every mutation call-site:
 
@@ -37,6 +42,8 @@ const onSubmit = async () => {
 ---
 
 ## 2.1 Slice A — Auth funnel
+
+**Status (2026-10-01):** ⬜ none. The `setUser` effect this replaces is now `src/navigation/AppNavigatorContainer.js:98-103` and sets the id on sign-in only; `logoutUser` is `src/store/slices/auth.js:7-20`, dispatched from `navigation/Customer/DrawerContent.js:224`, `navigation/Dealer/DrawerContent.js:221`, `screens/Common/Settings/DeleteAccount.js:55` and the 401 path (`rtkQueryErrorLogger.js:30-34`).
 
 Files: `src/screens/Login/AuthNavigator/{Login,Welcome,ForgotPassword,BetaUser,Customer,Dealer}.js`, plus auth API in `src/store/apis/dzzlooms/auth.js`.
 
@@ -90,6 +97,8 @@ useEffect(() => {
 
 ## 2.2 Slice B — Orders & Sales orders
 
+**Status (2026-10-01):** ⬜ none.
+
 Files: `src/screens/Customer/NewOrder/index.js`, `src/screens/Dealer/NewSalesOrder/index.js`, `src/screens/Dealer/EditSalesOrder/index.js`, `src/screens/{Customer,Dealer}/Orders/...`, APIs `order_msts.js` / `so_msts.js`.
 
 | Trigger | Event | Params |
@@ -132,6 +141,8 @@ fireFirstTime(`milestone_first_order_${userId}_${companyId}`, EVENTS.FIRST_ORDER
 
 ## 2.3 Slice C — Invoices, Payments, Vouchers
 
+**Status (2026-10-01):** ⬜ none; the correction's premises still hold — `src/components/Download/` has no importer and `src/screens/Common/_Invoice_/Render.js` is present.
+
 Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPayment/index.js`, `src/screens/Dealer/NewVoucher/index.js`, `_Invoice_/EmailBS.js`, `_Voucher_/`, APIs `invs.js` / `voc_msts.js`.
 
 > **Correction (2026-07-02 code audit):** the earlier draft said PDF generation is centralised in `src/components/Download/`. **That folder is dead code — zero external importers** (its `RNhtmlpdf.js`/`Invoice.js`/`invoiceHTML/` only import each other; the `Share`/`rn-fetch-blob` code inside is commented out or unused), and the one other `RNHTMLtoPDF` import in the app (`Reports/TcsTds/Render/index.js:5`) never calls `.convert()`. **There is no live client-side PDF / file-download / share path.** Invoices actually render as **HTML in a WebView**: `src/screens/Common/_Invoice_/Render.js` (templates from `src/helpers/Download/…`), used by the Invoice screen, `NewInvSummary`, `SummaryModal`, and `InvoiceDetailsBSM`. So instrument **`invoice_rendered {format}` once in `_Invoice_/Render.js`** (covers all callers) and treat `email_inv` as the export signal. Re-introduce PDF/download events only if a real download/share feature ships.
@@ -156,6 +167,8 @@ Files: `src/screens/Dealer/NewInvoice/index.js`, `src/screens/Customer/NewPaymen
 
 ## 2.4 Slice D — Reports & Renders
 
+**Status (2026-10-01):** ⬜ none; `daily_summary_viewed` must fire from the v2 screen (`src/screens/v2/Common/DailySummary/`, both roles) as well as v1 (`src/screens/Common/DailySummary/`) until the playbook's Step 6 deletes v1 — `X-APP-4`.
+
 Files: `src/screens/Common/Reports/...`, `Accounts/Render/` (`index.js` + `xlsxYearAcc.js`), `DailySummary/`, `TcsTds/Render/`, vehicle reports.
 
 > **Correction (2026-07-02 code audit):** `excel_exported` / `pdf_exported` dropped — there is **no file export**. "Excel" is an HTML render format (`Accounts/Render/index.js` picks `xlsxYearAcc(...)` HTML when `invFormat === 'Excel'` and shows it in a WebView; same pattern as `xlsxInvSummary` for invoices), and no live `RNHTMLtoPDF.convert` call exists anywhere (see §2.3). Carry a `format` param on the `*_viewed` events instead; re-add export events if a save/share feature ships.
@@ -172,6 +185,8 @@ Statement/report renders are high-value activation signals — prioritise this s
 ---
 
 ## 2.5 Slice E — Relations, Products, Vehicles, Company, Users
+
+**Status (2026-10-01):** ⬜ none.
 
 Broken into sub-tables by domain. Files: `dealer_custs.js`, `cust_msts.js`, `dealer_msts.js`, `prod_msts.js`, `psocs.js`, `veh_msts.js`, `dvr_msts.js`, `veh_reqs.js`, `users.js`, `invites.js`, `others.js`, and the matching screens under `src/screens/{Customer,Dealer}/`.
 
@@ -225,6 +240,8 @@ Broken into sub-tables by domain. Files: `dealer_custs.js`, `cust_msts.js`, `dea
 
 ## 2.6 Slice F — Engagement / UX
 
+**Status (2026-10-01):** ⬜ none. The v2 screens are the richest candidates: Customers has server search (300 ms debounce, no submit — `useScreenModel.js:27,92-101`), six sorts and two tri-state filter chips applied at once and saved through `PUT /api/v4/users/prefs/dealer_customers`; Daily Summary has tabs, status chips and the Date Filter sheet — `X-APP-4`.
+
 | Trigger | Event | Params | Note |
 | --- | --- | --- | --- |
 | Search submitted | `search_performed` | `screen, has_results` | **on submit, not per keystroke** |
@@ -238,6 +255,8 @@ Throttle/guard the noisy ones; ship them last and watch event volume in DebugVie
 ---
 
 ## 2.7 Slice G — Settings & Account
+
+**Status (2026-10-01):** ⬜ none.
 
 Files: `src/screens/Common/Settings/index.js`, `Settings/DeleteAccount.js`, `src/screens/Common/ContactUs/index.js`, API `others.js`.
 
@@ -254,11 +273,15 @@ Files: `src/screens/Common/Settings/index.js`, `Settings/DeleteAccount.js`, `src
 
 ## 2.8 App lifecycle (lightweight)
 
+**Status (2026-10-01):** ⬜ none.
+
 `app_opened` and `time_to_interactive` are **not** mutation-driven — wire them once in the startup path (`AppNavigatorContainer.js` mount effect / `StartupScreen.js`), not per screen. `time_to_interactive` pairs naturally with the existing `startTrace` perf helper. These are optional; ship after the funnels are validated.
 
 ---
 
 ## Rollout order & PR slicing
+
+**Status (2026-10-01):** ⬜ none of PR-1 … PR-6 exists.
 
 1. PR-1: Slice A (auth) + `setUserContext` wiring. ← highest signal, validates the whole pipeline.
 2. PR-2: Slice B (orders).
@@ -272,6 +295,8 @@ Each PR: verify in Firebase **DebugView** (Phase 4) before merge.
 ---
 
 ## Phase 2 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 8.
 
 - [ ] `setUserContext` replaces bare `setUser` on login + company switch; `clearUserContext()` fires on auth reset (manual logout, 401 auto-logout, account deletion).
 - [ ] `logout` event instrumented in the `logoutUser` thunk (`src/store/slices/auth.js`) with `trigger: 'manual' | 'auto'`, fired **before** `clearUserContext()`.

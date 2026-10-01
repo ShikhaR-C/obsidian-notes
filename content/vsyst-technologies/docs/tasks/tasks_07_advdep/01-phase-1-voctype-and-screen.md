@@ -6,9 +6,14 @@
 
 **Risk:** Low.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Built and shipped (API `9b5a996`, merged by PR #29 into release 1.5.4; app `5e0ee266`, in 1.78). One change from the plan: the selector lives on `Customer/NewPayAck` as a three-chip voucher-type row (TDS Note · On Account · Adv. Deposit), and the standalone `PayOnAc` screen was removed (`c5e87820`, 2026-06-04). All 5 acceptance criteria are met in code (flipped below); the Payments filter one is also pinned by tests. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Step 1.1 — API: add the `AdvDep` label to `voc_text()`
+
+**Status (2026-10-01):** ✅ `api_v3/services/voc_msts.js:65-66`; the model comment lists AdvDep too (`models/voc_msts.js:70`).
 
 `voc_text()` feeds notification/receipt wording. Without a case it returns `""`.
 
@@ -46,6 +51,8 @@ const voc_text = ({ voc_type }) => {
 ---
 
 ## Step 1.2 — App: add `AdvDep` to the payment constants
+
+**Status (2026-10-01):** ✅ `src/constants/payments.js:20,30,40`.
 
 **File:** `dzzlo_oms_app/src/constants/payments.js`
 
@@ -87,6 +94,8 @@ This is enough for AdvDep to appear in the payments filter bottom sheet (`src/sc
 
 ## Step 1.3 — App: add `AdvDep` to the display maps
 
+**Status (2026-10-01):** ✅ `src/utils/Conditional/VoucherType.js:35-36,79-80,132-133`, with a dedicated `payment-advdep` glyph rather than `payment-cash` (`1bd79d55`; the inline comments still say "payment-cash for now").
+
 **File:** `dzzlo_oms_app/src/utils/Conditional/VoucherType.js`
 
 Add an `AdvDep` case to **all three** switches, using the existing `payment-cash` glyph (decision §6.5 — a dedicated `advance-deposit` glyph can replace it later with no other call-site changes).
@@ -113,6 +122,8 @@ After this, `PaymentHeader` (`src/screens/Common/Payments/components/index.js`) 
 ---
 
 ## Step 1.4 — App: add the selector to `PayOnAc`
+
+**Status (2026-10-01):** ✅ built elsewhere — `src/screens/Customer/NewPayAck/index.js` maps "Adv. Deposit" → `AdvDep` with the "Advance deposit." remarks prefix (`:51-65`) and posts through `add_cust_on_acc_voc_msts` with `pay_type: 'CREDIT'`, `pay_status: false` (`:156-182`); `PayOnAc` was dropped by `c5e87820` (2026-06-04), so sub-steps 1.4a–1.4e are superseded by that screen.
 
 **File:** `dzzlo_oms_app/src/screens/Customer/Dealers/DealerSettings/PayOnAc/index.js`
 
@@ -198,13 +209,17 @@ await add_cust_on_acc_voc_msts({
 
 ## Acceptance criteria (Phase 1)
 
-- [ ] Selecting **Advance Deposit** + amount + pay mode and tapping **Create Payment** creates a voucher with `voc_type: 'AdvDep'`, `pay_type: 'CREDIT'`, `pay_status: false`, `remarks` starting with `"Advance deposit."`.
-- [ ] Selecting **On Account** reproduces the **exact** previous payload (`voc_type: 'PInv'`, `remarks` starting with `"On account payment."`). No regression.
-- [ ] In the customer/dealer Payments list, an AdvDep voucher shows the "Advance Deposit" label and an icon (not blank).
-- [ ] AdvDep appears as a filter option in the payments filter sheet.
-- [ ] `voc_text({ voc_type: 'AdvDep' })` returns `"Advance Deposit"` (API).
+**Status (2026-10-01):** 5 ✅ — flipped where code proves it; marks at the end of each line.
+
+- [x] Selecting **Advance Deposit** + amount + pay mode and tapping **Create Payment** creates a voucher with `voc_type: 'AdvDep'`, `pay_type: 'CREDIT'`, `pay_status: false`, `remarks` starting with `"Advance deposit."`. — **2026-10-01:** ✅ flipped: `NewPayAck/index.js:51-65`, `:156-182` (code; no test — `T07-N3`).
+- [x] Selecting **On Account** reproduces the **exact** previous payload (`voc_type: 'PInv'`, `remarks` starting with `"On account payment."`). No regression. — **2026-10-01:** ✅ flipped: same map (`'On Account'` → `PInv`, prefix `On account payment.`).
+- [x] In the customer/dealer Payments list, an AdvDep voucher shows the "Advance Deposit" label and an icon (not blank). — **2026-10-01:** ✅ flipped: label and glyph in `VoucherType.js`; the look itself is a device check ❔.
+- [x] AdvDep appears as a filter option in the payments filter sheet. — **2026-10-01:** ✅ flipped: `VOC_TYPES_ARRAY` (`payments.js:40`); pinned by `src/screens/{Dealer,Customer}/Payments/__tests__/AdvDepFilter.test.js` (`28cdee36`).
+- [x] `voc_text({ voc_type: 'AdvDep' })` returns `"Advance Deposit"` (API). — **2026-10-01:** ✅ flipped: `voc_msts.js:65-66` (code; no direct test).
 
 ## Verification (simulator)
+
+**Status (2026-10-01):** ❔ device steps not re-run; step 1 now starts from Customer → Payments → "New Voucher" (the `NewPayAck` screen in the Payments tab stack, `src/navigation/Customer/TrnTab.js:212-222`) and its "Adv. Deposit" chip, not "On A/c Payment".
 
 1. Customer → Dealer → On A/c Payment → toggle **Advance Deposit**, enter ₹1000, pick NEFT, submit.
 2. Confirm navigation to Payments tab and the new row shows "Advance Deposit".

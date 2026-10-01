@@ -4,6 +4,9 @@
 
 **This phase is genuinely optional.** The feature is complete and useful without it. Everything below assumes you've decided it's worth doing.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Optional and not started: no OCR code, SDK or extraction collection in either repo (grep). Provider research, prices and data terms were not re-assessed. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. The finding that reframes the whole decision
@@ -186,6 +189,8 @@ Then **fit a small logistic regression** on `[arith_pass, rate_match, evidence_c
 ---
 
 ## 4. The pipeline
+
+**Status (2026-10-01):** ⬜ to do — nothing exists; the two collections in §4.4 would be `models/` files behind the Phase 1 approval, and on v4 the §7.2 server invariant would be a command precondition.
 
 ```
 ┌─ ON DEVICE, at capture (0–300 ms, offline) ──────────────────┐
@@ -431,6 +436,8 @@ Call it **"Scan to fill"**, never "auto-entry". Show once in onboarding: *"Scann
 ---
 
 ## 8. Open items before committing
+
+**Status (2026-10-01):** ⬜ all open — research and vendor checks, not repo work.
 
 1. **On-device RN package audit** — `@react-native-ml-kit/text-recognition`, VisionCamera text plugins, `@infinitered/react-native-mlkit-*`: New-Architecture support, last publish, maintenance. The "gate only" verdict doesn't depend on it, but the implementation does.
 2. **Whether ML Kit Text Recognition v2 exposes per-element confidence.** Load-bearing for §2.

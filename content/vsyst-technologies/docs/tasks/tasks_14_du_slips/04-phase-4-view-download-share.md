@@ -3,9 +3,14 @@
 **Blocked by:** Phase 2 (web half) / Phase 3 (app half).
 **Delivers:** slip thumbnails and a full-screen viewer in both clients, download + share of a slip, and — if approved — a public share link for an SO plus its slips.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 8 definition-of-done items — no signed-URL issuance, viewer, share or download code in the app or API (no live `Share.share`, no image-cache library). The v2 Daily Summary now shows SO details and could carry slip thumbnails (T14-N6); its v4 read model's explicit projection keeps slips out until one is added. dip-web (§3) and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. D8 — the read path
+
+**Status (2026-10-01):** ⬜ to do — no CloudFront signer dependency and no issuance endpoint.
 
 ```
 RN <Image> / <img>  →  CloudFront (signed URL, 15-min TTL)
@@ -71,6 +76,8 @@ The rule:
 
 ## 2. App: viewer, download, share
 
+**Status (2026-10-01):** ⬜ to do — `Picture.js:25` still builds `API_URL + img`; no share code or image-cache library; `react-native-gesture-handler` and `react-native-reanimated` are present for a pinch-zoom viewer (`package.json:51,56`). The v2 Daily Summary's order details are a new candidate surface (T14-N6).
+
 ### 2.1 Thumbnails
 
 Extend `src/components/ImagePicker/Picture.js` (the app's only remote-image component) or write a sibling. ⚠️ Note `:25` builds `${API_URL + img}` — using `API_URL`, **not** `API_URL_V`. Slip URLs are absolute CDN URLs, so bypass that construction entirely.
@@ -97,6 +104,8 @@ iOS: `UIActivityViewController` via RN's built-in `Share`. `NSPhotoLibraryAddUsa
 
 ### 2.4 ⚠️ The PDF renderer will try to fetch slip images
 
+**Note (2026-10-01):** still true at `6d41ce5` (`fileBuffer.js:51`).
+
 `api_v3/services/invoice/htmlPdf/fileBuffer.js:51` calls `page.setContent(html, { waitUntil: "networkidle0" })`. That means **puppeteer actually fetches every remote `<img>` during render**. If slip images are ever added to an invoice or SO PDF template:
 
 - a **public** URL works,
@@ -108,6 +117,8 @@ If slips go into a PDF, generate a long-TTL signed URL (or fetch the bytes serve
 ---
 
 ## 3. dip-web
+
+**Note (2026-10-01):** not re-assessed — dip-web is outside this review.
 
 **`so_msts` has zero presence in `dip-web`.** No page, no endpoint, no tag type, no permission resource. The three existing references are all to a pre-aggregated scalar `item.uninvoicedSOs` used in credit math (`src/pages/superadmin/customers/CustDealers.js:186`, `src/pages/superadmin/dealers/DlrCusts.js:653`). Everything here is new.
 
@@ -132,6 +143,8 @@ There is **no file/blob/download primitive anywhere in `dip-web`** — no `FormD
 ---
 
 ## 4. D9 — the public share link
+
+**Status (2026-10-01):** ⏸ waits on the go/no-go (overview §7 question 4); nothing built.
 
 > ### RECOMMENDATION: defer this to v2.
 > It is the single largest compliance surface in the project and the only part that exposes **third-party** data — a DU slip typically names the *customer*: vehicle number, sometimes phone, sometimes address. The dealer consents to publishing; the customer never did. The core feature is complete and useful without it. If it ships, everything below is mandatory, not optional.
@@ -168,6 +181,8 @@ RTK Query on the web side needs no change for this: `prepareHeaders` (`createApi
 ---
 
 ## 5. Definition of done
+
+**Status (2026-10-01):** ⬜ 0 of 8 — none done; the web items were not assessed.
 
 - [ ] CloudFront signed-URL issuance endpoint, batch-capable, 15-min TTL
 - [ ] `CachingOptimized` cache policy confirmed on the distribution (query strings **not** in the cache key)

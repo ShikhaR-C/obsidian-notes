@@ -2,9 +2,14 @@
 
 **Outcome:** events are confirmed flowing in Firebase, instrumentation can be disabled remotely without a release, and the team has a QA checklist + dashboard handoff.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — there is nothing to verify until Phases 1–3 land: 0 of 15 QA items and 0 of 5 definition-of-done items. §4.3's Remote Config kill switch cannot be built as written (the package left the app on 2026-09-27, tasks_17) — `T10-N1`; the §4.1 iOS caveat still applies (`ios/dzzlo_oms_app.xcodeproj/project.pbxproj:291` exports `APP_ENV=testing`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 4.1 Verify with Firebase DebugView (per slice, before merge)
+
+**Status (2026-10-01):** ⬜ device and console work, after Phases 1–3; the iOS caveat below is still true (`project.pbxproj:291`).
 
 DebugView shows events in near-real-time for a single device — the fastest way to confirm names/params before they pollute prod.
 
@@ -35,6 +40,8 @@ adb shell setprop debug.firebase.analytics.app .none
 
 ## 4.2 Register events & params in GA4 (console, ops task)
 
+**Status (2026-10-01):** ❔ console work — the user; nothing to register until the events exist.
+
 - Mark key events as **conversions**: `order_created`, `invoice_created`, `payment_recorded`, `login_succeeded`, the three `first_*` milestones.
 - Register **custom dimensions** for params you'll segment by: `role`, `company_id`, `report_type`, `order_type`, `request_type`. (GA4 won't break them out in reports until registered.)
 - Register **user properties**: `role`, `company_id`, `app_version`, `account_verified`, `scope`, `proj_env`. *(Correction: the earlier draft said `user_status` — no such field exists on the user; see the 00-overview user-properties table.)*
@@ -43,6 +50,8 @@ adb shell setprop debug.firebase.analytics.app .none
 
 ## 4.3 Remote Config kill-switch (already plumbed in Phase 1)
 
+**Status (2026-10-01):** ❌ as designed — Remote Config was removed from the app (`ad40ed71`, tasks_17), so there is no `getRemoteValue` / `fetchAndActivate` to read the flag; re-home it or drop it — `T10-N1`.
+
 `track()` checks `analytics_enabled` (default `true`). To silence analytics in prod without a release: Firebase Console → Remote Config → set `analytics_enabled = false` → Publish. Verify `getRemoteValue('analytics_enabled')` reflects it after the next `fetchAndActivate` (hourly in prod per `firebase.js`).
 
 Consider a parallel `crashlytics_enabled` flag if you want the same control over error reporting (wire into `setCrashlyticsCollectionEnabled`).
@@ -50,6 +59,8 @@ Consider a parallel `crashlytics_enabled` flag if you want the same control over
 ---
 
 ## 4.4 QA regression checklist (run on a testing build)
+
+**Status (2026-10-01):** ⬜ 0 of 15 — nothing to exercise yet.
 
 - [ ] Login (password + OTP) → `login_*` / `otp_*` events; `setUserContext` sets role/company.
 - [ ] Create order / sales order → `order_created` / `sales_order_created` (+ `first_order_created` once).
@@ -71,6 +82,8 @@ Consider a parallel `crashlytics_enabled` flag if you want the same control over
 
 ## 4.5 Dashboards handoff (ops, post-merge)
 
+**Status (2026-10-01):** ❔ console work after events flow — the user.
+
 Once events flow for a few days, build in GA4 / Looker Studio:
 - **Activation funnel:** `login_succeeded` → `first_order_created` → `first_invoice_created` → `first_payment_recorded`, split by `role`.
 - **Daily active by role / company.**
@@ -81,6 +94,8 @@ Once events flow for a few days, build in GA4 / Looker Studio:
 
 ## 4.6 Documentation & maintenance
 
+**Status (2026-10-01):** ⬜ `AI.md` has no analytics section (grep: 0); the store disclosures are ❔ (the user).
+
 - Add a short "Analytics" section to `AI.md`: "All analytics go through `src/config/events.js` + `track()`. Never call `analytics().logEvent` directly in screens. No PII in params."
 - PR-review rule: any new event name must land in `EVENTS` (catalog test enforces validity).
 - **Store disclosures:** setting the analytics user id + `role`/`company_id` properties means updating the Google Play **Data Safety** form and App Store **privacy** declarations (analytics + crash data linked to a user identifier).
@@ -89,6 +104,8 @@ Once events flow for a few days, build in GA4 / Looker Studio:
 ---
 
 ## Definition of done (whole task)
+
+**Status (2026-10-01):** ⬜ 0 of 5.
 
 - [ ] Phases 1–3 merged; `__tests__/events.test.js` green.
 - [ ] All Phase-2 slices verified in DebugView; conversions + dimensions registered in GA4.

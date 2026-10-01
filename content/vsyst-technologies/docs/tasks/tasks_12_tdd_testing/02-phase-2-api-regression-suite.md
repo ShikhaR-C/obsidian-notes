@@ -5,35 +5,42 @@
 
 > **TDD lens:** this phase is mostly _characterization_ — writing tests that pin behavior we already believe is correct, so future changes that break it go red. New tests are written one flow at a time, red-first where a gap is a genuine unknown (write the assertion you _expect_, run it, and let reality correct you).
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). 🟡 The regression contract is in place: the flow→test map is committed (API `docs/testing.md` §8) with flows 1–13 pinned, and the credit suite now also pins the legacy presenter and the `createDC` defaults. Checklist: 6 ✅ (two flipped), 3 🟡, 1 ⬜, 1 ❌; open are flow #2's wiring (`X-SEC-1` in tasks_01), the DB-driven version gate (only on PR #34), the getAll skips and the `202405_v2` rollover parity check. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 2.1 Flow → test map (the regression contract, executable form)
 
+**Status (2026-10-01):** ✅ committed as API `docs/testing.md` §8 (`:222-266`), with a second table for the v4 harness and the two redesigned screens; per-row state in the new last column below.
+
 This table is the deliverable. It starts as below and ends with every row ✅. Copy the final version into `docs/testing.md` and reference it from the release checklist (Phase 6).
 
-| Flow (overview #)         | Existing tests                                                                                                       | Gap work this phase                                                                                                                                 |
-| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth & session (#1)       | `auth/login_otp`, `auth/redux_auth`, `auth/forgot_reset_pass`, `auth/verify_email_phone`                             | none (verify assertions still match current contract)                                                                                               |
-| Role/scope/bearer (#2)    | ❌                                                                                                                   | **NEW** `auth/authorization/index.test.js` (§2.2.1)                                                                                                 |
-| Company status gates (#3) | `helper/check_user_company_status.test.js`, `features/multiple_companies/*`                                          | **NEW** route-level gate cases in §2.2.2                                                                                                            |
-| Orders lifecycle (#4)     | `collections/order_msts/index.test.js`                                                                               | audit delivery-OTP coverage (`otp_by`/`otp_to`, `getOTPToken`); add `collections/order_msts/delivery_otp.test.js` if thin                           |
-| Sales orders (#5)         | `so_msts/index`, `dieselQtyLimit`, `editSalesOrder_backdate_reprice`                                                 | none                                                                                                                                                |
-| Invoices (#6)             | `collections/invs/index.test.js`                                                                                     | audit GST + TCS invoice types; extend if thin                                                                                                       |
-| Vouchers & payments (#7)  | `voc_msts/index`, `voc_msts/advdep`                                                                                  | AdvDep **drawdown** cases when tasks_07 Phase 3 (v2) lands — conditional                                                                            |
-| Credit engine (#8)        | 🟡 scattered                                                                                                         | **NEW** `features/credit/index.test.js` (§2.2.3)                                                                                                    |
-| Accounts/ledger (#9)      | `features/accounts/index.test.js`, `features/sadmin/index.test.js`                                                   | verify fin-year rollover + month recompute parity with old `202405_v2` sadmin coverage before deleting it                                           |
-| Products/rates (#10)      | `prod_msts/index` (incl. rates + `a/prodRates`), `psocs/*`, `helper/getApplicableRate.test.js`, `features/prod_disc` | none                                                                                                                                                |
-| Vehicles/drivers (#11)    | `vehs/*`, `dvr_msts/*`                                                                                               | none                                                                                                                                                |
-| Invites/users (#12)       | `invites/index`, `users/index`, `helper/bustUserCache.test.js`                                                       | none                                                                                                                                                |
-| Version gate (#13)        | ❌                                                                                                                   | **NEW** `features/version_gate/index.test.js` (§2.2.4)                                                                                              |
-| getAll matrix             | `getAll/active.test.js` (skips `veh_msts` GET, `counters`, `logs`; `getAll/index.test.js` is `describe.skip`)        | un-skip `veh_msts`; decide `counters`/`logs` rows; delete or revive the skipped `index.test.js` (recommend delete — `active` is the maintained one) |
-| DIP (#14)                 | ❌ — blocked                                                                                                         | see §2.6                                                                                                                                            |
+| Flow (overview #)         | Existing tests                                                                                                       | Gap work this phase                                                                                                                                 | 2026-10-01                                                       |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Auth & session (#1)       | `auth/login_otp`, `auth/redux_auth`, `auth/forgot_reset_pass`, `auth/verify_email_phone`                             | none (verify assertions still match current contract)                                                                                               | ✅ unchanged; 4 email / logout `describe.skip` blocks (`T12-N2`) |
+| Role/scope/bearer (#2)    | ❌                                                                                                                   | **NEW** `auth/authorization/index.test.js` (§2.2.1)                                                                                                 | 🟡 primitives pinned; v3 wiring is `X-SEC-1` in tasks_01         |
+| Company status gates (#3) | `helper/check_user_company_status.test.js`, `features/multiple_companies/*`                                          | **NEW** route-level gate cases in §2.2.2                                                                                                            | ✅ `features/company_status`                                     |
+| Orders lifecycle (#4)     | `collections/order_msts/index.test.js`                                                                               | audit delivery-OTP coverage (`otp_by`/`otp_to`, `getOTPToken`); add `collections/order_msts/delivery_otp.test.js` if thin                           | ✅ `delivery_otp.test.js` added                                  |
+| Sales orders (#5)         | `so_msts/index`, `dieselQtyLimit`, `editSalesOrder_backdate_reprice`                                                 | none                                                                                                                                                | ✅; two weak list tests (`T12-N3`)                               |
+| Invoices (#6)             | `collections/invs/index.test.js`                                                                                     | audit GST + TCS invoice types; extend if thin                                                                                                       | ✅ `tax_types` (TCS inverted), `tax_status`, `tcs_refused*`      |
+| Vouchers & payments (#7)  | `voc_msts/index`, `voc_msts/advdep`                                                                                  | AdvDep **drawdown** cases when tasks_07 Phase 3 (v2) lands — conditional                                                                            | ✅ drawdown + overdraw pinned in `advdep.test.js:175-311`        |
+| Credit engine (#8)        | 🟡 scattered                                                                                                         | **NEW** `features/credit/index.test.js` (§2.2.3)                                                                                                    | ✅ `features/credit` + `order_msts/credit_window`                |
+| Accounts/ledger (#9)      | `features/accounts/index.test.js`, `features/sadmin/index.test.js`                                                   | verify fin-year rollover + month recompute parity with old `202405_v2` sadmin coverage before deleting it                                           | 🟡 ledger suites (PR #36); `202405_v2` parity unconfirmed        |
+| Products/rates (#10)      | `prod_msts/index` (incl. rates + `a/prodRates`), `psocs/*`, `helper/getApplicableRate.test.js`, `features/prod_disc` | none                                                                                                                                                | ✅; 3 `xdescribe` blocks (`T12-N2`)                              |
+| Vehicles/drivers (#11)    | `vehs/*`, `dvr_msts/*`                                                                                               | none                                                                                                                                                | ✅; 1 TRANSACTIONAL skip (`T12-N2`)                              |
+| Invites/users (#12)       | `invites/index`, `users/index`, `helper/bustUserCache.test.js`                                                       | none                                                                                                                                                | ✅                                                               |
+| Version gate (#13)        | ❌                                                                                                                   | **NEW** `features/version_gate/index.test.js` (§2.2.4)                                                                                              | 🟡 hardcoded gate only; DB gate on PR #34                        |
+| getAll matrix             | `getAll/active.test.js` (skips `veh_msts` GET, `counters`, `logs`; `getAll/index.test.js` is `describe.skip`)        | un-skip `veh_msts`; decide `counters`/`logs` rows; delete or revive the skipped `index.test.js` (recommend delete — `active` is the maintained one) | ⬜ 2 `xit` rows + whole-file skip remain                         |
+| DIP (#14)                 | ❌ — blocked                                                                                                         | see §2.6                                                                                                                                            | ⏸ unchanged (§2.6)                                               |
 
 ## 2.2 New test specifications
 
 All new tests follow the exact house idiom — shown once in §2.4; only the intent is specified per suite here.
 
 ### 2.2.1 `test/api_v3/auth/authorization/index.test.js` — bearer/roles/scopes
+
+**Status (2026-10-01):** 🟡 done as *current behaviour* (`auth/authorization/index.test.js`, probe `/__smoke/whoami`); wiring the guards into v3 routes is `X-SEC-1` in tasks_01. v4 requires a bearer on every route, pinned per route (`test/api_v4/harness/mount.test.js:100`).
 
 Requires Phase 1 §1.2 (test app mounts `logging()`). Matrix to cover:
 
@@ -45,12 +52,16 @@ Requires Phase 1 §1.2 (test app mounts `logging()`). Matrix to cover:
 
 ### 2.2.2 Company-status gate — route-level
 
+**Status (2026-10-01):** ✅ `test/api_v3/features/company_status/index.test.js`.
+
 Extend `features/multiple_companies/*` or add `features/company_status/index.test.js`:
 
 - Set seeded company `status` inactive → any gated route returns 403 `error_code: COMPANY_INACTIVE`; removed-from-company user → `NOT_IN_COMPANY` / `COMPANY_REMOVED`.
 - `x-co-id` header: valid 24-hex switch honored; malformed header rejected; superadmin bypass verified.
 
 ### 2.2.3 `test/api_v3/features/credit/index.test.js` — the credit engine
+
+**Status (2026-10-01):** ✅ `features/credit/index.test.js`: create and edit gates incl. blocked + `adv_dep` and the inclusive cap (`:106-345`), DC-update normalisation (`:346-402`), legacy presenter (`:403-470`), `createDC` defaults (`:480-550`); the v1.77 write gate in `collections/dealer_custs/index.test.js:90-178`; plus `collections/order_msts/credit_window.test.js`. The v4 Customers read model carries a parity-tested copy of the ratio (`test/api_v4/lib/customersModel.test.js:159-206`; see `X-V4-2` in tasks_02). The `cr_bill_lmt` / `max_cr_days` bullet has nothing to pin: both are schema fields only (`models/dealer_custs.js:81,98`), read by no code in `api_v3/`, `api_v4/` or `helpers/`.
 
 The highest-value new suite. Cases (exact status codes/messages to be confirmed against `api_v3/services/order_msts.js` + `invs.js` + `voc_msts.js` while writing — plan intentionally does not guess):
 
@@ -62,11 +73,15 @@ The highest-value new suite. Cases (exact status codes/messages to be confirmed 
 
 ### 2.2.4 `test/api_v3/features/version_gate/index.test.js`
 
+**Status (2026-10-01):** 🟡 the suite pins the hardcoded `check_user_version` (`helpers/middlewares.js:123-128`, blocks ≤ 1.68); the DB-driven gate (`versionGate.js`, `version_gate` counters doc, soft header) is still only on API PR #34 — open, `CONFLICTING` (the app side is `X-APP-5` in tasks_09).
+
 - Seed the `counters` doc `doc_name: "version_gate"` (needs the `counters` re-hydration branch from Phase 1 §1.3.4, or create it inline).
 - App version below `minVersion` → hard 403; between min and latest → soft header (`x-app-update-available`); missing/garbage version header → documented fallback behavior (`versionGate.js` defaults).
 - The 60s in-process cache: assert a threshold change takes effect after cache expiry/bust (use the documented cache-bust mechanism rather than sleeping, if available).
 
 ## 2.3 Seed additions (`test/api_v3/temp/seed/v3/factories/`)
+
+**Status (2026-10-01):** ❌ superseded — scenarios are set up per test on the re-hydrated seed (implementation notes, decision 2); the seed still forces every relation to `max_cr_lmt: null` (`test/api_v3/temp/seed/v3/index.js:245`).
 
 Keep the architecture (JSON snapshots + factories) — ⏳ Q3. Additions:
 
@@ -86,6 +101,8 @@ Keep the architecture (JSON snapshots + factories) — ⏳ Q3. Additions:
 Every factory keeps the local-only rule: writes go through the in-process app (supertest + `db.dheader`) or direct mongoose against the memory server; snapshots land in `temp/seed/data/`.
 
 ## 2.4 House idiom — the worked example new tests copy
+
+**Status (2026-10-01):** ✅ followed by the v3 suites; v4 suites use their own idiom (`docs/testing.md` §11, "Three idiom differences from `test/api_v3/`").
 
 `test/api_v3/features/credit/index.test.js` (skeleton, exact paths/assertions per repo reality):
 
@@ -131,13 +148,19 @@ Rules the example encodes: import the shared test app; one memory-server per des
 
 ## 2.5 Definition of done per flow — the mutation smoke
 
+**Status (2026-10-01):** ✅ in use — commit and PR bodies record smokes (e.g. `1164378`: each of five guard calls deleted in turn, only that path's tests red).
+
 A flow row is ✅ only if breaking its business rule turns the suite red. Ritual: temporarily invert/disable the rule in the service (e.g. comment out the credit check), run the flow's suite, confirm failure, revert. Record the check in the PR description. This catches assertion-free tests — the current `App.test.tsx` disease — before they enter the backbone.
 
 ## 2.6 DIP — blocked, scoped out pending Q1
 
+**Status (2026-10-01):** ⏸ unchanged — `models/dip_models/*.js` import `db_dip`, which `helpers/db_conn.js:64` opens at import time; the deferral is recorded in `docs/testing.md:244`.
+
 `/api/dip/v1` routes require `models/dip_models/*`, which require `helpers/db_conn.js`, which **connects to remote Atlas at import time**. DIP therefore cannot be mounted in the test app without a small refactor (lazy/injected `db_dip` connection). Decision needed (⏳ Q1): if DIP is ranked P0/P1, add a "Phase 2b — DIP harness" (connection injection + seed factories for dealers/decants/meter_reads/insps + suites); default P2 = defer, and dip-web tests mock DIP responses via MSW meanwhile.
 
 ## 2.7 Verification — how we know Phase 2 is done
+
+**Status (2026-10-01):** 🟡 `test:full` green in CI and inside budget (1,664 passed, 130.9 s, run 36788793446); `master`'s push run on `6d41ce5` failed at the month end (`X-REL-1` in 00-overview); P1 row #9 parity and the getAll row still open.
 
 - §2.1 table fully ✅ for P0/P1 rows (P2 rows explicitly deferred with a note).
 - `yarn test:full` green; runtime within budget (⏳ Q10: ≤ 5 min target).
@@ -146,19 +169,23 @@ A flow row is ✅ only if breaking its business rule turns the suite red. Ritual
 
 ## Phase 2 checklist
 
-- [ ] Flow→test map (§2.1) committed to `docs/testing.md` and kept current in PRs — _pending end-of-phase synthesis_
-- [x] `auth/authorization/index.test.js` — bearer/role/scope matrix _(adapted, see notes)_
-- [x] Company-status route-level gate cases — `features/company_status/index.test.js`
-- [x] `features/credit/index.test.js` — capped/blocked/unlimited + DC-update normalization + adv_dep interplay _(presenter + createDC-defaults deferred)_
-- [x] `features/version_gate/index.test.js` — pins the hardcoded `check_user_version`
-- [x] Order delivery-OTP coverage audited (thin) → `collections/order_msts/delivery_otp.test.js` added (11 tests)
-- [x] Invoice GST/TCS coverage audited (thin) → `collections/invs/tax_types.test.js` added (8 tests; `inv_props` regex widened to accept `GST`)
-- [ ] `getAll/active.test.js` un-skips resolved; skipped `getAll/index.test.js` deleted or revived — _see notes (blocked on missing v3 routes)_
-- [x] ~~Seed factories~~ — **not needed**: scenarios are set up per-test via direct mongoose writes on rehydrated seed (keeps the seed's own `createOrders` green; see notes)
-- [ ] Fin-year rollover / month-recompute parity confirmed vs `202405_v2` before its deletion — _deferred_
-- [ ] DIP decision recorded (Q1) — deferred **P2** (dip-web mocks DIP via MSW meanwhile)
+**Status (2026-10-01):** 6 ✅ (two flipped from `[ ]`), 3 🟡, 1 ⬜, 1 ❌ — marks at the end of each line.
+
+- [x] Flow→test map (§2.1) committed to `docs/testing.md` and kept current in PRs — ~~_pending end-of-phase synthesis_~~ — **2026-10-01:** ✅ flipped: `docs/testing.md` §8 (`:222-266`), kept current by later PRs (e.g. the tasks_16 rows #6 / #7).
+- [x] `auth/authorization/index.test.js` — bearer/role/scope matrix _(adapted, see notes)_ — **2026-10-01:** 🟡 current behaviour only (`X-SEC-1` in tasks_01).
+- [x] Company-status route-level gate cases — `features/company_status/index.test.js` — **2026-10-01:** ✅.
+- [x] `features/credit/index.test.js` — capped/blocked/unlimited + DC-update normalization + adv_dep interplay ~~_(presenter + createDC-defaults deferred)_~~ — **2026-10-01:** ✅ the presenter (`:403-470`) and the `createDC` defaults (`:480-550`) are pinned too.
+- [x] `features/version_gate/index.test.js` — pins the hardcoded `check_user_version` — **2026-10-01:** 🟡 hardcoded gate only; the DB-driven gate is on PR #34.
+- [x] Order delivery-OTP coverage audited (thin) → `collections/order_msts/delivery_otp.test.js` added (11 tests) — **2026-10-01:** ✅.
+- [x] Invoice GST/TCS coverage audited (thin) → `collections/invs/tax_types.test.js` added (8 tests; `inv_props` regex widened to accept `GST`) — **2026-10-01:** ✅; its TCS case was inverted by tasks_16 (`1164378`).
+- [ ] `getAll/active.test.js` un-skips resolved; skipped `getAll/index.test.js` deleted or revived — _see notes (blocked on missing v3 routes)_ — **2026-10-01:** ⬜ `active.test.js:34,111` still `xit`; `index.test.js:12` still a whole-file skip (`T12-N2`).
+- [x] ~~Seed factories~~ — **not needed**: scenarios are set up per-test via direct mongoose writes on rehydrated seed (keeps the seed's own `createOrders` green; see notes) — **2026-10-01:** ❌ superseded by per-test setup.
+- [ ] Fin-year rollover / month-recompute parity confirmed vs `202405_v2` before its deletion — _deferred_ — **2026-10-01:** 🟡 the ledger suites from PR #36 (`dealer_custs/{month_rebuild,year_rollforward,duplicate_buckets,entry_window}`) pin rollover and recompute on their own; the `202405_v2` comparison is not recorded.
+- [x] DIP decision recorded (Q1) — deferred **P2** (dip-web mocks DIP via MSW meanwhile) — **2026-10-01:** ✅ flipped: recorded in `docs/testing.md:244`; the harness itself stays ⏸ (§2.6).
 
 ## Phase 2 — implementation notes (executed 2026-07-09, branch `api_tdd`)
+
+**Status (2026-10-01):** decisions 1 and 3 still describe `master` — the v3 guard wiring is `X-SEC-1` in tasks_01, and the DB-driven gate lives only on PR #34.
 
 **Done & green** (each suite verified via `yarn test:file`; 36 tests incl. the Phase-1 harness smoke):
 

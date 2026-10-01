@@ -4,6 +4,9 @@
 > `dzzlo_oms_api` repo. It asks for a design + implementation tutorial, not a
 > one-shot code dump.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). The design plan this prompt produced (00–07 in this folder) is unbuilt — 0 of 7 phases. The prompt predates `api_v4/` (mounted 2026-09-30) and the API's rule that new contracts are written inside `api_v4/` (`AI.md:85-86`), and its "What already exists" list names v3 files only: settle question 8 in `00-overview.md` (v4 or v3 mount) before pasting it, and add `api_v4/index.js` and `api_v4/lib/*` to that list if the answer is v4. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 You are working inside the **DZZLO OMS API** repo (`dzzlo_oms_api`): Node.js +

@@ -1,5 +1,8 @@
 # Phase 1 — Foundation
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Built as foundation step F-APP-3 on 2026-09-04 (`cc5413c7` → `87bde4f9`) under redesign decision D11, without Restyle: of the 21 steps, 9 are done, 1 partly, 6 to do, 3 dropped or superseded and 2 unverifiable here (device smoke, lint). The exit criteria hold in D11's form — the app looks the same because `src/theme/__tests__/parity.test.js` pins Paper's theme to the legacy `Light` / `Dark` — except the neon option, which was dropped. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 **Goal**: Stand up `src/theme/`, install Restyle, wire the new provider, and ship zero visible changes.
 
 **Entry criteria**: Design decisions locked (README), audit reviewed, architecture approved.
@@ -17,6 +20,8 @@
 
 ## Step 1.1 — Install `@shopify/restyle`
 
+**Status (2026-10-01):** ❌ rejected on 2026-09-04 (02-foundations decision log: last release 2025-03-19, RN 0.84 / React 19 unverified); `@shopify/restyle` is not in `package.json`.
+
 ```sh
 yarn add @shopify/restyle
 ```
@@ -24,6 +29,8 @@ yarn add @shopify/restyle
 No native linking. Verify with `yarn start --reset-cache && yarn ios && yarn android`.
 
 ## Step 1.2 — Create `src/theme/` skeleton
+
+**Status (2026-10-01):** ✅ `src/theme/{tokens,themes,adapters,provider}` + `scale.js`, `layout.js`, `tint.js`, `index.js`; `components/` went to `src/components/v2/` (D10), the hooks to `src/theme/provider/`; no `fixed.js`, `motion.js`, `neon.js`, `runtime.js`, `useThemeSwitcher.js`.
 
 Create the folder structure from `03_ARCHITECTURE.md`:
 
@@ -56,6 +63,8 @@ src/theme/
 ```
 
 ## Step 1.3 — Write `tokens/palette.js`
+
+**Status (2026-10-01):** 🟡 the lift is done — `src/theme/tokens/palette.js:9-56` restates the legacy `Light` / `Dark` colours key for key; the MD3 tonal variants were not added, and `hex2rgba` / `withAlpha` stayed in `src/utils/Colors`, imported by `src/theme/tint.js:7`.
 
 Seed the reference palette. Start by **lifting every color currently in `src/utils/Colors/index.js`** into the palette with semantic names, then add the missing MD3 tonal variants.
 
@@ -100,6 +109,8 @@ Every hex that currently appears in `Light` or `Dark` goes into palette with a n
 
 ## Step 1.4 — Write `tokens/fixed.js`
 
+**Status (2026-10-01):** ⬜ no `fixed.js`: no `warning` / `info` tokens, no brand block; `success` is a palette key (`palette.js:31,54`).
+
 Theme-invariant tokens (same value in every theme):
 
 ```js
@@ -128,6 +139,8 @@ export default {
 Exact brand hex values to be verified from the SVG files under `src/components/SVG/psoc/` in Step 1.4a.
 
 ## Step 1.5 — Write `tokens/typography.js`
+
+**Status (2026-10-01):** ✅ `src/theme/tokens/typography.js:8-114` — the 15 roles, verbatim from the legacy `fontObject` (Paper's MD3 values: `titleLarge` 22 / 28, `bodyLarge` tracking 0.15, `displayLarge` 0), plus `captionTiny` and `TABULAR`.
 
 Full 15-variant MD3 scale with **corrected** `letterSpacing` (fixing the bug in the current fontObject):
 
@@ -256,6 +269,8 @@ export default textVariants;
 
 ## Step 1.6 — Write `tokens/spacing.js` and `tokens/radii.js`
 
+**Status (2026-10-01):** ✅ both reuse `src/constants/designTokens.js:1-3` — spacing `xs 4 · sm 8 · md 16 · lg 24 · xl 32`, radii `sm 4 · md 8 · lg 12` — not the scales below.
+
 ```js
 // src/theme/tokens/spacing.js
 export default { none: 0, xxs: 2, xs: 4, s: 8, m: 16, l: 24, xl: 32, xxl: 48 };
@@ -268,11 +283,15 @@ These values reflect the most common hardcoded values observed in the audit (4, 
 
 ## Step 1.7 — Write `themes/light.js` and `themes/dark.js`
 
+**Status (2026-10-01):** ✅ `src/theme/themes/light.js:13-25`, `dark.js:13-26`; the zero-diff rule is pinned by `parity.test.js:20-26`.
+
 Each file imports palette + fixed + typography and produces a full semantic theme. See `03_ARCHITECTURE.md` for the `light.js` skeleton. The dark theme mirrors the same keys with dark-appropriate palette entries.
 
 **Match the existing Light/Dark values exactly** where possible — this phase ships zero visual diff. Any refinement happens in Phase 6.
 
 ## Step 1.8 — Write `themes/neon.js` (proof of extensibility)
+
+**Status (2026-10-01):** ❌ F-APP-3 lists the neon theme under "deliberately not".
 
 A third theme to prove adding one is trivial. Use electric purple + near-black surface + high-contrast neon accents. This isn't enabled in production; it's a functional test that the registry works.
 
@@ -303,6 +322,8 @@ export default {
 
 ## Step 1.9 — Write `themes/index.js`
 
+**Status (2026-10-01):** ✅ `src/theme/themes/index.js:9` — `themes = { light, dark }`, keyed by name; no array and no `getThemeById` fallback.
+
 ```js
 // src/theme/themes/index.js
 import light from "./light";
@@ -318,9 +339,13 @@ Adding a new theme later is literally adding a file + one entry here.
 
 ## Step 1.10 — Write `adapters/toPaperTheme.js` and `toNavigationTheme.js`
 
+**Status (2026-10-01):** ✅ `src/theme/adapters/toPaperTheme.js:28-44` and `toNavigationTheme.js:33-44`, each with a test; the second has no caller yet (Step 1.19).
+
 Bodies defined in `03_ARCHITECTURE.md`. These are pure functions — no state, trivially testable.
 
 ## Step 1.11 — Write `provider/runtime.js`
+
+**Status (2026-10-01):** ⬜ not built; no non-React caller needs a theme value yet.
 
 ```js
 // src/theme/provider/runtime.js
@@ -334,6 +359,8 @@ export const getActiveTheme = () => _activeTheme;
 For any non-component caller (error boundaries, formatters, axios interceptors) that needs a theme value.
 
 ## Step 1.12 — Write `provider/ThemeProvider.js`
+
+**Status (2026-10-01):** ✅ in D11's form — `src/theme/provider/ThemeProvider.js:18-34` is a plain context (no Restyle, no Redux selector); `AppNavigatorContainer.js:84-88` picks the theme and renders `PaperProvider` inside it (`:177-178`).
 
 ```jsx
 import { ThemeProvider as RestyleThemeProvider } from "@shopify/restyle";
@@ -374,6 +401,8 @@ export const AppThemeProvider = ({ children }) => {
 
 ## Step 1.13 — Write `provider/useAppTheme.js`
 
+**Status (2026-10-01):** ✅ `src/theme/provider/useAppTheme.js:15-28` — reads the context and throws outside it.
+
 ```js
 import { useTheme } from "@shopify/restyle";
 export const useAppTheme = () => useTheme();
@@ -382,6 +411,8 @@ export const useAppTheme = () => useTheme();
 Thin wrapper — lets us evolve the hook later without touching 300+ call sites.
 
 ## Step 1.14 — Write `provider/useThemeSwitcher.js`
+
+**Status (2026-10-01):** ⬜ not built; the theme is still chosen in Settings (`src/screens/Common/Settings/index.js:26`) and stored on the user.
 
 ```js
 import { useDispatch, useSelector } from "react-redux";
@@ -400,6 +431,8 @@ export const useThemeSwitcher = () => {
 ```
 
 ## Step 1.15 — Create `src/store/slices/theme.js`
+
+**Status (2026-10-01):** ⬜ no theme slice; the theme stays `auth.user.theme` (`AppNavigatorContainer.js:73-78`). There is no `persistConfig` to add it to — `redux-persist` is not a dependency.
 
 New Redux slice dedicated to theme state. Persisted via `redux-persist` so the choice survives cold starts.
 
@@ -422,6 +455,8 @@ Register in `src/store/apis/index.js` alongside the existing slices. Add `theme`
 
 ## Step 1.16 — Refactor `src/utils/Colors/index.js` into a shim
 
+**Status (2026-10-01):** ❌ superseded — the reverse was built: `src/utils/Colors` stays the v1 source, the tokens copy it, and `parity.test.js` fails if the two drift (`AppNavigatorContainer.js:80-83`).
+
 ```js
 // src/utils/Colors/index.js — after refactor
 import light from "../../theme/themes/light";
@@ -440,17 +475,25 @@ All 86 direct-import files keep working unchanged. Phase 5 migrates them gradual
 
 ## Step 1.17 — Delete `src/utils/Colors/defaultCombined.js`
 
+**Status (2026-10-01):** ⬜ still present (87 lines) with 0 importers.
+
 It's dead code. Verified zero importers in the audit. Delete the file.
 
 ## Step 1.18 — Wire `AppThemeProvider` in `AppNavigatorContainer.js`
+
+**Status (2026-10-01):** ✅ `src/navigation/AppNavigatorContainer.js:84-88` (memoised `toPaperTheme`) and `:176-181` (`ThemeProvider` around `PaperProvider`); the inline selection stayed, as `:73-78`.
 
 Replace the existing `<PaperProvider theme={theme}>` at `src/navigation/AppNavigatorContainer.js:83` with `<AppThemeProvider>`. Remove the inline theme-resolution logic (lines 43-49) — it's now in `AppThemeProvider`. Keep the StatusBar line but read `isDarkTheme` from the new `useAppTheme()` hook instead.
 
 ## Step 1.19 — Sync Navigation theme
 
+**Status (2026-10-01):** ⬜ `RestartProvider` still receives the Paper theme (`AppNavigatorContainer.js:179` → `src/components/Error/RestartContext.js:52`); `toNavigationTheme` has 0 callers.
+
 `src/components/Error/RestartContext.js` currently passes the Paper theme directly to `<NavigationContainer>`. Change it to use `toNavigationTheme(activeTheme)`. This requires pulling `activeTheme` from `useAppTheme()`.
 
 ## Step 1.20 — Smoke test
+
+**Status (2026-10-01):** ❔ parity is proven in Jest (`parity.test.js`); the device screenshot pair was left to the user (02-foundations, F-APP-3); the neon and persistence checks no longer apply (❌).
 
 - Run `yarn ios` + `yarn android`
 - Toggle Settings → Theme → LIGHT / DARK / SYSTEM, confirm nothing visibly changed
@@ -460,11 +503,15 @@ Replace the existing `<PaperProvider theme={theme}>` at `src/navigation/AppNavig
 
 ## Step 1.21 — Lint pass
 
+**Status (2026-10-01):** ❔ not run here; app CI runs Jest only (`.github/workflows/test.yml:9-29`).
+
 `yarn lint` — expect zero new errors. The shim preserves all existing imports.
 
 ---
 
 ## Phase 1 deliverables
+
+**Status (2026-10-01):** 🟡 delivered: tokens (palette, typography, spacing, radii, elevation), two themes, both adapters, `ThemeProvider` + `useAppTheme`, the wiring. Not delivered: Restyle (rejected), `fixed` / `motion` tokens, neon, `runtime.js`, `useThemeSwitcher`, theme slice, the shim (superseded), the deletion, the `RestartContext` change.
 
 | Artifact      | File path                                                                                   |
 | ------------- | ------------------------------------------------------------------------------------------- |
@@ -479,6 +526,8 @@ Replace the existing `<PaperProvider theme={theme}>` at `src/navigation/AppNavig
 | Wiring        | `src/navigation/AppNavigatorContainer.js`, `src/components/Error/RestartContext.js` updated |
 
 ## Verification
+
+**Status (2026-10-01):** ❔ commands not run here. App CI runs `yarn test` only; no lint, no build job.
 
 ```sh
 yarn lint                    # 0 errors

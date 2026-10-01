@@ -8,6 +8,9 @@
 
 **Depends on:** Phases 1 & 2. **Risk:** High — voucher→voucher linkage, two-ledger posting, overdraw guardrails, a new screen + endpoint.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Built and shipped (API `9b5a996` … `ffe7120`, merged by PR #29 → 1.5.4; app `5e0ee266`, `fc7b4e3a`, `baf9f37e` → 1.78) with three design changes: the passbook derives everything from vouchers (no opening plug — a one-off backfill seeds legacy balances), it opens from the Accounts balance header for both roles instead of `CustSettings`, and "Adjust to account" draws the whole deposit once (no amount form). Acceptance: 8 flipped ✅ (3 pinned by tests, 5 by code only), 1 ❌ superseded, 1 ❔ device check. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## What changed from the v1 spec (read this if you saw the old doc)
@@ -26,6 +29,8 @@ The original Phase 3 let AdvDep + adjustment rows appear in the **main** ledger 
 
 ## Decisions (resolved 2026-05-25)
 
+**Status (2026-10-01):** two decisions changed in the build. The advance figure is derived from the vouchers alone (`6ae9aff`; `getAdvDepLedger` returns `opening: 0`), so a pre-feature manual balance needs `scripts/backfill_advdep_seed_opening.js` (`T07-N1` in 00-overview); and the ledger entry point moved from `CustSettings` to the Accounts balance header (`baf9f37e`). The pooled cap holds on the server (`voc_msts.js:342-354`); the app adds "one adjustment per deposit" (`VoucherDetailsBSM.js:136-151`).
+
 - **Accounts screen keeps netting.** `FinalBalance = opening + outstanding − advance` and the "Advance Deposits" column stay exactly as today. **No change to `components.js`.** (User decision: "Keep netting.")
 - **The advance figure IS the advance-deposit ledger balance.** `dealer_custs.adv_dep` is voucher-driven (Phase 2 made the manual editor read-only; only AdvDep approval `+` and adjustment approval `−` mutate it). So the scalar **equals** the advance-deposit ledger's running total by construction. The accounts screen and credit-limit checks keep reading `adv_dep` (= the ledger balance) — nothing to recompute. (User note: "calculate adv dep from balance of new adv dep ledger.")
 - **Credit-limit math unchanged.** `order_msts.js:790/792` and `:930/932` keep subtracting `adv_dep` (= ledger balance). No edit. (A held deposit legitimately offsets credit-limit consumption.)
@@ -38,6 +43,8 @@ The original Phase 3 let AdvDep + adjustment rows appear in the **main** ledger 
 
 ## Background — the exact code we touch (current line numbers, post-Phase-2)
 
+**Status (2026-10-01):** historical — the line numbers have moved; see the step status lines for where each piece lives at `master`.
+
 - **Relationship-ledger transaction list:** `api_v3/services/dealer_custs.js` → `getDealerCustomerAccount` (L566). The voucher query `vocQueryStr` (L584-588) filters only `pay_status: true` — **no `voc_type` filter** (so AdvDep currently leaks in). Each row gets `type` (DEBIT/CREDIT), `amt`, `name` (= `voc_type`), `dt`. Returned via the `POST cust_msts/app/month` route.
 - **Approval posting:** `api_v3/services/voc_msts.js` → `updateVocStatus` (L318). Select at L320-324 already includes `voc_type` (Phase 2). The `isAdvDep` branch is at L340-359. `updateAdvDep` helper at L286-309, `updateCrDr` at L243-288.
 - **Voucher create (pass-through):** `createCustomerOnAcVoucher` (L602) does `VoucherMaster.create(body)` → `ref_voc_id` persists once it's in the schema. `getOneVoucher_func` select at L65.
@@ -46,6 +53,8 @@ The original Phase 3 let AdvDep + adjustment rows appear in the **main** ledger 
 ---
 
 ## Step 3.1 — API: add `ref_voc_id` to the schema & selects
+
+**Status (2026-10-01):** ✅ `models/voc_msts.js:31-35`; selected in `updateVocStatus` (`api_v3/services/voc_msts.js:297`); the voucher read also returns the adjustments that point at a deposit as `linked_vocs` (`:137`, `7300418`).
 
 **File:** `dzzlo_oms_api/models/voc_msts.js` — add after `order_id` (~L26-30):
 
@@ -73,6 +82,8 @@ Add `ref_voc_id` to the two selects that need it:
 
 ## Step 3.2 — API: filter `AdvDep` out of the relationship ledger
 
+**Status (2026-10-01):** ✅ `api_v3/services/dealer_custs.js:465`.
+
 **File:** `dzzlo_oms_api/api_v3/services/dealer_custs.js` (`getDealerCustomerAccount`, L584-588)
 
 ```js
@@ -89,6 +100,8 @@ This is the **only** change to the relationship ledger. AdvDep voucher rows disa
 ---
 
 ## Step 3.3 — API: two-ledger posting on adjustment approval
+
+**Status (2026-10-01):** ✅ as `isAdjustment` (`voc_msts.js:307`): an approved adjustment rebuilds the month bucket and re-derives `adv_dep` through `persistAdvDep` (`:409-437`); un-approving reverses both (`:439-456`); overdraw is refused before any write (`:342-354`). Tests: `advdep.test.js:175`, `:232`.
 
 **File:** `dzzlo_oms_api/api_v3/services/voc_msts.js` (`updateVocStatus`)
 
@@ -146,6 +159,8 @@ Everything below (invoice resolution, FULLPAID/PARTPAID) is unchanged — the ad
 ---
 
 ## Step 3.4 — API: new `getAdvDepLedger` service + controller + route
+
+**Status (2026-10-01):** ✅ with a change — `getAdvDepLedger` (`api_v3/services/dealer_custs.js:523-568`) builds rows and balance from the vouchers only, returns `opening: 0`, and writes the healed total back to `adv_dep` (`:561-566`); controller `api_v3/controllers/collections/dealer_custs.js:83`, route `api_v3/routes/collections/cust_msts.js:81`. No test calls the route (`T07-N2`).
 
 ### 3.4a — Service
 
@@ -235,6 +250,8 @@ router.post("/app/advdepledger", getAdvDepLedger); // ← ADD
 
 ## Step 3.5 — App: RTK query for the advance-deposit ledger
 
+**Status (2026-10-01):** ✅ `src/store/apis/balance/SectionalAcc.js:23-28`, hook exported at `:111`.
+
 **File:** `dzzlo_oms_app/src/store/apis/balance/SectionalAcc.js`
 
 Add an endpoint after `get_month_acc` (L14-21). **Do not** strip to `.data` — we need `adv_dep`/`opening` too:
@@ -259,6 +276,8 @@ Add the hook to the export block (L98-109):
 ---
 
 ## Step 3.6 — App: the Advance Deposit Ledger screen
+
+**Status (2026-10-01):** ✅ `src/screens/Common/AdvDepLedger/index.js` (278 lines; `FlatList`; tappable rows open `VoucherDetailsBSM`, `:91-97`; dates `DDMMyy` since `dcde2c8b`). No test (`T07-N3`).
 
 **New file:** `dzzlo_oms_app/src/screens/Common/AdvDepLedger/index.js`
 
@@ -411,6 +430,8 @@ export default AdvDepLedger;
 
 ## Step 3.7 — App: register the screen & wire the `CustSettings` entry
 
+**Status (2026-10-01):** 3.7a ✅ in both roles — `src/navigation/Dealer/Main.js:227`, `Dealer/TrnTab.js:277,330`, `Customer/Main.js:229`, `Customer/TrnTab.js:250,303`. 3.7b ❌ superseded — the entry is a tap on the Accounts balance header's "Advance Deposits" (`src/screens/Common/Accounts/components.js:92-102` → `index.js:478-494`, `baf9f37e`, 2026-06-04); `CustSettings` no longer shows an Advance Deposits field.
+
 ### 3.7a — Register in the dealer customer stack
 
 **File:** `dzzlo_oms_app/src/navigation/Dealer/Main.js` — add to `DealerCustomerStack` next to the `Accounts` screen (~L170-178):
@@ -460,6 +481,8 @@ Replace the no-op `onPress` (which only blurred the now-non-editable input) with
 ---
 
 ## Step 3.8 — App: "Adjust to account" action on the voucher-details bottom sheet
+
+**Status (2026-10-01):** ✅ in `src/screens/Common/Accounts/BSheets/VoucherDetailsBSM.js:131-197` — customer only, approved deposits only; changed from 3.8b–d: one adjustment per deposit (`linked_vocs`, `:136-151`) for the deposit's full amount (`:159`), so there is no amount form. No test (`T07-N3`).
 
 > **Implementation note (corrected during review).** The live voucher-details bottom sheet is **`dzzlo_oms_app/src/screens/Common/Accounts/BSheets/VoucherDetailsBSM.js`** — **not** `_Voucher_/BS/index.js`, which is dead/unused code (so is `_Voucher_/index.js`). Because AdvDep is filtered out of the relationship ledger (§3.2), an AdvDep voucher never opens from the Accounts ledger; instead the **Advance Deposit Ledger passbook rows are made tappable** (extends Step 3.6) to open `VoucherDetailsBSM` for the tapped deposit (via a `vocDtlBSMRef`, mirroring `Accounts/index.js`). The passbook is reachable from **both sides** — dealer via `CustSettings` "Advance Deposits" (Step 3.7) and customer via `Customer/Dealers/DealerSettings` "Advance Deposits" (registered in both `Dealer/Main.js` and `Customer/Main.js`). The adjustment is **customer-initiated**: the "Adjust to account" button is gated to `userRole === 'customer'`, so the dealer views deposits read-only while the customer creates the adjustment (the dealer then approves it via the normal PromptPay flow).
 
@@ -590,6 +613,8 @@ Notes:
 
 ## Step 3.9 — Guardrails & UX
 
+**Status (2026-10-01):** ✅ client cap (`VoucherDetailsBSM.js:161-164`), server guard before any write (`voc_msts.js:342-354`), approved-only (`VoucherDetailsBSM.js:149`); reconciliation is now automatic — `persistAdvDep` rewrites `adv_dep` from the ledger on every approval.
+
 - **Client cap:** the adjustment amount field is capped at the current `adv_dep` (read from `dealer_cust.adv_dep`, or the ledger's `adv_dep`).
 - **Server guardrail:** `updateAdvDep` (Phase 2 §2.1) throws `400 "Adjustment exceeds available advance deposit"` if the decrement would push `adv_dep` below 0 — surface that message in the dealer approval sheet.
 - **Approved-only:** only offer "Adjust to account" on an **approved** AdvDep voucher (an unapproved deposit has no real balance).
@@ -598,6 +623,8 @@ Notes:
 ---
 
 ## Step 3.10 — Exclude AdvDep from ALL voucher-summing balance paths (invariant completion)
+
+**Status (2026-10-01):** ✅ all four sites carry the filter — `api_v3/services/dealer_custs.js:77` (`getInvVoc`), `:326`, `:400`, and `api_v3/services/order_msts.js:348` — and so does the month rebuild (`api_v3/services/ledger_window.js:394`). No test runs `checkYearMonth` with an approved AdvDep (`T07-N2`).
 
 > Found during the Phase 3 review. Phase 2 only fixed the *write* path (`updateVocStatus`). The codebase has several **read/reconcile** paths that re-derive balances by summing approved vouchers by `pay_type`. AdvDep vouchers are `pay_type: 'CREDIT'`, so they were being counted as outstanding-reducing credits — re-introducing the deposit into invoice outstanding. Every such query must exclude AdvDep (`voc_type: { $ne: "AdvDep" }`); adjustments are `PInv` and stay counted.
 
@@ -612,18 +639,22 @@ The four sites (all now carry the filter):
 
 ## Acceptance criteria (Phase 3 v2)
 
-- [ ] AdvDep vouchers **do not** appear as rows in the relationship ledger (Accounts screen), and the running-balance / "Outstanding" column is unaffected by them.
-- [ ] Tapping the "Advance Deposits" field in `CustSettings` opens the **Advance Deposit Ledger** screen.
-- [ ] The ledger shows approved AdvDep deposits in the **Deposit (credit)** column and approved adjustments in the **Adjusted (debit)** column, with a running balance whose last value equals `adv_dep`.
-- [ ] In the Advance Deposit Ledger, tapping an approved AdvDep deposit row opens the Voucher Details bottom sheet (`VoucherDetailsBSM`) with an "Adjust to account" button. Submitting for ≤ available deposit creates a linked on-account voucher (`ref_voc_id` set, `voc_type: 'PInv'`, unapproved).
-- [ ] On dealer approval of the adjustment: `adv_dep −= amount` **and** `month_crdrs.crttl += amount`. The row shows as a **DEBIT** in the advance-deposit ledger **and** a **CREDIT** in the relationship ledger.
-- [ ] On the Accounts screen the "Advance Deposits" column drops by the adjustment amount, "Outstanding" drops, and "Final Bal." nets unchanged (because the formula still subtracts the now-smaller advance).
-- [ ] An adjustment exceeding the available deposit is rejected (client cap + server 400).
-- [ ] Approving a normal On-Account payment still posts a CREDIT to `month_crdrs` exactly as before (regression).
-- [ ] After approving an AdvDep deposit, opening the Accounts screen (which triggers `sync_year_acc`) leaves `month_crdrs` and outstanding **unchanged** — i.e., the sync/reconcile path no longer re-injects AdvDep (Step 3.10).
-- [ ] Credit-limit checks subtract the advance deposit **once** (not twice): an approved AdvDep of ₹X frees exactly ₹X of credit room, not ₹2X (Step 3.10).
+**Status (2026-10-01):** 8 ✅ (flipped; 3 pinned by tests, 5 by code only), 1 ❌, 1 ❔ — marks at the end of each line.
+
+- [x] AdvDep vouchers **do not** appear as rows in the relationship ledger (Accounts screen), and the running-balance / "Outstanding" column is unaffected by them. — **2026-10-01:** ✅ flipped: `dealer_custs.js:465` (code; `T07-N2`).
+- [ ] Tapping the "Advance Deposits" field in `CustSettings` opens the **Advance Deposit Ledger** screen. — **2026-10-01:** ❌ superseded: the passbook opens from the Accounts balance header (`Accounts/index.js:478-494`).
+- [x] The ledger shows approved AdvDep deposits in the **Deposit (credit)** column and approved adjustments in the **Adjusted (debit)** column, with a running balance whose last value equals `adv_dep`. — **2026-10-01:** ✅ flipped: `getAdvDepLedger` (`dealer_custs.js:523-568`) and the screen (code; `T07-N2`, `T07-N3`).
+- [x] In the Advance Deposit Ledger, tapping an approved AdvDep deposit row opens the Voucher Details bottom sheet (`VoucherDetailsBSM`) with an "Adjust to account" button. Submitting for ≤ available deposit creates a linked on-account voucher (`ref_voc_id` set, `voc_type: 'PInv'`, unapproved). — **2026-10-01:** ✅ flipped, as built: the adjustment is for the deposit's full amount, once per deposit (`VoucherDetailsBSM.js:147-179`; code).
+- [x] On dealer approval of the adjustment: `adv_dep −= amount` **and** `month_crdrs.crttl += amount`. The row shows as a **DEBIT** in the advance-deposit ledger **and** a **CREDIT** in the relationship ledger. — **2026-10-01:** ✅ flipped: `advdep.test.js:175`.
+- [ ] On the Accounts screen the "Advance Deposits" column drops by the adjustment amount, "Outstanding" drops, and "Final Bal." nets unchanged (because the formula still subtracts the now-smaller advance). — **2026-10-01:** ❔ device check.
+- [x] An adjustment exceeding the available deposit is rejected (client cap + server 400). — **2026-10-01:** ✅ flipped: client `VoucherDetailsBSM.js:161-164`; server `advdep.test.js:232`.
+- [x] Approving a normal On-Account payment still posts a CREDIT to `month_crdrs` exactly as before (regression). — **2026-10-01:** ✅ flipped: `advdep.test.js:128`.
+- [x] After approving an AdvDep deposit, opening the Accounts screen (which triggers `sync_year_acc`) leaves `month_crdrs` and outstanding **unchanged** — i.e., the sync/reconcile path no longer re-injects AdvDep (Step 3.10). — **2026-10-01:** ✅ flipped: `ledger_window.js:394`, `dealer_custs.js:77` (code; `T07-N2`).
+- [x] Credit-limit checks subtract the advance deposit **once** (not twice): an approved AdvDep of ₹X frees exactly ₹X of credit room, not ₹2X (Step 3.10). — **2026-10-01:** ✅ flipped: `order_msts.js:348` (code; no test pins "once").
 
 ## Verification (simulator + DB)
+
+**Status (2026-10-01):** ❔ device and DB steps not re-run; steps 5 and 7 are pinned by `advdep.test.js:175-311`. Step 3 now starts from the Accounts balance header, not `CustSettings`.
 
 1. Create + approve an AdvDep voucher (Phases 1–2). Note `adv_dep` and the current `month_crdrs` row.
 2. Open Accounts (relationship ledger): the AdvDep voucher is **not** listed; balances unchanged by it.

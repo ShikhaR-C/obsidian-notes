@@ -1,14 +1,32 @@
 # TCS removal — the option, the invoice line, the voucher, and an API that says no
 
-**Status:** **DONE 2026-09-26 — all three repos COMMITTED; web pushed as PR #28 on 2026-09-27; API and app commits NOT pushed.** API `1164378` on API `release/v1_79` (11 files, +989/−63; `test:full` 84 suites / 1659 tests) · app `bf64051a` on app `release/v1_79` (PR #55 carries it; 152 / 3599) · web `1ba8cad` PUSHED 2026-09-27 = **dip-web PR #28** `web_tcs_removal` → `slave_dev` (open, not draft, not merged; 7 / 49). Plan agreed 2026-09-25; C‑1 … C‑8 answered then; C‑9 … C‑12 answered 2026-09-26 (§9). **Next, in order:** push + deploy the API (separate go-ahead) → the user sets the remaining `taxStatus: 'TCS'` relations to NONE by hand (C‑1) → app ships in PR #55 → the user merges dip-web PR #28 after the API deploy. Follow-ups: the dealer's own turnover switch on `Dealer/CompanyProfile` (C‑11), an API scenario capture with a TDS relation for the app's B‑4 test, a device look at the three v1 screens.
+**Status:** ✅ **2026-10-01:** shipped — API `1164378` is in `master` (`6d41ce5`, tag `v1.5.5`, GitHub release 2026-09-30) and app `bf64051a` is in `main` (`ea7e7222`, tag `v1.79`, Android 105 / iOS 4); the 1.5.5 deploy, the hand clean-up of relations still marked TCS and the device look are ❔; C‑11 and B‑4 still ⬜; web (dip-web PR #28) — not assessed. — _was:_ **DONE 2026-09-26 — all three repos COMMITTED; web pushed as PR #28 on 2026-09-27; API and app commits NOT pushed.** API `1164378` on API `release/v1_79` (11 files, +989/−63; `test:full` 84 suites / 1659 tests) · app `bf64051a` on app `release/v1_79` (PR #55 carries it; 152 / 3599) · web `1ba8cad` PUSHED 2026-09-27 = **dip-web PR #28** `web_tcs_removal` → `slave_dev` (open, not draft, not merged; 7 / 49). Plan agreed 2026-09-25; C‑1 … C‑8 answered then; C‑9 … C‑12 answered 2026-09-26 (§9). **Next, in order:** push + deploy the API (separate go-ahead) → the user sets the remaining `taxStatus: 'TCS'` relations to NONE by hand (C‑1) → app ships in PR #55 → the user merges dip-web PR #28 after the API deploy. Follow-ups: the dealer's own turnover switch on `Dealer/CompanyProfile` (C‑11), an API scenario capture with a TDS relation for the app's B‑4 test, a device look at the three v1 screens.
 **Created:** 2026-09-25, from the user: "TCS is removed by government. we will removed the TCS option from where it is enabled, suggest where else should we remove TCS from. we do not want to hide TCS as older transactions when it was enabled should be visible. we should also plan to remove TCS adding in invoice as well. plan first, then ask to execute" · "yes perhaps we also need to remove logic and show error from apis".
 **Scope:** Three repos. `dzzlo_oms_api` (the guard, the invoice logic, a migration), `dzzlo_oms_app` (settings, new invoice, new voucher), `dip-web` (the superadmin voucher page). **History stays visible everywhere**: an invoice or voucher that carries TCS keeps printing it — the ledger, the payments list, the receipt, the invoice PDF and the TCS/TDS report do not change.
 **Why now:** TCS on sale of goods (s. 206C(1H)) was withdrawn by the Finance Act 2025 with effect from **1 April 2025**. TDS on purchase of goods (s. 194Q) stays, so every TDS path stays. The app already greyed out the TCS chip on **2025-04-22** (`99ff310bf`), but everything behind the chip is still live: a relation still marked `taxStatus: 'TCS'` still gets TCS added to every new invoice by the API, and a dealer can still raise a "TCS Voucher".
 **Source:** the code as read on 2026-09-25 — app `release/v1_79` @ `4b45cc0b`, API `release/v1_79` @ `292d64f`, dip-web `slave_dev`. Every file below was opened that day.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Shipped in both assessed repos: API `1164378` is in `master` (1.5.5) and app `bf64051a` is in `main` (1.79, Android 105 / iOS 4). Left: 2 follow-ups ⬜ (C‑11, B‑4) and 3 items ❔ (the 1.5.5 deploy, the hand clean-up of relations still marked TCS, the device look); no new tasks. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
+## Status roll-up (2026-10-01)
+
+| Item                                            | Status             | What exists now (evidence)                                                                                                                                                      | What is left / next step                                             |
+| ----------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| Phase A — API: guards and invoice logic         | ✅                 | `1164378` is in `master` (`6d41ce5`, tag `v1.5.5`; the GitHub release "v1.5.5 (2026-09-30)" has a "Tax" section); guards and zeroed invoice fields as in §2.1; four suites (§4) | Deploy 1.5.5 ❔ — see `X-REL-2` in tasks_01                          |
+| Phase B — App                                   | ✅                 | `bf64051a` is in `main` (`ea7e7222`, tag `v1.79`; builds Android 105 / iOS 4 from `303eec8e`, not the "104 / 1" in PR #55's title)                                              | Store rollout ❔                                                     |
+| Phase C — Web (dip-web PR #28)                  | web — not assessed | —                                                                                                                                                                               | —                                                                    |
+| C‑1 hand clean-up of relations still marked TCS | ❔                 | The guards refuse any new TCS; the stored values are database state                                                                                                             | The user confirms                                                    |
+| C‑11 the dealer's own turnover switch           | ⬜                 | Still on `src/screens/Dealer/CompanyProfile/index.js:147,240-315,599-603` (`toGrt`, "Turn Over > 10 crore")                                                                     | Leave or remove — the user's call (recommended: leave, follow-up)    |
+| B‑4 API capture with a TDS relation             | ⬜                 | No `taxStatus` in any `fixtures/api_v3` capture; `CustSettings.tax.test.js:20-62` overlays the fields on `dealer_custs_list.json`                                               | Add a capture with a TDS relation, re-export, pull, drop the overlay |
+| Device look at the three v1 tax screens         | ❔                 | —                                                                                                                                                                               | Device-only                                                          |
+| v2 screens and v4 read models                   | ✅ nothing to do   | No TCS code in `api_v4/`, `src/screens/v2`, `src/components/v2` or `src/store/apis/v4`                                                                                          | —                                                                    |
+
 ---
 
 ## 1. The one-paragraph answer
+
+**Status (2026-10-01):** ✅ built as described in the two assessed repos: the API refuses TCS on every create path and writes no TCS on new invoices, the app no longer offers TCS, and every read path still prints the history.
 
 Remove the three places TCS is **created** — the relation setting, the invoice computation, the dealer voucher — and put the refusal **in the API**, so that a phone still on 1.78 (or earlier) gets a clear error instead of a silent tax line. Keep every place TCS is **read**. The relations still marked TCS are **updated by hand by the user** (C‑1: "we will update them manually"), not by a script; until each one is, a 1.78 phone's invoice preview may show a TCS line the API no longer adds. Nothing is deleted from the data model: `inv_tcs_rate`, `inv_tcs_amt`, `voc_type: 'TCS'` and the relation's `taxStatus` all stay, because the history lives in them.
 
@@ -16,9 +34,13 @@ Remove the three places TCS is **created** — the relation setting, the invoice
 
 ## 2. Inventory — every TCS touchpoint, and what happens to it
 
+**Status (2026-10-01):** ✅ API and app rows done as planned (evidence under §2.1 and §2.2); web rows — not assessed.
+
 **REMOVE** = the path that creates TCS goes. **GUARD** = the API refuses it. **KEEP** = reads history; untouched. **CLEAN** = dead code or a stale comment.
 
 ### 2.1 API (`dzzlo_oms_api`, v3 — the app and the web both call v3)
+
+**Status (2026-10-01):** ✅ `api_v3/services/taxRemoved.js:6-7` (`TCS_REMOVED`); `refuseTcsRelation` (`api_v3/services/dealer_custs.js:41`, first in `createDC` `:1283` and `updateDealerCust` `:1440`); `refuseTcsVoucher` (`api_v3/services/voc_msts.js:189`, first in the three voucher create paths `:701`, `:765`, `:849`); PRODUCT and GST invoices write `inv_tcs_rate` / `inv_tcs_amt` as 0 (`api_v3/services/invs.js:280-281`, `:439-440`); model comment `models/dealer_custs.js:109`. The v4 read models hold no TCS code.
 
 | Where                                                                         | What it does today                                                                                                          | Plan                                                                                                                                                                            |
 | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -49,6 +71,8 @@ The API is authoritative for the invoice: `createInvNew` recomputes the tax from
 
 ### 2.2 App (`dzzlo_oms_app`)
 
+**Status (2026-10-01):** ✅ `src/helpers/Invoice/invoiceTotals.js` (no TCS arm), `src/helpers/Tax/tdsLiability.js`, `src/screens/Dealer/NewVoucher/voucherTypes.js` (no TCS Voucher, `:7-15`); CustSettings shows "Tax Settings (TDS)" read-only (`CustSettings.js:1306`); DealerSettings and the sheet read "Tax Settings (TDS)" / "Set TDS" (`DealerSettings/index.js:1272`, `BSheets/TCSTDSSettings.js:404`); no TCS computation is left under `src/screens/Dealer/NewInvoice`; the v2 screens hold none either.
+
 | Where                                                                                                     | What it does today                                                                                                                                                                                       | Plan                                                                                                                                                                                                                         |
 | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Dealer › Customer settings** `src/screens/Dealer/Customers/CustSettings.js` — "Tax Settings (TCS / TDS)" | Chips TCS (greyed since 2025-04-22) · TDS (greyed, the customer sets it) · NONE; `onToggleSwitch` still has the "Enable TCS collection in bills?" branch and "Disable TCS ?"; the TCS liability rule `isLiable` (**dealer turnover > 10 Cr** and payment from customer > 50 L); "Liable for TCS" / "Not liable for TCS…" statuses; the TCS Rate row; the `lypmt` switch; the **dealer's own turnover switch** (`dealer_toGrt`, written through `update_dealer_msts`) | **REMOVE** the TCS chip, the TCS branch and the NONE-as-disable-TCS branch, the dealer-side liability rule and its five TCS statuses, the TCS Rate row, the `lypmt` switch (C‑2) **and the dealer-turnover switch (C‑7: "also remove turnover of dealer switch")** — the seller's turnover was the 206C(1H) criterion; the TDS rule reads only the customer's turnover and `lysal`. What stays is **read-only** (C‑7): the tax status the customer set (TDS n % / NONE), the customer's turnover and the sale-over-50-L switch. Header → "Tax Settings (TDS)" |
@@ -63,6 +87,8 @@ The API is authoritative for the invoice: `createInvNew` recomputes the tax from
 
 ### 2.3 Web (`dip-web`)
 
+**Status (2026-10-01):** web — not assessed.
+
 | Where                                                          | Today                                                     | Plan                                                                          |
 | -------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------------------------------- |
 | `src/pages/superadmin/dealers/DlrNewVoucher.js:39` (`VOUCHER_TYPES`) | "TCS Note" (`voc_type: 'TCS'`, DEBIT, flow `note`)         | **REMOVE** the row. No test file exists for the page today; one is written red first (§5 C‑1) |
@@ -73,6 +99,8 @@ The API is authoritative for the invoice: `createInvNew` recomputes the tax from
 
 ## 3. Order of work — API first
 
+**Status (2026-10-01):** 🟡 step 1 ✅ committed and released (API 1.5.5), deploy ❔ (see `X-REL-2` in tasks_01); step 2 ❔ (the user's hand clean-up); step 3 ✅ shipped in app 1.79 (Android 105 / iOS 4, `303eec8e`); step 4 web — not assessed.
+
 1. **API** (guards + invoice logic) as **one commit** on API `release/v1_79` (the same discipline the user set for the app, C‑5). Deploying it first is what makes the change true for **every** phone: the invoice stops carrying TCS the moment the API is up, whichever app version created it.
 2. **By hand, the user:** set the remaining `taxStatus: 'TCS'` relations to NONE (C‑1). The dip-web superadmin page or the DB — the guard only refuses `'TCS'`, so writing `'NONE'` goes through. Until a relation is updated, a 1.78 phone's New Invoice preview (which reads `selectedDlrCust.taxStatus`) can show a TCS line the API no longer adds; the invoice itself is right.
 3. **App** as **one commit straight on `release/v1_79`** (C‑5: "same branch and we will keep updates in single commit"), so PR #55 carries it. The tests are still written first and run red before the source changes; the red run is recorded in the commit body and the PR body instead of a separate red commit.
@@ -81,6 +109,8 @@ The API is authoritative for the invoice: `createInvNew` recomputes the tax from
 ---
 
 ## 4. Phase A — API, red → green pairs
+
+**Status (2026-10-01):** ✅ A‑1, A‑2, A‑3 and A‑6 landed in `1164378` (in `master`); A‑4 ❌ dropped (C‑1); A‑5 ✅ (model comment; `docs/testing.md` flow rows #6 / #7 at `:236-237`). Suites: `collections/invs/tax_types.test.js` (flow #6 inverted), `collections/dealer_custs/tax_status.test.js` (13), `collections/voc_msts/tcs_refused.test.js` (9), `collections/voc_msts/tcs_refused_customer.test.js` (10).
 
 | #   | Red (`test(scope): … (red)`)                                                                                                                                     | Green                                                                                                                                                 | Smoke                                                    |
 | --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -93,6 +123,8 @@ The API is authoritative for the invoice: `createInvNew` recomputes the tax from
 **Commit shape (C‑5):** one commit on API `release/v1_79` — `feat(tax): TCS withdrawn — no TCS on new invoices, TCS refused on relations and vouchers` — whose body carries the red runs of A‑1 … A‑3 (which tests failed, how many) and the three smokes. Suite: `yarn test:full`; release gate with fixtures re-exported if any captured invoice fixture carried TCS (`fixtures/api_v3`, `api_v4` — check with `rg inv_tcs_amt fixtures/`; a non-zero value in a capture means the exporter's seed has a TCS relation and the capture changes).
 
 ## 5. Phase B — App, red → green pairs
+
+**Status (2026-10-01):** ✅ B‑1 … B‑5 landed in `bf64051a` (in `main`): `src/helpers/Invoice/__tests__/invoiceTotals.test.js`, `src/screens/Dealer/NewVoucher/__tests__/voucherTypes.test.js`, `src/helpers/Tax/__tests__/tdsLiability.test.js`, `src/screens/Dealer/Customers/__tests__/CustSettings.tax.test.js`; app `docs/testing.md` "Tax — TCS withdrawn" (`:355`).
 
 The three screens are v1, so the rule "lowest layer that shows the behaviour" lands mostly at Tier 1 and in one Tier 3 test per screen only where a decision changes.
 
@@ -108,6 +140,8 @@ The three screens are v1, so the rule "lowest layer that shows the behaviour" la
 
 ## 6. Test verdicts (for the PR bodies)
 
+**Status (2026-10-01):** ✅ as recorded; B‑4 still overlays the tax fields on a captured relation (`CustSettings.tax.test.js:20-62`) because no `fixtures/api_v3` capture carries a `taxStatus` — the follow-up capture is ⬜.
+
 - **API `tax_types.test.js` flow #6** — *Inverted, not deleted.* It pinned "a TCS relation gets TCS on the invoice"; that rule is withdrawn by law and by the user's decision (2026-09-25); the same file now pins "a TCS relation gets **no** TCS", with the same base/total/rounding arithmetic on the untaxed sum. The "without TCS" describe is unchanged.
 - No app test is deleted: the three v1 screens have no Tier 3 tests today; the new ones pin the decisions above.
 - Web: no test existed for `DlrNewVoucher.js`; C‑1 (§2.3) writes one red first (the type list has no TCS row; a TDS row still posts `voc_type: 'TDS'`).
@@ -115,6 +149,8 @@ The three screens are v1, so the rule "lowest layer that shows the behaviour" la
 ---
 
 ## 7. Calls — answered 2026-09-25
+
+**Status (2026-10-01):** ✅ all answered; C‑9 … C‑12 are in §9. C‑11 (the dealer's own turnover switch) is still open ⬜.
 
 The user, in one line: "1. No we will update them manually 2. yes remove payment over 50 lakh switch 3. No do not relabel report entry. keep it as it is 5. same branch and we will keep updates in single commit 6. leave api_v2 as recommended 7. yes show read-only to dealer. also remove turnover of dealer switch 8. as recommended. update docs". Each call keeps its recommendation and carries the answer.
 
@@ -130,6 +166,8 @@ The user, in one line: "1. No we will update them manually 2. yes remove payment
 ---
 
 ## 8. What is deliberately NOT in this plan
+
+**Status (2026-10-01):** ✅ still true at both release commits — `inv_tcs_*`, `voc_type: 'TCS'`, the report and the PDF lines remain, and no version-gate bump was made (the hard gate still blocks only ≤ 1.68, `helpers/middlewares.js:123-128`).
 
 - Deleting `inv_tcs_*`, `voc_type: 'TCS'`, the report, the PDF lines, the icon, the labels — history.
 - TDS: untouched in logic; only the labels and the `disabled` ties to TCS change.
@@ -153,3 +191,7 @@ The user, in one line: "1. No we will update them manually 2. yes remove payment
 - **2026-09-25, C‑4 answered:** the user: "check Removal of TCS on Sale of Goods Finance Act, 2025 (provisions of Section 206C(1H) omitted) April 1, 2025. can we add it as error" → yes; it becomes the shared `TCS_REMOVED` constant (§2.1) that both guards prefix, each followed by one short sentence saying what was refused. **Waits for "execute".**
 - **2026-09-25, calls answered:** C‑1 no (by hand), C‑2 yes, C‑3 no relabel, C‑5 one commit on `release/v1_79`, C‑6 leave v2, C‑7 read-only plus the dealer-turnover switch removed, C‑8 as recommended; C‑4 not mentioned then. §1, §2, §3, §4, §5 and §7 carry the answers; the migration row and A‑4 are struck.
 - **2026-09-25, planned:** survey of the three repos (25 app files, ~40 API files incl. v2 and tests, 2 web files); the app's TCS chip found greyed since 2025-04-22 with everything behind it still live; the API found authoritative for the invoice's TCS (client values never read). Plan written; waits for "execute" and the C‑1 … C‑8 answers.
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+None. The v2 screens and the v4 read models carry no TCS code (`git grep -i tcs` over API `api_v4/` and app `src/screens/v2`, `src/components/v2`, `src/store/apis/v4` finds nothing), so the redesign adds no TCS work; the two open follow-ups (C‑11, B‑4) are tracked in the roll-up.

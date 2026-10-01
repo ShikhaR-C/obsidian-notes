@@ -4,16 +4,19 @@
 > Without `.select()`, MongoDB returns all document fields — wasting network bandwidth, memory, and serialization time.
 > Prioritized by request frequency and business impact.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). The fixes were committed as `03b8bbf` (2026-04-14): at master 330 of the 378 model reads in the 22 audited files carry a projection; of the 25 sections below, 14 are done, 9 partly done (mostly reads added since April, or lists that project only a client-chosen `select`), the `advancedResults` default is still to do, and the out-of-scope note splits — `api_v1/` no longer applies, `api_v2/` was never audited. Every v4 read projects, is `.lean()` and has a time limit. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Implementation Status (2026-04-13)
 
-**Status:** Implementation complete (11 parallel agents) — **~177 of ~184 queries fixed across 20 files.**
+**Status:** ✅ **2026-10-01:** committed as `03b8bbf` (2026-04-14; `1656f16` added `_id` to the projections on 2026-05-06). At API master, 330 of the 378 model reads (`find` / `findOne` / `findById` on a model) in the 22 audited files carry a projection. Method: each file parsed at `6d41ce5`; a read counts as projected when its query chain calls `.select(…)` or passes a projection argument, with projections set in a later statement checked by hand. This counts every model read in a file, so the totals are larger than the audit's. — _was:_ Implementation complete (11 parallel agents) — **~177 of ~184 queries fixed across 20 files.**
 
 - All edits scoped to `dzzlooms_app/api_v3/`. `.select()` placed before `.lean()` everywhere.
 - Whitelist projections used; RTK consumers verified per file.
 - **Total tests run:** ~274 pass, 23 skip, 0 fail.
-- **No commits made yet.**
+- ~~**No commits made yet.**~~ _(2026-10-01: committed as `03b8bbf` on 2026-04-14.)_
 
 ### Per-file results
 
@@ -42,6 +45,8 @@
 | `controllers/sadmin/units_hsns.js`         | 4                                      | no test suite                        |
 
 ### Not done (out of scope)
+
+**Status (2026-10-01):** `helpers/newProdList.js` was done after all, in the same commit (`helpers/newProdList.js:10-12`); the `auth.js` and `veh_reqs.js` reads kept for document methods are still unprojected, as intended; `veh_msts.js` L65 / L92 now project.
 
 - **`helpers/newProdList.js` (1 HIGH query)** — Blocked by AI.md rule "Write ONLY inside `api_v3/`". Needs explicit authorization to edit `helpers/`.
 - **7 of `auth.js` queries** — require `.save()` / instance methods; per audit doc guidance, left alone.
@@ -87,6 +92,8 @@ const dealer = await DealerMaster.findById(id)
 
 ### File: `api_v3/services/order_msts.js` (13 queries)
 
+**Status (2026-10-01):** ✅ all 47 model reads in the file project at master (`03b8bbf`).
+
 | #   | Line | Query                                                           | Suggested `.select()`                                                                                    |
 | --- | ---- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | 1   | 518  | `OrderMaster.findOne({ _id: body._id }).lean()`                 | `.select('order_no order_status products cust_id dealer_id veh_id otp_to otp_val otp_expire')`           |
@@ -112,6 +119,8 @@ const dealer = await DealerMaster.findById(id)
 
 ### File: `helpers/newProdList.js` (1 query)
 
+**Status (2026-10-01):** ✅ projected after all — `.select("_id categories rates name")` at `helpers/newProdList.js:10-12` (`03b8bbf`).
+
 | #   | Line | Query                                             | Suggested `.select()`                  |
 | --- | ---- | ------------------------------------------------- | -------------------------------------- |
 | 1   | 10   | `ProdMst.find({ _id: { $in: prod_ids } }).lean()` | `.select('_id categories rates name')` |
@@ -125,6 +134,8 @@ const dealer = await DealerMaster.findById(id)
 ---
 
 ### File: `api_v3/services/so_msts.js` (7 queries)
+
+**Status (2026-10-01):** ✅ all 37 model reads project (36 are `.lean()`; the delete path keeps a document).
 
 | #   | Line | Query                                             | Suggested `.select()`                                                             |
 | --- | ---- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
@@ -144,6 +155,8 @@ const dealer = await DealerMaster.findById(id)
 ---
 
 ### File: `api_v3/services/invs.js` (8 queries)
+
+**Status (2026-10-01):** 🟡 21 of 23 project; the two `SalesOrder.find` reads at `api_v3/services/invs.js:651` and `:747` do not.
 
 | #   | Line | Query                                                       | Suggested `.select()`                              |
 | --- | ---- | ----------------------------------------------------------- | -------------------------------------------------- |
@@ -167,6 +180,8 @@ const dealer = await DealerMaster.findById(id)
 
 ### File: `api_v3/services/dealer_custs.js` (6 queries)
 
+**Status (2026-10-01):** 🟡 25 of 41 project — the file has roughly doubled with the ledger work since April; 15 plain reads have no projection (e.g. `:424`, `:467-468`, `:701`, `:803`, `:1354-1638`) and one list (`:1611`) projects only a client-chosen `select`.
+
 | #   | Line | Query                                                | Notes                  |
 | --- | ---- | ---------------------------------------------------- | ---------------------- |
 | 1   | 158  | `month_crdrs.findOne({ dealer_id, cust_id, month })` | also missing `.lean()` |
@@ -179,6 +194,8 @@ const dealer = await DealerMaster.findById(id)
 ---
 
 ### File: `api_v3/services/veh_trns.js` (19 queries)
+
+**Status (2026-10-01):** ✅ all 26 model reads project.
 
 | #   | Line    | Query                                                        |
 | --- | ------- | ------------------------------------------------------------ |
@@ -206,6 +223,8 @@ const dealer = await DealerMaster.findById(id)
 
 ### File: `api_v3/services/voc_msts.js` (10 queries)
 
+**Status (2026-10-01):** ✅ all 38 model reads project.
+
 | #   | Line | Query                                                   |
 | --- | ---- | ------------------------------------------------------- |
 | 1   | 61   | `VoucherMaster.findById(VOUCHER_ID).lean()`             |
@@ -222,6 +241,8 @@ const dealer = await DealerMaster.findById(id)
 ---
 
 ### File: `api_v3/services/auth.js` (10 queries)
+
+**Status (2026-10-01):** ✅ as planned — 7 of 14 reads project; the other 7 are followed by `.save()` or model methods, which this audit chose to leave.
 
 | #   | Line    | Query                                                              | Notes                                                     |
 | --- | ------- | ------------------------------------------------------------------ | --------------------------------------------------------- |
@@ -244,6 +265,8 @@ const dealer = await DealerMaster.findById(id)
 
 ### File: `api_v3/services/dvr_msts.js` (17 queries)
 
+**Status (2026-10-01):** 🟡 23 of 26 project; three paged lists (`:181`, `:200`, `:435`) project only a client-chosen `select`.
+
 Lines: 39, 71, 74, 108, 115, 220, 222, 246, 269, 274, 287, 299, 310, 322, 348, 362, 423
 
 All are `DriverMaster.findById()`, `DriverMaster.findOne()`, or `VehicleTrn.findOne()` without `.select()`.
@@ -251,6 +274,8 @@ All are `DriverMaster.findById()`, `DriverMaster.findOne()`, or `VehicleTrn.find
 ---
 
 ### File: `api_v3/services/users.js` (25 queries)
+
+**Status (2026-10-01):** 🟡 28 of 30 project; two internal reads in the deletion cascades have no projection.
 
 Lines: 129, 262, 289, 319, 346, 371, 397, 425, 434, 438, 443, 481, 491, 501, 504, 521, 544, 550, 554, 559, 597, 607, 617, 620, 637
 
@@ -260,6 +285,8 @@ Mostly `User.findById().lean()` and various model `.find()` / `.findOne()` for u
 
 ### File: `api_v3/services/psocs.js` (16 queries)
 
+**Status (2026-10-01):** ✅ all 16 model reads project.
+
 Lines: 8, 14, 22, 24, 37, 55, 75, 98, 103, 106, 120, 153, 174, 195, 220, 263
 
 All `PSOCS.findById(id).lean()` without `.select()`.
@@ -268,11 +295,15 @@ All `PSOCS.findById(id).lean()` without `.select()`.
 
 ### File: `api_v3/services/prod_msts.js` (8 queries)
 
+**Status (2026-10-01):** 🟡 9 of 10 project; `prod_msts.find` at `:133` does not.
+
 Lines: 83, 85, 92, 121, 167, 177, 202, 236
 
 ---
 
 ### File: `api_v3/services/veh_msts.js` (8 queries)
+
+**Status (2026-10-01):** ✅ all 8 model reads project, L65 / L92 included.
 
 Lines: 13, 16, 55, 65, 68, 76, 84, 92
 
@@ -291,11 +322,15 @@ Lines: 13, 16, 55, 65, 68, 76, 84, 92
 
 ### File: `api_v3/services/dealer_msts.js` (5 queries)
 
+**Status (2026-10-01):** 🟡 7 of 9 project; two paged lists (`:198`, `:222`) project only a client-chosen `select`.
+
 Lines: 48, 89, 109, 126, 129
 
 ---
 
 ### File: `api_v3/services/veh_reqs.js` (8 queries)
+
+**Status (2026-10-01):** 🟡 12 of 23 project — the audit listed 8 of the file's reads; 11 have no projection (`:14`, `:35`, `:88`, `:95`, `:157`, `:165`, `:194`, `:227`, `:235`, `:240`, `:292`), some because a document is saved afterwards.
 
 Lines: 18, 63, 78, 144, 151, 221, 226, 284
 
@@ -303,11 +338,15 @@ Lines: 18, 63, 78, 144, 151, 221, 226, 284
 
 ### File: `api_v3/services/cust_msts.js` (4 queries)
 
+**Status (2026-10-01):** 🟡 4 of 7 project; two paged lists (`:162`, `:187`) project only a client-chosen `select`, and one internal user read has none.
+
 Lines: 96, 113, 116, 125
 
 ---
 
 ### File: `api_v3/services/invites.js` (4 queries + 2 bugs)
+
+**Status (2026-10-01):** ✅ all 10 model reads project, and the chain-order bug is fixed (below).
 
 | #   | Line | Query                                             | Notes                                   |
 | --- | ---- | ------------------------------------------------- | --------------------------------------- |
@@ -320,11 +359,15 @@ Lines: 96, 113, 116, 125
 
 ### File: `api_v3/services/rate_msts.js` (1 query)
 
+**Status (2026-10-01):** 🟡 1 of 2 project; `RateMst.find` at `:56` has neither a projection nor `.lean()`.
+
 Line: 34 — `RateMst.find({ prod_id, dealer_id })` — also missing `.lean()`
 
 ---
 
 ### File: `api_v3/controllers/collections/prod_disc.js` (3 queries)
+
+**Status (2026-10-01):** ✅ all 3 project.
 
 | #   | Line | Query                                                 | Notes                                     |
 | --- | ---- | ----------------------------------------------------- | ----------------------------------------- |
@@ -336,6 +379,8 @@ Line: 34 — `RateMst.find({ prod_id, dealer_id })` — also missing `.lean()`
 
 ### File: `api_v3/controllers/collections/users.js` (1 query)
 
+**Status (2026-10-01):** ✅ projected.
+
 | #   | Line | Query                                | Notes                   |
 | --- | ---- | ------------------------------------ | ----------------------- |
 | 1   | 115  | `User.findById(req.body._id).lean()` | reads `companies` array |
@@ -343,6 +388,8 @@ Line: 34 — `RateMst.find({ prod_id, dealer_id })` — also missing `.lean()`
 ---
 
 ### File: `api_v3/controllers/dbUpdates/dlr_psoc_prod.js` (2 queries)
+
+**Status (2026-10-01):** ✅ both project.
 
 | #   | Line | Query                                             | Notes           |
 | --- | ---- | ------------------------------------------------- | --------------- |
@@ -352,6 +399,8 @@ Line: 34 — `RateMst.find({ prod_id, dealer_id })` — also missing `.lean()`
 ---
 
 ### File: `api_v3/controllers/sadmin/units_hsns.js` (4 queries)
+
+**Status (2026-10-01):** ✅ all 4 project.
 
 | #   | Line | Query                                            | Notes                       |
 | --- | ---- | ------------------------------------------------ | --------------------------- |
@@ -363,6 +412,8 @@ Line: 34 — `RateMst.find({ prod_id, dealer_id })` — also missing `.lean()`
 ---
 
 ## Architectural Note: `helpers/advancedResults.js`
+
+**Status (2026-10-01):** ⬜ unchanged — `getResults` applies no default projection for its 25 v3 callers (`helpers/advancedResults.js`), and the paged lists in `dvr_msts.js`, `dealer_msts.js`, `cust_msts.js` and `dealer_custs.js` do the same. v4 read models always project.
 
 The shared pagination helper (`getResults` at line 70 and `advancedResults` middleware at line 175) uses `model.find()` without a default `.select()`. It **does** apply `.select()` if the client passes `?select=field1,field2` in the query string (lines 73-76 and 178-181), but most callers don't pass this parameter.
 
@@ -377,6 +428,8 @@ This is related to **DB-8** (`$facet` pagination refactor) and could be addresse
 ---
 
 ## Bug: `.lean()` Before `.select()` in `invites.js`
+
+**Status (2026-10-01):** ✅ fixed in `03b8bbf` — `.select()` now comes before `.lean()` at `api_v3/services/invites.js:17` and `:23-26`.
 
 **File:** `api_v3/services/invites.js`
 
@@ -402,6 +455,8 @@ users.findOne({ ... }).select("_id username email phone companies").lean();
 ---
 
 ## Out of Scope: `api_v1/` and `api_v2/`
+
+**Status (2026-10-01):** ❌ `api_v1/` no longer applies — it is not mounted (`dzzlo_oms.js:23,107`); ⬜ `api_v2/` is still mounted (`dzzlo_oms.js:112`) for old app builds and was never audited. Every v4 read projects, is `.lean()` and carries `maxTimeMS` (`api_v4/readmodels/customers.js:655-716`, `api_v4/readmodels/dailySummary.js:339-404`, `api_v4/commands/userPrefs.js:53-62`); the app-features read beside v4 (`helpers/appFeatures.js:70`) is `X-V4-1` in tasks_02.
 
 The older API versions (`api_v1/controllers/`, `api_v2/controllers/`) have **~770 additional queries** without `.select()`. These were not audited in detail since the active codebase uses `api_v3`. A future pass should cover these if those endpoints are still active.
 

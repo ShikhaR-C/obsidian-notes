@@ -4,6 +4,9 @@
 
 > Companion to `FIREBASE_INTEGRATION_PLAN.md` and `FIREBASE_ANALYTICS_PLAN.md`. The integration plan mentions "Cloud Messaging (FCM) — could replace OneSignal." This doc answers: **can it actually?** Short answer — yes for basic push, but you lose meaningful features. Use this to decide whether to drop, keep, or run both.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ A decision document whose decision is not taken in code: the app and the API run OneSignal only (`react-native-onesignal ^5.4.1`, `package.json:54`; `api_v3/controllers/App/notification.js:9-45`), neither `@react-native-firebase/messaging` nor `in-app-messaging` is installed, and "Files touched (if migrating)" is 0 of 10. One fact moved: the integration plan now installs four packages, not five (remote-config ⏸, tasks_17). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -61,6 +64,8 @@ Split of responsibilities in this hybrid:
 
 ## Decision checklist
 
+**Status (2026-10-01):** ⬜ not answered in the repos — the user's call; the code today matches neither "migrate" nor "hybrid" (OneSignal only).
+
 Go through these — if you answer "yes" to **two or more of 1–5**, keep OneSignal.
 
 1. Does anyone outside engineering need to send notifications?
@@ -74,6 +79,8 @@ Go through these — if you answer "yes" to **two or more of 1–5**, keep OneSi
 ---
 
 ## If you migrate from OneSignal to FCM only
+
+**Status (2026-10-01):** ⬜ none of the 8 steps; step 1's list of what the integration plan adds is out of date — `remote-config` left the app on 2026-09-27 (tasks_17), four packages remain (`package.json:35-38`).
 
 1. Add `@react-native-firebase/messaging` (the integration plan already adds `app`, `crashlytics`, `analytics`, `perf`, `remote-config` — messaging is separate).
 2. iOS: enable Push Notifications + Background Modes (Remote notifications) capability; upload APNs auth key to Firebase console.
@@ -91,6 +98,8 @@ Go through these — if you answer "yes" to **two or more of 1–5**, keep OneSi
 
 ## If you keep the hybrid
 
+**Status (2026-10-01):** ⬜ not adopted — no `@react-native-firebase/messaging` or `in-app-messaging`.
+
 1. Install `@react-native-firebase/messaging` alongside OneSignal.
 2. Do **not** call `messaging().getToken()` for outbound push — OneSignal manages that.
 3. Use `@react-native-firebase/in-app-messaging` (FIAM is a separate package) purely for Analytics-triggered in-app UI.
@@ -99,6 +108,8 @@ Go through these — if you answer "yes" to **two or more of 1–5**, keep OneSi
 ---
 
 ## Files touched (if migrating)
+
+**Status (2026-10-01):** ⬜ 0 of 10; every OneSignal piece is still in place — `package.json:54`, the NSE target (`ios/OneSignalNotificationServiceExtension/NotificationService.swift`, `ios/Podfile:73-74`), the app-group entitlement (`ios/dzzlo_oms_app/dzzlo_oms_app.entitlements:9`), `src/helpers/OneSignal/index.js`.
 
 | File                                                | Change                                                                                                    |
 | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |

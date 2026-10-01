@@ -5,9 +5,14 @@
 **Companion:** [`03_mongoose_driver_upgrade.md`](./03_mongoose_driver_upgrade.md)
 **Active dev rule:** Write new code only under `dzzlo_oms_api/api_v3/`. This plan touches infra files (package.json, db_conn.js) and audits `api_v1`/`api_v2` for legacy patterns; it does NOT modify legacy feature code.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started as a PR: the two comment clean-ups are still open (`helpers/db_conn.js:4-5`, `dzzlo_oms.js:44-53`) and every Atlas step is ❔ — 7.0's end of life (2026-08-31, per 02) has passed. §2 checklist: 1 ✅ · 2 🟡 · 6 ❔; steps: §3 ❔ · §4 🟡 · §5 ⬜ (5.3 ❌) · §6 🟡 · §7 🟡 · §8 ❔ · §9 ❔; §10 files: 7 ✅ · 2 ⬜ · 5 ❔. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Context (read first)
+
+**Re-checked (2026-10-01):** holds, with moved lines — the deps are at `package.json:44-45` and `:54`; the dead comments are at `helpers/db_conn.js:4-5` and `dzzlo_oms.js:44-53`; `models/order_msts.js` now declares 5 compound and 3 single-field indexes (API-1 added `v4_dealer_cust_status_ondt`, `:82-85`) and `getOTPToken` is async (`:134`); the strategy record is still at `docs/strategy/mongoose_9_upgrade_plan_61daa006.strategy.md`. New since: both connections take pool options (`helpers/db_conn.js:44-64`).
 
 Files actually inspected for this plan:
 
@@ -26,19 +31,21 @@ Files actually inspected for this plan:
 
 ## 2. Pre-upgrade Checklist
 
-- [ ] **Atlas backup** — From Atlas UI → Project → Backups, trigger an on-demand snapshot of the production cluster (source DB + `db_dip` DB). Confirm snapshot completes before starting.
-- [ ] **Download point-in-time snapshot locally** — `mongodump --uri "$DATABASE_URI"` and `mongodump --uri "$DIPDB"` on a secure workstation as a belt-and-braces offline copy. Store encrypted. (Security note: prefer a `--config` file for the credentialed URI — even via an env var, the expanded argument is visible in `ps` output while the dump runs.)
-- [ ] **Create a throwaway Atlas test cluster** on **M10+** seeded from the latest snapshot. (Not M0/Flex: snapshots can't be restored into shared tiers, and shared tiers don't let you pin/choose the MongoDB major version, so an upgrade rehearsal isn't possible there.) Run the upgrade rehearsal here first.
-- [ ] **Pin Node.js** — project runs fine on Node 22/24 (Mongoose 9 floor is 20.19). Add a `.nvmrc` with `20.19.0` (minimum supported) or `22.x` (LTS at time of writing). Current dev machine reports `v24.14.1`.
-- [ ] **Confirm `yarn.lock` committed** — mandatory, Yarn is the package manager (`feedback_package_manager.md`).
-- [ ] **Capture baseline metrics** — response times for hot `api_v3` routes (list customers, orders by dealer), current `db.serverStatus()`, current `db.currentOp()` patterns. Needed for before/after comparison.
-- [ ] **Freeze schema/index changes** during the upgrade window.
-- [ ] **Notify on-call & business stakeholders** of the maintenance window.
-- [ ] **Review `.env.production` / `.env.testing`** — confirm `DATABASE_URI` and `DIPDB` still point to the correct cluster; SRV strings should already use `mongodb+srv://`.
+- [ ] **Atlas backup** — From Atlas UI → Project → Backups, trigger an on-demand snapshot of the production cluster (source DB + `db_dip` DB). Confirm snapshot completes before starting. — **2026-10-01:** ❔ Atlas-side, not visible from the repos.
+- [ ] **Download point-in-time snapshot locally** — `mongodump --uri "$DATABASE_URI"` and `mongodump --uri "$DIPDB"` on a secure workstation as a belt-and-braces offline copy. Store encrypted. (Security note: prefer a `--config` file for the credentialed URI — even via an env var, the expanded argument is visible in `ps` output while the dump runs.) — **2026-10-01:** ❔ outside the repos.
+- [ ] **Create a throwaway Atlas test cluster** on **M10+** seeded from the latest snapshot. (Not M0/Flex: snapshots can't be restored into shared tiers, and shared tiers don't let you pin/choose the MongoDB major version, so an upgrade rehearsal isn't possible there.) Run the upgrade rehearsal here first. — **2026-10-01:** ❔ Atlas-side.
+- [ ] **Pin Node.js** — project runs fine on Node 22/24 (Mongoose 9 floor is 20.19). Add a `.nvmrc` with `20.19.0` (minimum supported) or `22.x` (LTS at time of writing). Current dev machine reports `v24.14.1`. — **2026-10-01:** 🟡 CI pins Node 22 (`.github/workflows/test.yml:18-21`); no `.nvmrc`, no `engines` field.
+- [x] **Confirm `yarn.lock` committed** — mandatory, Yarn is the package manager (`feedback_package_manager.md`). — **2026-10-01:** ✅ tracked; CI installs with `--frozen-lockfile` (`.github/workflows/test.yml:31`).
+- [ ] **Capture baseline metrics** — response times for hot `api_v3` routes (list customers, orders by dealer), current `db.serverStatus()`, current `db.currentOp()` patterns. Needed for before/after comparison. — **2026-10-01:** 🟡 the v4 probe baselines exist (local mongod 8.2.1, `docs/v4-performance.md`, `yarn perf:baseline`); no Atlas baseline for v3 routes.
+- [ ] **Freeze schema/index changes** during the upgrade window. — **2026-10-01:** ❔ a process step.
+- [ ] **Notify on-call & business stakeholders** of the maintenance window. — **2026-10-01:** ❔ a process step.
+- [ ] **Review `.env.production` / `.env.testing`** — confirm `DATABASE_URI` and `DIPDB` still point to the correct cluster; SRV strings should already use `mongodb+srv://`. — **2026-10-01:** ❔ the env files are gitignored; `.env.example:11,14` shows the `mongodb+srv://` shape.
 
 ---
 
 ## 3. Step 1 — Upgrade Atlas Cluster 7.0.31 → 8.0
+
+**Status (2026-10-01):** ❔ not visible from the repos, and overdue if not done — 7.0's end of life (2026-08-31) has passed; the user can confirm the cluster version in Atlas. An in-repo comment calls the cluster an M10 (`helpers/db_conn.js:8`).
 
 MongoDB Atlas supports in-place major version upgrades once the cluster reaches the latest 7.0.x patch. The cluster is already on 7.0.31 so no interstitial patching required.
 
@@ -61,6 +68,8 @@ If `db_dip` lives on a separate cluster (check the `DIPDB` URI in `.env.producti
 ---
 
 ## 4. Step 2 — Refresh Node Packages
+
+**Status (2026-10-01):** 🟡 no `package.json` edit was needed and none was made (`package.json:44-45,54`); `yarn.lock` resolves mongoose 9.4.1, mongodb 7.1.1 and bson 7.2.0 as §4.3 expected (`yarn.lock:2425-2426,4456-4466`), and mongodb-memory-server is pinned to mongod 8.2.1 (`package.json:23-27`); missing: `yarn upgrade` has not been re-run since the plan (the mongo packages' lock entries have not changed since `e407a29`, 2026-04-06).
 
 Both packages already satisfy latest-on-npm (`mongoose 9.4.1`, `mongodb 7.1.1`). The change is a lockfile refresh, not a `package.json` edit.
 
@@ -99,9 +108,13 @@ yarn jest                  # run the suite
 
 ## 5. Step 3 — `dzzlo_oms_api/helpers/db_conn.js` Changes
 
+**Status (2026-10-01):** ⬜ the one required change (5.1) is not made; the optional hardening (5.3) was decided against.
+
 Current state inspected at lines 1–49. No functional changes required to support MongoDB 8 or driver 7.1.1. **Cosmetic cleanup** only:
 
 ### 5.1 Remove the dead `updatePipeline` comment
+
+**Status (2026-10-01):** ⬜ the comment is still at `helpers/db_conn.js:4-5` (and `AI.md:100` still says the global set is on).
 
 ```diff
   const mongoose = require("mongoose");
@@ -117,9 +130,13 @@ Reason: the migration settled on per-call `{ updatePipeline: true }` (see `api_v
 
 ### 5.2 Nothing else changes
 
+**Re-checked (2026-10-01):** no longer "no options" — API-3 passes `CONNECTION_OPTIONS` (`maxPoolSize` 75, `waitQueueTimeoutMS` 3000) to both connections (`helpers/db_conn.js:44-64`); the event handlers and the SIGINT handler are unchanged (`:67-89`).
+
 `mongoose.connect(databaseURI)` and `mongoose.createConnection(database_dip)` are still the correct Mongoose 9 / driver 7 APIs. No options object required — SRV strings carry auth, read preference, retry writes etc. The event handlers (`on("error")`, `once("open")`) and `SIGINT` graceful shutdown are unchanged in Mongoose 9.
 
 ### 5.3 Optional hardening (recommended, not required)
+
+**Status (2026-10-01):** ❌ dropped — API-3 deliberately leaves `serverSelectionTimeoutMS` at the driver's 30 s so an election (10–15 s without a primary) is ridden out (`helpers/db_conn.js:35-40`).
 
 Consider adding a `serverSelectionTimeoutMS` to fail fast during outages:
 
@@ -135,9 +152,13 @@ Not required for the upgrade itself; file as a follow-up ticket.
 
 ## 6. Step 4 — Deprecated API Audit
 
+**Status (2026-10-01):** 🟡 the audit still holds (`api_v1` stays unmounted, `dzzlo_oms.js:23,107`; `isValidObjectId` has no callers); of 6.1's edits the test-app one is done and the `dzzlo_oms.js` one is not.
+
 Grep was run for every known-deprecated pattern from the Mongoose 9 migration guide. Results:
 
 ### 6.1 `useNewUrlParser` / `useUnifiedTopology` / `useCreateIndex` / `useFindAndModify`
+
+**Status (2026-10-01):** 🟡 `test/dzzlo_oms_test.js` no longer has the dead block (rewritten by the TDD work, PR #35); still open: the block in `dzzlo_oms.js:44-53`. The `api_v1_test` call sites (26 files) are untouched as planned and never run — `jest.config.js:4-10` ignores those folders.
 
 Live occurrences:
 
@@ -186,6 +207,8 @@ Grep: no matches. Safe.
 
 ## 7. Step 5 — Test Strategy
 
+**Status (2026-10-01):** 🟡 the in-process half is in place — mongodb-memory-server 11.0.1 is pinned to mongod 8.2.1 (`package.json:23-27`) and CI runs the full suite on it (`.github/workflows/test.yml:25-39`); the `api_v1` suites are excluded by `jest.config.js:4-10`. The Atlas smoke test, dual-DB log check and latency comparison (7.2–7.4) wait on the upgraded cluster (❔); the probe that exists is `yarn perf:baseline` (`package.json:20`).
+
 ### 7.1 Unit / integration
 
 ```bash
@@ -227,6 +250,8 @@ Run the same `k6`/`ab`/curl-loop script used for baseline metrics. MongoDB 8 gen
 
 ## 8. Step 6 — Rollback Plan
 
+**Status (2026-10-01):** ❔ nothing to verify in code — the plan applies only once the upgrade runs.
+
 ### 8.1 If the app breaks after the package refresh (pre-Atlas upgrade)
 
 1. `git revert` the lockfile commit.
@@ -260,6 +285,8 @@ Run the same `k6`/`ab`/curl-loop script used for baseline metrics. MongoDB 8 gen
 
 ## 9. Rollout Order
 
+**Status (2026-10-01):** ❔ no stage of the rollout is visible from the repos.
+
 1. **Local dev machine** — `yarn upgrade`, `yarn jest`, smoke against a local `mongodb-memory-server` (MongoDB 8 binary).
 2. **Dev Atlas cluster** — upgrade to 8.0, point dev app at it, run smoke tests.
 3. **Test Atlas cluster** (the one `.env.testing` points to) — upgrade, run `yarn start:test`, full manual route pass.
@@ -277,22 +304,22 @@ Gates between stages:
 
 ## 10. Specific Files to Review (and What to Look For)
 
-| File                                                                 | What to check                                                                                   |
-|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|
-| `dzzlo_oms_api/package.json`                                         | `mongoose` / `mongodb` / `mongodb-memory-server` satisfy latest; no stray npm-ism.              |
-| `dzzlo_oms_api/yarn.lock`                                            | `mongoose 9.4.1`, `mongodb 7.1.1`, `bson ^7.1.1` present; no duplicates.                        |
-| `dzzlo_oms_api/helpers/db_conn.js`                                   | Remove dead `updatePipeline` comment; connections still event-handled; dual-DB intact.          |
-| `dzzlo_oms_api/dzzlo_oms.js`                                         | Remove dead `useNewUrlParser` comment block (lines 45–53); `defaultConnectionPromise` gate kept. |
-| `dzzlo_oms_api/api_v/api_constants.js`                               | `DATABASE_URI` and `DIPDB` env vars still point where expected.                                 |
-| `dzzlo_oms_api/models/order_msts.js`                                 | 6 compound indexes still defined; no callback APIs; `getOTPToken` is async.                     |
-| `dzzlo_oms_api/models/cust_msts.js`                                  | `pre("save")` has no `next` param.                                                              |
-| `dzzlo_oms_api/models/dip_models/*.js`                               | DIP schemas still register against the `db_dip` connection.                                     |
-| `dzzlo_oms_api/api_v3/services/psocs.js`                             | Heavy `findOneAndUpdate` user — smoke test its endpoints.                                       |
-| `dzzlo_oms_api/api_v3/services/dealer_custs.js`                      | Another `findOneAndUpdate` hotspot (lines 202, 212, 767, 1414+).                                 |
-| `dzzlo_oms_api/api_v3/services/users.js`                             | 10+ `findOneAndUpdate` calls; exercise login / profile endpoints.                               |
-| `dzzlo_oms_api/api_v2/controllers/dbUpdates/**`                      | Keep `{ updatePipeline: true }` on every call — do not remove them.                              |
-| `dzzlo_oms_api/test/dzzlo_oms_test.js`                               | Clean up dead comment; run once to confirm Jest boots.                                          |
-| `dzzlo_oms_api/.env.production`, `.env.testing`, `.env.development`  | Confirm URIs; add backup of prior version before editing.                                       |
+| File                                                                 | What to check                                                                                   | 2026-10-01                                                                             |
+|----------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| `dzzlo_oms_api/package.json`                                         | `mongoose` / `mongodb` / `mongodb-memory-server` satisfy latest; no stray npm-ism.              | ✅ carets unchanged — `^9.4.1`, `^7.1.1`, `^11.0.1` (`package.json:44-45,54`)           |
+| `dzzlo_oms_api/yarn.lock`                                            | `mongoose 9.4.1`, `mongodb 7.1.1`, `bson ^7.1.1` present; no duplicates.                        | ✅ 9.4.1, 7.1.1, bson 7.2.0, one entry each (`yarn.lock:2425,4456,4465`)                |
+| `dzzlo_oms_api/helpers/db_conn.js`                                   | Remove dead `updatePipeline` comment; connections still event-handled; dual-DB intact.          | ⬜ comment still at `:4-5`; both connections intact (`:50-80`)                          |
+| `dzzlo_oms_api/dzzlo_oms.js`                                         | Remove dead `useNewUrlParser` comment block (lines 45–53); `defaultConnectionPromise` gate kept. | ⬜ dead block still at `:44-53`; connection gate kept (`:167-169`)                      |
+| `dzzlo_oms_api/api_v/api_constants.js`                               | `DATABASE_URI` and `DIPDB` env vars still point where expected.                                 | ❔ reads `DATABASE_URI` / `DIPDB` (`:15-18`); the values live in gitignored env files   |
+| `dzzlo_oms_api/models/order_msts.js`                                 | 6 compound indexes still defined; no callback APIs; `getOTPToken` is async.                     | ✅ 5 compound + 3 single indexes (v4 added one, `:82-85`); `getOTPToken` async (`:134`) |
+| `dzzlo_oms_api/models/cust_msts.js`                                  | `pre("save")` has no `next` param.                                                              | ✅ `pre("save", async function ()` — no `next` (`:68`)                                  |
+| `dzzlo_oms_api/models/dip_models/*.js`                               | DIP schemas still register against the `db_dip` connection.                                     | ✅ registered on `db_dip` (e.g. `models/dip_models/dealers.js:4,88`)                    |
+| `dzzlo_oms_api/api_v3/services/psocs.js`                             | Heavy `findOneAndUpdate` user — smoke test its endpoints.                                       | ❔ a runtime smoke test                                                                 |
+| `dzzlo_oms_api/api_v3/services/dealer_custs.js`                      | Another `findOneAndUpdate` hotspot (lines 202, 212, 767, 1414+).                                 | ❔ a runtime smoke test                                                                 |
+| `dzzlo_oms_api/api_v3/services/users.js`                             | 10+ `findOneAndUpdate` calls; exercise login / profile endpoints.                               | ❔ a runtime smoke test                                                                 |
+| `dzzlo_oms_api/api_v2/controllers/dbUpdates/**`                      | Keep `{ updatePipeline: true }` on every call — do not remove them.                              | ✅ `updatePipeline: true` still on each call (10 hits)                                  |
+| `dzzlo_oms_api/test/dzzlo_oms_test.js`                               | Clean up dead comment; run once to confirm Jest boots.                                          | ✅ no dead block (rewritten by PR #35); CI boots it                                     |
+| `dzzlo_oms_api/.env.production`, `.env.testing`, `.env.development`  | Confirm URIs; add backup of prior version before editing.                                       | ❔ gitignored — not visible from the repos                                              |
 
 ---
 

@@ -1,8 +1,13 @@
 # Guide: Should financial transactions move to a structured (SQL) database?
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). The decision stands: money has not moved to another engine (no SQL driver in either repo), and none of the §5 triggers shows in code. Of §1's five mechanisms, one is now partly in use — integer paise, on the v4 read side only — and the other four are still unused. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 **Decision: No engine change. Build the structure inside MongoDB.** This document is the full argument, the honest scorecard, the precision policy, and — importantly — the written list of triggers that would make us reopen this decision. Keep it; it is the answer to "why didn't we use Postgres?" two years from now.
 
 ## 1. What people actually mean by "structured DB", mapped to what we'd do in Mongo
+
+**Status (2026-10-01):** the right-hand column still holds except row 3: the v4 read models now do money in integer paise (api:`api_v4/lib/money.js`, user-confirmed 2026-09-15) while v3 storage stays float. Transactions are still used only by `veh_reqs` (api:`api_v3/services/veh_reqs.js:249`); statements still merge in JS, now at api:`api_v3/services/dealer_custs.js:443-501`.
 
 "Use SQL for money" is shorthand for five real requirements. Each has a first-class MongoDB mechanism — all five are currently unused in our codebase, which is why money *feels* unstructured today:
 
@@ -19,7 +24,7 @@ Conclusion of the mapping: **the gap is discipline, not engine.** Phases 2 and 4
 ## 2. Why *not* PostgreSQL (specific to this system, not ideology)
 
 1. **Atomicity would get worse, not better.** Money never moves alone here: `createInvNew` writes `so_msts` (link) + `invs` + `month_crdrs`; voucher approval writes `voc_msts` + `month_crdrs` + `dealer_custs.adv_dep`; order creation reads credit exposure across three collections. Inside one Mongo replica set, one transaction covers all of it (even across the `oms_core`/`oms_fin` namespaces — sessions span databases on the same cluster). With the ledger in Postgres, every one of these becomes a two-engine distributed write needing outbox/saga machinery and a reconciliation story for *partial* failure. We would be importing the hardest problem in distributed systems to solve a schema-discipline problem.
-2. **Operational surface doubles for a team that runs lean.** Today: one Atlas cluster, PM2, no queue, no Redis, no CI. Postgres adds provisioning, backups/PITR, upgrades, monitoring, connection pooling (pgbouncer), a second driver/ORM, and a second security model — permanently.
+2. **Operational surface doubles for a team that runs lean.** Today: one Atlas cluster, PM2, no queue, no Redis, ~~no CI~~ **2026-10-01:** CI since 2026-07-10 (tests only). Postgres adds provisioning, backups/PITR, upgrades, monitoring, connection pooling (pgbouncer), a second driver/ORM, and a second security model — permanently.
 3. **The entire test strategy just standardized on Mongo.** tasks_12 built the regression harness on `mongodb-memory-server` with seeded fixtures across three repos. A SQL ledger forks the harness (containers or embedded PG), the seed system, and the fixtures contract on day one.
 4. **The queries we struggle with are not relational-shaped.** Statements, TCS/TDS summaries, balances, exports are *time-ordered scans and group-bys over one logical stream per relation* — exactly what a posting collection + compound index + aggregation `$group`/`$merge` serve. There is no many-way ad-hoc JOIN workload here; the joins we do (`$lookup` ×10 in the codebase) are narrow and index-backed.
 5. **Migration risk with zero user-visible payoff.** Dual-run + backfill + cutover of the money spine across 3 client apps, for query capabilities we can have in-place. The payoff column is empty until one of the §5 triggers fires.
@@ -43,6 +48,8 @@ Conclusion of the mapping: **the gap is discipline, not engine.** Phases 2 and 4
 
 ## 4. Precision policy (the D4 fix)
 
+**Status (2026-10-01):** 🟡 the v4 read models already follow this policy's shape — integer paise inside, rupee numbers at the boundary (api:`api_v4/lib/money.js:61-62`) — under a per-line half-up rule the user confirmed on 2026-09-15/16 (screen spec 02, O-3). `api_v3/services/money.js` does not exist. One rule, not two: T13-N1 in [00-overview.md](./00-overview.md).
+
 Today every money field is a float with a setter `v => (Math.round(v*100)/100).toFixed(2)` — note `.toFixed(2)` returns a **string** Mongoose casts back to a float (`models/invs.js:55-115`). Sums of many 2-dp floats accumulate sub-paise error; the reconcilers currently paper over it.
 
 **Policy (default, pending Q6):**
@@ -54,6 +61,8 @@ Today every money field is a float with a setter `v => (Math.round(v*100)/100).t
 *Why not Decimal128*: it fixes storage but not JS arithmetic (still needs a decimal library on every `+`), it makes every read a `.toString()` conversion in three client repos, and Mongoose ergonomics around it are poor. Integer paise fixes the arithmetic itself with native operators. Revisit only if sub-paise precision (e.g. per-litre micro-rates) becomes a requirement — rates today are 2-dp and quantity×rate rounding is explicitly policy (`inv_round_amt`).
 
 ## 5. Triggers that reopen this decision (write the date next to any that fires)
+
+**Status (2026-10-01):** none dated. From the repos: no SQL driver in either project and no accounting module; triggers 1, 3 and 5 are business or scale facts the repos cannot show (❔).
 
 1. Finance/BI analysts need **daily ad-hoc SQL** joins and Atlas SQL/Charts demonstrably can't serve them.
 2. Product scope grows a **true accounting module** — chart of accounts, journal + trial balance, P&L/balance-sheet statements. (Then evaluate: double-entry in Mongo vs an accounting subsystem in PG behind an internal API.)

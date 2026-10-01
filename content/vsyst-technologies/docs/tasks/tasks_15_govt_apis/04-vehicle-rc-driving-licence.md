@@ -3,6 +3,9 @@
 **Researched:** 2026-08-05. **Constraint:** no paid aggregators.
 **One-line answer:** consent-based RC + DL pulls are available **today, free, to private companies** via DigiLocker/API Setu (publisher: MoRTH) — that covers in-app onboarding of tank-trucks and drivers. Consent-less backend lookups now have a formal direct channel too: **MoRTH's NTR Data Sharing Policy (18-08-2025)** — application-based, no fees stated, but discretionary and slower.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research only; nothing built — no RC or licence fields beyond `veh_msts.veh_reg_no` (`models/veh_msts.js:12`) and no DigiLocker code (grep). §2's "driver … signs in with DigiLocker in-app" assumes a driver login the app does not have; the fleet owner is a customer user (T15-N1 in the overview). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Two distinct needs, two routes

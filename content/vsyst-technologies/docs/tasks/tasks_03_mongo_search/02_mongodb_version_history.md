@@ -2,11 +2,14 @@
 
 > Current state of DZZLO OMS:
 >
-> - **Server**: MongoDB Atlas running **7.0.31**
+> - **Server**: MongoDB Atlas running **7.0.31** — ❔ **2026-10-01:** not visible from the repos; 7.0's end of life (2026-08-31, §3) has passed — confirm the cluster version in Atlas.
 > - **Backend driver**: `mongodb` **^7.1.1**
 > - **ODM**: `mongoose` **^9.4.1**
 >
 > This document traces MongoDB's version history from 4.x through 8.x, deep-dives into what 7.0 and 8.0 bring, explains what it takes to upgrade our Atlas cluster safely, and gives a clear recommendation.
+
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research — no tasks to mark here; the upgrade steps are tracked in 04 and in the 00_README checklist. Facts about our code re-checked: driver 7.1.1 and mongoose 9.4.1 are unchanged (`yarn.lock:4456-4466`), no `$where` or geospatial query exists, and the test suite already runs mongod 8.2.1 (`package.json:23-27`, `.github/workflows/test.yml:25-29`), so CI uses an 8.x-compatible driver against an 8.x server (§11.3); the Atlas version is ❔ (see the note above). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
 
 ---
 

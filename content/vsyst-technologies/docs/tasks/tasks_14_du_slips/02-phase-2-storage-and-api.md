@@ -3,9 +3,14 @@
 **Blocked by:** Phase 1 (schema + approvals).
 **Delivers:** an S3 bucket, a CDN, a post-upload worker, and four `api_v3` endpoints. After this phase, an image can be uploaded and read back by an authorised caller — with no app changes yet.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 11 definition-of-done items — no S3 or CloudFront SDK (only `@aws-sdk/client-sesv2`, `package.json:31`), no multer or presign code, no slip routes, services or sweeper (grep at `6d41ce5`). §5 places four endpoints in v3, which the API's rule now freezes for features (`AI.md:85-86`) — see T14-N1 for the v4 option. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. D1 — S3 `ap-south-1` + CloudFront
+
+**Status (2026-10-01):** ⬜ to do — bucket, KMS key and CDN are infrastructure the repos cannot show (❔ ops); the invoice logo still loads from `vsystimages.s3.ap-south-1.amazonaws.com` (`api_v3/services/invoice/htmlTemplates/components.js:20`).
 
 ### 1.1 The comparison, at real prices
 
@@ -96,6 +101,8 @@ SSE-KMS is not decoration — **DPDP Rule 6(1)(a)** names *"encryption, obfuscat
 
 ## 2. D2 — presigned POST policy
 
+**Status (2026-10-01):** ⬜ to do — no presign code (`git grep presign` → 0).
+
 | Option                  | Enforces size? | Round trips | Verdict                                                                                                                        |
 | ----------------------- | -------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | (a) Proxy via Express   | ✅ full control | 2           | Fine at 5k/mo. At 300k/mo it pushes ~145 GB/mo through Express and holds sockets 40 s on dying 3G. Also forces raising the 1 MB body limit. **No.** |
@@ -168,6 +175,8 @@ Deliberately absent: `s3:DeleteObject`, `s3:PutObjectAcl`, anything on `img/*`.
 
 ## 3. The commit path — and why the client is never trusted
 
+**Status (2026-10-01):** ⬜ to do — no worker, EventBridge rule or sweeper in the repo.
+
 ### 3.1 Flow
 
 ```
@@ -211,6 +220,8 @@ A sweeper flips `claimed`-with-no-event rows to `failed` after 15 minutes and al
 ---
 
 ## 4. D3 — build the variants, don't buy a service
+
+**Status (2026-10-01):** ⬜ to do — no `sharp` dependency.
 
 ### 4.1 The comparison at 300k images/month, month 12
 
@@ -261,6 +272,8 @@ Set `sharp`'s `limitInputPixels` in the Lambda as a decompression-bomb guard.
 
 ## 5. The API surface
 
+**Status (2026-10-01):** ⬜ to do — no slip routes (`api_v3/routes/collections/so_msts.js:16-34` unchanged). If overview §7 question 6 lands on v4: commands per screen-redesign D2, request schemas in the house DSL, `maxTimeMS` on reads (`api_v4/lib/limits.js`), and a per-user limiter on the `api_v4/lib/rateLimit.js` pattern.
+
 Following the local conventions exactly: routes declare bare handlers; controllers are `asyncHandler`-wrapped and call services with a single named-arg object; services throw `ErrorResponse`.
 
 ```js
@@ -290,6 +303,8 @@ exports.PresignSlip = asyncHandler(async (req, res) => {
 **Rate-limit these routes.** Collection routes are currently unlimited; the global limiter at `dzzlo_oms.js:88-95` is **commented out**. The two existing per-route limiters are the pattern: `api_v3/routes/auth/index.js:7-16` (15/3 min) and `routes/open_apis/contact_email.js:4-9` (100/15 min). An upload-presign endpoint needs one.
 
 ### 5.1 🔴 Authorization — the thing this phase must get right
+
+**Status (2026-10-01):** ⬜ to do — the pre-existing issue is still open at master, tracked as X-SEC-1 in tasks_01. On v4 the sketch changes: the tenant comes from `tenantOf` / `scopeFilter`, which also honour the addressed company (`api_v4/lib/tenancy.js:42-102`), and one answer covers "not yours" and "no such SO", so the endpoint is no existence oracle (`:105-120`).
 
 **Every new slip endpoint must derive `dealer_id` from the token and verify it against `so.dealer_id`.**
 
@@ -324,6 +339,8 @@ async function assertSlipAccess({ soId, headers }) {
 
 ### 5.2 Business rules enforced server-side
 
+**Status (2026-10-01):** ⬜ to do — the role gate needs a membership-scope check that `api_v4/lib` lacks (T14-N4).
+
 | Rule                         | Where                                                          |
 | ---------------------------- | -------------------------------------------------------------- |
 | ≤6 slips per SO              | `presignSlip` — count non-deleted `du_slips` before minting     |
@@ -335,6 +352,8 @@ async function assertSlipAccess({ soId, headers }) {
 ---
 
 ## 6. 🔴 Stop `du_slips` leaking into invoices
+
+**Status (2026-10-01):** ⬜ to do — two sites now: `api_v3/services/invs.js:651-657` (invoice detail and email/PDF, `getOneInvoice_func` `:617`) and `:747-753` (`multipleInvoice`, the invoice lists `:903`, `:950`) — T14-N2. The v4 Daily Summary read model is safe by construction (explicit projection, `api_v4/readmodels/dailySummary.js:62-64`).
 
 `api_v3/services/invs.js:659-665`:
 
@@ -358,6 +377,8 @@ Also check `:1128-1131` (already projected — safe) and `helpers/advancedResult
 
 ## 7. Config
 
+**Status (2026-10-01):** ⬜ to do — the list is now five files: `.env.ci` is tracked and CI copies it to `.env.development` (`.github/workflows/test.yml:36`). The SES client is still built per call (`helpers/sendEmail.js:15-19`).
+
 New env vars — add to **all four** files (`.env.example`, `.env.development`, `.env.testing`, `.env.production`):
 
 ```
@@ -376,6 +397,8 @@ Credentials: the existing pattern is static keys from env, client constructed **
 ---
 
 ## 8. Definition of done
+
+**Status (2026-10-01):** ⬜ 0 of 11 — none done; the infrastructure items cannot be verified from the repos (❔ ops).
 
 - [ ] Bucket + KMS key + lifecycle rules + Object Lock created in `ap-south-1`
 - [ ] CloudFront distribution with OAC, `CachingOptimized` policy, key group for signing, on a **cookie-less** domain

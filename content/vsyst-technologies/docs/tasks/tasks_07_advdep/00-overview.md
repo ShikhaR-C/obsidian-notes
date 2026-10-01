@@ -1,13 +1,29 @@
 # Advance Deposit (AdvDep) — Feature Plan & Overview
 
-**Status:** Phases 1 & 2 implemented (2026-05-25); Phase 3 spec'd as **v2** (overview synced 2026-05-25)
+**Status:** ✅ **2026-10-01:** Phases 1–3 built and shipped (API PR #29 `2bb7eba` → release 1.5.4; app `5e0ee266` … `c5e87820` → 1.78), with three changes from the plan — the balance is re-derived from the voucher ledger, the passbook opens from the Accounts balance header, and an adjustment draws a whole deposit once; Phase 4 🟡 (API tests ✅; app tests ⬜; the production backfill run ❔). — _was:_ Phases 1 & 2 implemented (2026-05-25); Phase 3 spec'd as **v2** (overview synced 2026-05-25)
 **Owner:** TBD
 **Created:** 2026-05-24
 **Scope:** New voucher type `AdvDep` in `dzzlo_oms_api`, customer-initiated from the `PayOnAc` screen, posting to a **separate advance-deposit balance** that does not touch invoice outstanding, plus a linked **adjustment/drawdown** mechanism.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Phases 1–3 ✅ (as built, with the design changes noted in each phase doc), Phase 4 🟡; 3 new tasks (`T07-N1` … `T07-N3`). The v4 layer adds no AdvDep logic of its own: the Customers read model reads the stored `adv_dep` and the v2 credit sheet shows it (`api_v4/readmodels/customers.js:661,735`; `CreditSheet.js:303-305`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
+## Status roll-up (2026-10-01)
+
+| Item                                        | Status | What exists now (evidence)                                                                                                                                                                                                                                                                                                                                                  | What is left / next step                                                                  |
+| ------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Phase 1 — `AdvDep` type + customer selector | ✅     | API `voc_text` (`api_v3/services/voc_msts.js:65-66`); app constants (`src/constants/payments.js:20,30,40`) and display maps (`src/utils/Conditional/VoucherType.js`); the selector is the "Adv. Deposit" chip on `Customer/NewPayAck` (`index.js:51-65`) — the standalone `PayOnAc` was removed (`c5e87820`)                                                                | —                                                                                         |
+| Phase 2 — balance posting + dealer approval | ✅     | Approval branches on `voc_type` and `ref_voc_id` (`voc_msts.js:306-307`); deposits never enter `month_crdrs`; `persistAdvDep` re-derives `adv_dep` from the vouchers (`:243-253`) instead of the planned increment; approving an AdvDep needs app ≥ 1.78 (`:320-333`); PromptPay branch (`PromptPay.js:141`); the manual editor is gone                                     | —                                                                                         |
+| Phase 3 — separate ledger + adjustment      | ✅     | `ref_voc_id` (`models/voc_msts.js:31`); AdvDep kept out of the relationship ledger, three balance paths and the month rebuild (`dealer_custs.js:77,326,400,465`, `ledger_window.js:394`, `order_msts.js:348`); passbook route (`routes/collections/cust_msts.js:81`); app `Common/AdvDepLedger` in both roles' stacks; "Adjust to account" (`VoucherDetailsBSM.js:131-197`) | The three design changes are recorded in the Phase 2 and Phase 3 docs                     |
+| Phase 4 — tests, docs, rollout              | 🟡     | Regexes (`helper/collections/voc_msts/index.js:58`, `features/accounts/index.test.js:128,167`); `collections/voc_msts/advdep.test.js` (24 tests); `docs/AI_CONTEXT.md:110-116`; app `AdvDepFilter.test.js` ×2                                                                                                                                                               | `T07-N1` (backfill run ❔), `T07-N2` (passbook and reconcile tests), `T07-N3` (app tests) |
+| Built beyond the plan                       | 🆕     | Dealer-created AdvDep on the API (`createDealerVoucher`, `voc_msts.js:770-807`); an unadjusted-deposit lookup for the web voucher page (`routes/collections/voc_msts.js:32`, `ffe7120`)                                                                                                                                                                                     | The app's dealer `NewVoucher` offers no AdvDep (`voucherTypes.js:11-15`)                  |
+| 1.79 fixes                                  | ✅     | Passbook dates `DDMMyy` (`84f49ec6` → `dcde2c8b`); the Payments type filter opens with Advance Deposit included (`5e211e0d` → `28cdee36`)                                                                                                                                                                                                                                   | —                                                                                         |
+
 ---
 
 ## 1. What we are building
+
+**Status (2026-10-01):** ✅ all three flows exist in code: On-Account (`PInv`), Advance Deposit (`AdvDep`) and the linked adjustment (`PInv` + `ref_voc_id`).
 
 Today the customer payment screen `PayOnAc` creates a single kind of payment: an **On-Account payment** (`voc_type: 'PInv'`, `pay_type: 'CREDIT'`, `pay_status: false`). It sits unapproved until a dealer approves it, at which point it credits the customer's running ledger (reduces invoice outstanding).
 
@@ -32,6 +48,8 @@ And a third, later, flow:
 
 ## 2. Key discovery — the advance-deposit ledger already half-exists
 
+**Status (2026-10-01):** ✅ `dealer_custs.adv_dep` is still the stored balance that the screens and the credit check read — but it is no longer set on its own: every approval and every passbook read re-derives it from the approved vouchers (`api_v3/services/voc_msts.js:215-253`, `api_v3/services/dealer_custs.js:522-566`). The v4 Customers read model reads the same field (`api_v4/readmodels/customers.js:661,735`).
+
 We do **not** need a new collection. An advance-deposit balance is already modelled and displayed:
 
 - **Storage:** `dzzlo_oms_api/models/dealer_custs.js:83` → `adv_dep: { type: Number } // advanced deposit`. A scalar per dealer↔customer relationship.
@@ -55,6 +73,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 
 ## 3. How voucher type currently flows (the mechanics we rely on)
 
+**Status (2026-10-01):** two mechanics changed after this was written: approval now posts by rebuilding the month bucket from the raw documents (`recomputeMonthCrDr`, `voc_msts.js:204-207`) instead of `updateCrDr`, and PromptPay's cascade has the AdvDep branch (`PromptPay.js:141`).
+
 - **Schema has no enum.** `models/voc_msts.js:63-66` — `voc_type` is a free `String`. So storing `'AdvDep'` requires **no model change**. (The comment lists the known types; updating it is optional and is a `models/` edit — see §6.)
 - **Creation endpoint is type-agnostic.** App calls `POST voc_msts/a/custvoc` (`add_cust_on_acc_voc_msts`) → `api_v3/services/voc_msts.js:560` `createCustomerOnAcVoucher` → just `VoucherMaster.create(body)`. **No ledger posting at creation.** So an AdvDep voucher is created the same way, with no API change to the create path.
 - **Ledger posting happens on dealer approval.** `updateVocStatus` (`api_v3/services/voc_msts.js:295`) flips `pay_status:true` and, today, **always** posts `cd:'CREDIT'` to `month_crdrs` via `updateCrDr` (keyed on `pay_type`, **never** `voc_type`). → **This is the one place we branch** (Phase 2): for `voc_type === 'AdvDep'`, increment `adv_dep` instead of posting to `month_crdrs`.
@@ -64,6 +84,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 
 ### Display label/icon maps (additive — Phase 1)
 
+**Status (2026-10-01):** ✅ all three carry `AdvDep` (`voc_msts.js:65-66`; `src/constants/payments.js:20,30,40`; `VoucherType.js:35-36,79-80,132-133`).
+
 - API: `voc_text()` switch `api_v3/services/voc_msts.js:36-57` (used in notifications/receipts). No `AdvDep` case → returns `""`.
 - App constants: `src/constants/payments.js` — `VOC_TYPE`, `VOC_TYPE_LABELS`, `VOC_TYPES_ARRAY`.
 - App display: `src/utils/Conditional/VoucherType.js` — `Voucher_type()` (icon), `Voucher_text()` (label), `Voc_Inv_type()` (icon).
@@ -71,6 +93,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 ---
 
 ## 4. Phase map
+
+**Status (2026-10-01):** Phases 1–3 ✅ (API PR #29 → 1.5.4; app → 1.78), Phase 4 🟡 — see the roll-up at the top.
 
 | Phase | File                                                                                   | Goal                                                                                                                                                                                   | Risk                                                   | Ships independently?                                                             |
 | ----- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------- |
@@ -84,6 +108,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 ---
 
 ## 5. File-change index (full feature)
+
+**Status (2026-10-01):** ✅ every listed change is in code, with two moves: the selector is in `src/screens/Customer/NewPayAck/index.js` (the `PayOnAc` screen was removed, `c5e87820`), and the passbook opens from the Accounts balance header (`src/screens/Common/Accounts/index.js:478-494`, wired at `:930`) rather than from `CustSettings`.
 
 ### API (`dzzlo_oms_api`) — all within `api_v3/` (honours the active-development rule), except where flagged
 
@@ -115,6 +141,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 
 ## 6. Decisions (resolved 2026-05-24, updated 2026-05-25)
 
+**Status (2026-10-01):** 1 ✅ voucher-driven — the manual field is gone, not just read-only; 2 ✅ `ref_voc_id` (`models/voc_msts.js:31`); 3 🟡 pooled on the server (`voc_msts.js:342-354`), but the app allows one adjustment per deposit, for its full amount (`VoucherDetailsBSM.js:136-160`); 4 🆕 the API now accepts a dealer-created AdvDep (`createDealerVoucher`, `voc_msts.js:770-807`), which the app does not offer; 5 ❌ superseded — a dedicated `payment-advdep` glyph exists (`VoucherType.js:36`, added in `1bd79d55`); 6 ✅ with the passbook entry moved to Accounts.
+
 1. **`adv_dep` source of truth → RESOLVED: voucher-driven; manual field read-only.** Keep storing the balance in `dealer_custs.adv_dep` (no model change, reuse all display) and mutate it **only** via voucher approval going forward. The dealer's manual editor in `CustSettings` becomes **read-only** (it displays the voucher-driven balance) — see Phase 2, Step 2.4. Any existing stored value carries forward as the starting balance.
 
 2. **Adjustment→AdvDep linkage field → RESOLVED: add `ref_voc_id`.** Add optional `ref_voc_id: { type: ObjectId, ref: 'voc_msts' }` to `models/voc_msts.js` (Phase 3, Step 3.1). Additive, backward-compatible, changes no legacy behaviour. This is the **one sanctioned exception** to the "no edits to `models/`" rule (AI.md §"Active Development Rule"), justified because it is purely additive. (The remarks-encoding fallback is dropped.)
@@ -130,6 +158,8 @@ We do **not** need a new collection. An advance-deposit balance is already model
 ---
 
 ## 7. Risk register
+
+**Status (2026-10-01):** the five code risks are mitigated in code — AdvDep never reaches `month_crdrs` (pinned by `advdep.test.js:81`), the approval branch exists, manual double-counting cannot happen (editor removed, older builds' writes refused), overdraw is refused before any write, and approval needs app ≥ 1.78. New: the re-derivation resets a legacy manual balance that has no voucher behind it unless the one-off backfill ran (`T07-N1`).
 
 | Risk                                                             | Likelihood              | Impact | Mitigation                                                                                                                |
 | ---------------------------------------------------------------- | ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
@@ -150,3 +180,11 @@ We do **not** need a new collection. An advance-deposit balance is already model
 - **`month_crdrs`** — per-month `{drttl, crttl}` ledger; the running-balance source of truth.
 - **`adv_dep`** — scalar advance-deposit balance on `dealer_custs`.
 - **`pay_status`** — `false` = pending dealer approval, `true` = approved (posts to ledgers).
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+| ID     | Task                                                                                              | Why (evidence)                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Project | Size | Depends on                            |
+| ------ | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | ---- | ------------------------------------- |
+| T07-N1 | 🆕 ❔ Confirm the one-off `yarn backfill:advdep` ran on production, or run it (`--dry-run` first) | Since `6ae9aff` the balance is re-derived from approved vouchers and written back (`persistAdvDep`, `api_v3/services/voc_msts.js:243-253`; the passbook read writes it too, `api_v3/services/dealer_custs.js:561-566`), so a pre-feature manual `adv_dep` with no voucher behind it is reset to the voucher total on the next approval or passbook read; `scripts/backfill_advdep_seed_opening.js` seeds that difference as an approved AdvDep voucher; nothing in the repos records a run | API     | XS   | Production database access (the user) |
+| T07-N2 | 🆕 API tests for the passbook route and the reconcile path                                        | No test calls the passbook route (`routes/collections/cust_msts.js:81`, service `dealer_custs.js:523-568`) — its credit / debit classification, the closing balance equal to `adv_dep`, the write-back — and none runs `checkYearMonth` with an approved AdvDep to pin Phase 3 Step 3.10 (`ledger_window.js:394`, `dealer_custs.js:77`)                                                                                                                                                    | API     | S    | —                                     |
+| T07-N3 | 🆕 App tests for the AdvDep paths                                                                 | Only the Payments filter is tested (`src/screens/{Dealer,Customer}/Payments/__tests__/AdvDepFilter.test.js`); untested are `NewPayAck`'s "Adv. Deposit" payload (`index.js:51-65`, `:156-182`), PromptPay's AdvDep branch (`PromptPay.js:141`), `VoucherDetailsBSM`'s `canAdjust` and adjustment payload (`:147-179`) and the passbook screen (`src/screens/Common/AdvDepLedger/index.js`)                                                                                                 | app     | M    | —                                     |

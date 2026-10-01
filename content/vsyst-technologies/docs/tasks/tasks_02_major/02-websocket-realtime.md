@@ -3,6 +3,9 @@
 > Originally deferred as **Phase 7C** in the learning docs.
 > Primary motivator: when a user's company or status changes, every active device of that user should reflect the change **instantly**, not on next screen focus.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: none of the 8 phases or 32 steps exists — `socket.io` is still an unused API dependency and the app has no client (all ⬜). The plan's "single-instance PM2" assumption conflicts with the two-server topology the runbook describes (X-OPS-1 in tasks_01), and the v2 screens still refresh only on refocus and pull (X-APP-2, X-APP-3 in tasks_01); no new tasks. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -19,6 +22,8 @@ Net effect: the permission/status change propagates to **every active device in 
 
 ### 1.1 API side
 
+**Status (2026-10-01):** still accurate in substance — `socket.io ^4.8.3` (api:`package.json:50`) with no code using it; the commented block has moved to api:`helpers/middlewares.js:340-386`; `SOCKET_PORT=8031` is still in api:`.env.example:18`.
+
 | Concern                 | File                                             | Notes                                                                    |
 | ----------------------- | ------------------------------------------------ | ------------------------------------------------------------------------ |
 | Socket.io installed     | `dzzlo_oms_api/package.json` → `socket.io@4.8.3` | Already in deps, no code using it                                        |
@@ -32,6 +37,8 @@ Net effect: the permission/status change propagates to **every active device in 
 
 ### 1.2 App side
 
+**Status (2026-10-01):** still no client (`socket.io-client` absent from app:`package.json`). Changed: axios is gone (`0bfdd36f`), so the forced logout on 401 is app:`src/store/middleware/rtkQueryErrorLogger.js:30-34`; a 403 `COMPANY_INACTIVE` / `COMPANY_REMOVED` / `NOT_IN_COMPANY` now triggers one `updateCurr_User_Comp` refresh per 30 s (`:43-61`) — a pull-side answer to scenario 2.
+
 | Concern               | File                                              | Notes                                                                             |
 | --------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------- |
 | Redux auth slice      | `src/store/slices/auth.js`                        | Stores `user`, `company`, `userRole`. No socket reducers.                         |
@@ -42,6 +49,8 @@ Net effect: the permission/status change propagates to **every active device in 
 
 ### 1.3 Key observations
 
+**Status (2026-10-01):** observation 4 is in doubt: api:`docs/runbook.md` and api:`api_v4/lib/rateLimit.js:24-26` describe two servers with one PM2 fork process each (X-OPS-1 in tasks_01 asks the user to confirm). With two servers, rooms need the Redis adapter or sticky sessions from the first release, not after RES-3.
+
 1. **Socket.io is already in the API `package.json` but zero code uses it.** This is leftover from an earlier attempt. We're not adding a new dependency — we're activating one.
 2. **No device tracking on the User model.** This was also flagged in `01-token-refresh.md`. Both initiatives share the `refreshTokens[]` subschema, which effectively **is** the device list. We reuse it as the source of truth for "which devices should receive events."
 3. **OneSignal is the current push layer.** It should stay for offline delivery (app killed, device asleep). Sockets complement it — they handle the foreground/real-time case.
@@ -50,6 +59,8 @@ Net effect: the permission/status change propagates to **every active device in 
 ---
 
 ## 2. Problem Statement
+
+**Status (2026-10-01):** all seven scenarios still stand. The v2 screens (Dealer Customers, Daily Summary) refresh on navigation refocus and pull only: `setupListeners` is never called, so nothing refetches on foreground or reconnect (X-APP-2 in tasks_01), and no SO or invoice write invalidates Daily Summary (X-APP-3 in tasks_01).
 
 Scenarios that motivate this initiative:
 
@@ -257,14 +268,20 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 ### Phase 1 — API: Socket.io bootstrap (connect/disconnect only, no events)
 
+**Status (2026-10-01):** ⬜ to do — no socket server is attached anywhere (`git grep socket.io` → the commented block only).
+
 **Goal:** get Socket.io running side-by-side with Express. No business events yet. Verify the connection lifecycle works.
 
 #### Step 1.1 — Create socket module
+
+**Status (2026-10-01):** ⬜ to do — no `helpers/socket.js`.
 
 - New file: `helpers/socket.js`
 - Exports: `initSocket(httpServer)`, `getIo()`, `emitToUser(userId, event, payload)`, `emitToCompany(companyId, event, payload)`, `emitToRoom(room, event, payload)`.
 
 #### Step 1.2 — Attach to HTTP server
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `dzzlo_oms.js` (entry)
 - After `const server = http.createServer(app)`, add `initSocket(server)`.
@@ -272,10 +289,14 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 #### Step 1.3 — CORS for sockets
 
+**Status (2026-10-01):** ⬜ to do. The Express CORS policy has no origin allow-list yet (a tasks_01 security item), so "mirror the Express origins" needs that list first.
+
 - Socket.io 4.x has its own CORS config, separate from Express CORS.
 - Mirror the Express CORS origins.
 
 #### Step 1.4 — Connection middleware
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Reject connections without a valid JWT in `socket.handshake.auth.token`.
 - Log (INFO): `socket connected userId=X deviceId=Y transport=Z`.
@@ -283,9 +304,13 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 #### Step 1.5 — Auto-join user and company rooms
 
+**Status (2026-10-01):** ⬜ to do.
+
 - In the `connection` handler: `socket.join(`user:${userId}`)` and `socket.join(`company:${companyId}`)`.
 
 #### Step 1.6 — Health check endpoint
+
+**Status (2026-10-01):** ⬜ to do. The route is `/healthcheck`, not `/health` (api:`dzzlo_oms.js:69`, api:`helpers/healthcheck.js:5-23`); it reports DB state, heap and uptime.
 
 - Extend the existing `/health` endpoint (from `tasks_01/RES-1`) to also report `io.engine.clientsCount`.
 
@@ -300,9 +325,13 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 ### Phase 2 — API: Emit `user:*` events on user mutations
 
+**Status (2026-10-01):** ⬜ to do — no emits; user status changes stay database-only.
+
 **Goal:** the three existing status endpoints now emit socket events.
 
 #### Step 2.1 — `inActivateUser` → `user:removed`
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/services/users.js:261-286`
 - After the DB update, call `emitToUser(targetUserId, 'user:removed', {at: Date.now(), by: req.user._id, companyId})`.
@@ -311,15 +340,21 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 #### Step 2.2 — `activateUser` → `user:reactivated`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - File: `api_v3/services/users.js:288-316`
 - Emit `user:reactivated`. Client refetches current user.
 
 #### Step 2.3 — `removeUser` → `user:removed`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - File: `api_v3/services/users.js:318-345`
 - Emit `user:removed` with reason `REMOVED`.
 
 #### Step 2.4 — `updateUser` → `user:scope_changed`
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/services/users.js:92-171`
 - If `req.body.scope` changed, emit `user:scope_changed` with `{newScope, companyId}`.
@@ -327,15 +362,21 @@ RTK Query's `api.util.invalidateTags()` is the key: it triggers an automatic ref
 
 #### Step 2.5 — Invalidate `getUserFromToken` cache on these mutations
 
+**Status (2026-10-01):** ⬜ to do. The only user cache is api:`api_v3/auth.js:6-57` (30 s, `bustUserCache` at `:29-32`); the global lookup has no cache (api:`helpers/middlewares.js:212` → `helpers/auth.js:17`; X-PERF-1 in tasks_01).
+
 - File: `helpers/auth.js`
 - Add `invalidateUserCache(userId)` export.
 - Call it from each of the services above so the 3-min cache doesn't serve stale user data.
 
 #### Step 2.6 — `company:user_added` / `company:user_removed`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - When a user joins or leaves a company (e.g. accept invite, be removed), emit to `company:<companyId>` so admins of that company see the list update.
 
 #### Step 2.7 — Server-side enforcement (don't trust the client to log itself out)
+
+**Status (2026-10-01):** ⬜ to do — it also waits on 01's refresh tokens, which do not exist.
 
 `user:removed` / `user:force_logout` are advisory — a tampered client just ignores them and keeps its socket and tokens. On the same mutation path (`inActivateUser`, `removeUser`, company blacklist), after emitting:
 
@@ -354,6 +395,8 @@ Residual window: an already-issued access token still verifies cryptographically
 ---
 
 ### Phase 3 — API: Emit `order:*`, `invoice:*`, `voucher:*`, `relation:*`
+
+**Status (2026-10-01):** ⬜ to do — no emits; OneSignal stays the only server-to-device channel.
 
 **Goal:** extend the coverage to all the high-value business events.
 
@@ -390,9 +433,13 @@ This is a batch of small PRs, one per resource. Each follows the same pattern as
 
 ### Phase 4 — App: Install socket.io-client, set up connection lifecycle
 
+**Status (2026-10-01):** ⬜ to do — no client package, no socket service.
+
 **Goal:** app connects on login, disconnects on logout/background. No event handlers wired yet.
 
 #### Step 4.1 — Install
+
+**Status (2026-10-01):** ⬜ to do.
 
 ```bash
 cd dzzlo_oms_app
@@ -404,6 +451,8 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 #### Step 4.2 — Create socket service
 
+**Status (2026-10-01):** ⬜ to do — `src/services/socket.js` absent.
+
 - New file: `src/services/socket.js`
 - Singleton instance. Exports `connectSocket(accessToken)`, `disconnectSocket()`, `getSocket()`, `reauthSocket(newAccessToken)`.
 - Uses `io(API_URL_V, {auth: (cb) => cb({token: latestAccessToken()}), transports: ['websocket'], autoConnect: false})`.
@@ -412,6 +461,8 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 #### Step 4.3 — Wire to login/logout
 
+**Status (2026-10-01):** ⬜ to do.
+
 - File: `src/store/slices/auth.js`
 - On `fulfilled` of `loginUser` → `connectSocket(accessToken)`.
 - On `logoutUser` → `disconnectSocket()`.
@@ -419,11 +470,15 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 #### Step 4.4 — Wire to AppState
 
+**Status (2026-10-01):** ⬜ to do. The D10 toggle refresh already listens to `AppState` (app:`src/navigation/useScreenFlag.js:32,90`) — a pattern to follow.
+
 - File: `src/services/socket.js`
 - Register `AppState` listener.
 - `background` → disconnect. `active` → reconnect (if authenticated).
 
 #### Step 4.5 — Wire to token refresh
+
+**Status (2026-10-01):** ⬜ to do — waits on `src/store/apis/tokenStorage.js` (01 Step 5.1, absent).
 
 - File: `src/store/apis/tokenStorage.js` (from `01-token-refresh.md` Phase 5)
 - After `setTokens({accessToken, ...})`, call `reauthSocket(accessToken)`.
@@ -439,6 +494,8 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 #### Step 4.6 — Connection status indicator (debug only, optional)
 
+**Status (2026-10-01):** ⬜ to do.
+
 - Tiny pulsing dot in dev builds that shows green/red based on `socket.connected`. Helps QA verify the socket is alive. Hidden in release builds.
 
 **Definition of Done:**
@@ -453,9 +510,13 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 ### Phase 5 — App: Socket event middleware dispatching to Redux
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** translate socket events into RTK Query cache invalidations and Redux actions.
 
 #### Step 5.1 — Create socket middleware
+
+**Status (2026-10-01):** ⬜ to do — `src/store/middleware/socketMiddleware.js` absent.
 
 - New file: `src/store/middleware/socketMiddleware.js`
 - A Redux middleware that:
@@ -465,10 +526,14 @@ cd ios && pod install && cd ..   # no native code, but in case of TurboModule re
 
 #### Step 5.2 — Register middleware
 
+**Status (2026-10-01):** ⬜ to do — the store's chain is api → perf logger → error logger (app:`src/store/apis/index.js:25-29`).
+
 - File: `src/store/index.js` (or wherever the store is configured)
 - Add `socketMiddleware` to the middleware chain.
 
 #### Step 5.3 — Handle `user:*` events
+
+**Status (2026-10-01):** ⬜ to do.
 
 | Event                | Handler                                                                         |
 | -------------------- | ------------------------------------------------------------------------------- |
@@ -481,6 +546,8 @@ Note: `logoutUser()` here calls `POST /auth/logout` with tokens the server has a
 
 #### Step 5.4 — Handle `company:*` events
 
+**Status (2026-10-01):** ⬜ to do.
+
 | Event                  | Handler                                                                     |
 | ---------------------- | --------------------------------------------------------------------------- |
 | `company:updated`      | refetch current user/company                                                |
@@ -489,6 +556,8 @@ Note: `logoutUser()` here calls `POST /auth/logout` with tokens the server has a
 | `company:user_removed` | invalidate `['company_users']` tag; if it's the current user → force logout |
 
 #### Step 5.5 — Handle `order:*`, `invoice:*`, `voucher:*`
+
+**Status (2026-10-01):** ⬜ to do. For the v2 lists the tags exist — `relations/CUSTOMERS_LIST` (app:`src/store/apis/v4/customers.js:38-41,145`) and `order_msts_POST/LIST` (app:`src/store/apis/v4/daily_summary.js:118`) — and every v2 list answer is a page 1 with no `merge` (`customers.js:127`, `daily_summary.js:101`), so invalidating the tag re-reads page 1: doc 04 §9's concern does not arise for them.
 
 All of these follow the same pattern: invalidate the corresponding RTK Query tag. The existing tag types are already defined (`order_msts`, `voc_msts`, `relations`, etc.).
 
@@ -505,6 +574,8 @@ socket.on("order:status_changed", (payload) => {
 
 #### Step 5.6 — Handle `relation:balance_changed`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - Invalidate `['relations']` tag.
 - If the user is currently on the Accounts screen for that relation, the screen will re-fetch automatically (RTK Query subscribed queries re-run on tag invalidation).
 
@@ -519,9 +590,13 @@ socket.on("order:status_changed", (payload) => {
 
 ### Phase 6 — Screen-level subscriptions (order detail, etc.)
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** for screens watching a specific resource (Order Detail, Invoice Detail), emit `subscribe` on mount and `unsubscribe` on unmount. This scopes server-pushed events to users who actually have the screen open, instead of broadcasting to everyone.
 
 #### Step 6.1 — API-side handlers
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `helpers/socket.js`
 - Add `socket.on('subscribe', ({resource, id}, ack) => {...})` and `socket.on('unsubscribe', ...)`.
@@ -532,11 +607,15 @@ socket.on("order:status_changed", (payload) => {
 
 #### Step 6.2 — App-side hook
 
+**Status (2026-10-01):** ⬜ to do — `src/hooks/useRealtimeSubscription.js` absent.
+
 - New file: `src/hooks/useRealtimeSubscription.js`
 - Usage: `useRealtimeSubscription('order', orderId)` → emits subscribe on mount, unsubscribe on unmount.
 - Handles reconnect: re-emits subscribe after socket reconnects.
 
 #### Step 6.3 — Wire into detail screens
+
+**Status (2026-10-01):** ⬜ to do — invoice detail, order detail and Accounts are still v1 screens (e.g. app:`src/screens/Common/_Invoice_/index.js`).
 
 - `src/screens/Common/_Invoice_/index.js` → `useRealtimeSubscription('invoice', inv._id)`
 - Order Detail screens → `useRealtimeSubscription('order', orderId)`
@@ -551,9 +630,13 @@ socket.on("order:status_changed", (payload) => {
 
 ### Phase 7 — OneSignal de-duplication
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** when the app is foregrounded AND a socket event arrives for an action that also sent a push, suppress the OS-level notification (it would be a duplicate).
 
 #### Step 7.1 — App-side OneSignal foreground handler
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Option A — suppress all foreground banners: `OneSignal.Notifications.addEventListener('foregroundWillDisplay', (event) => event.preventDefault())`. One listener, no coordination with the API.
 - Option B — selective: the API tags each push with the matching socket event id; the app shows the banner only if no matching socket event arrived in the last few seconds. More precise, but more moving parts.
@@ -569,13 +652,19 @@ socket.on("order:status_changed", (payload) => {
 
 ### Phase 8 — Monitoring & rollout
 
+**Status (2026-10-01):** ⬜ to do.
+
 #### Step 8.1 — Per-event metrics
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Log counter: `socket.emits.<event_name>` (each emit increments).
 - Log counter: `socket.receives.<event_name>` (client-side, optional, via analytics).
 - Log gauge: `socket.active_connections` (total sockets in the io namespace).
 
 #### Step 8.2 — Rollout plan
+
+**Status (2026-10-01):** ⬜ to do.
 
 1. Flag: `SOCKET_IO_ENABLED=true` on staging for 1 week.
 2. Exercise all screens manually; check the metrics dashboard.
@@ -584,6 +673,8 @@ socket.on("order:status_changed", (payload) => {
 5. Flip on for 100% if healthy.
 
 #### Step 8.3 — Emergency kill switch
+
+**Status (2026-10-01):** ⬜ to do. Firebase Remote Config has left the app (`ad40ed71`, tasks_17); the house toggle store behind `GET /api/v4/app/features` accepts only `screen_v2_*` keys (api:`helpers/appFeatures.js:38`), so a remote socket switch needs a new key family.
 
 - Set `SOCKET_IO_ENABLED=false` and `pm2 restart`. The helper returns early on every emit, and the client-side `connectSocket` is a no-op. Everything gracefully falls back to pull-to-refresh + OneSignal pushes.
 
@@ -630,6 +721,8 @@ socket.on("order:status_changed", (payload) => {
 
 ### 8.1 API tests
 
+**Status (2026-10-01):** ⬜ to do — no socket tests (no `test/api_v3/socket/`).
+
 - `test/api_v3/socket/auth.test.js`: connect without token → rejected. Connect with expired token → rejected. Connect with valid → joined `user:` and `company:` rooms. `auth:refresh` with a token belonging to a **different user** → rejected + disconnected.
 - `test/api_v3/socket/emit.test.js`: for each resource mutation endpoint, assert a socket listener in the relevant room receives the expected event.
 - `test/api_v3/socket/subscribe.test.js`: non-allowlisted resource → rejected; order the user isn't a party to → rejected; subscription cap enforced.
@@ -637,6 +730,8 @@ socket.on("order:status_changed", (payload) => {
 - Feature-flag test: `SOCKET_IO_ENABLED=false` → emit calls are no-ops, mutation still succeeds.
 
 ### 8.2 Manual QA checklist
+
+**Status (2026-10-01):** ⬜ to do — nothing to run until Phase 4 ships.
 
 - [ ] Two devices, same user: scope change propagates in < 1 s
 - [ ] Two devices, same user: inactivate → both log out with toast
@@ -651,6 +746,8 @@ socket.on("order:status_changed", (payload) => {
 
 ## 9. Post-launch Monitoring (week 1)
 
+**Status (2026-10-01):** ⬜ to do — waits on Phase 8.
+
 - `socket.active_connections` time series (should roughly match DAU during active hours)
 - `socket.emits.<event>` per hour by event type
 - `socket.connect.errors` (should be near zero)
@@ -661,6 +758,8 @@ socket.on("order:status_changed", (payload) => {
 ---
 
 ## 10. Open Questions
+
+**Status (2026-10-01):** all five still open.
 
 1. **Heartbeat tuning:** Socket.io default is 25s ping, 20s pong timeout. On mobile with spotty 4G, should we relax to 40/30? Decision: start with defaults, tune if disconnect noise is high.
 2. **Do we want typing indicators / presence?** Not in this phase. Room for the architecture but not building it.

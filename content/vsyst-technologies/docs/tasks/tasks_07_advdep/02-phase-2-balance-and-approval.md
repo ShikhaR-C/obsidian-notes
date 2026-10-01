@@ -6,9 +6,14 @@
 
 **Risk:** Medium — edits the shared `updateVocStatus` approval path. Mitigated by branching strictly on `voc_type` and leaving the existing path byte-for-byte unchanged for non-AdvDep.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Built and shipped (API PR #29 → 1.5.4; app → 1.78), with the balance write changed from the plan: approval re-derives `adv_dep` from the approved vouchers (`persistAdvDep` — idempotent, clamps at 0) instead of incrementing it with `updateAdvDep`, the overdraw guard runs before any write, and approving a deposit needs app ≥ 1.78. Acceptance: 4 of 5 flipped ✅ (three pinned by `advdep.test.js`), 1 is a device check ❔. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Background (the exact code we change)
+
+**Status (2026-10-01):** historical — `updateVocStatus` (`api_v3/services/voc_msts.js:293`) now selects `voc_type` and `ref_voc_id` and posts approvals by rebuilding the month bucket (`recomputeMonthCrDr`, `:204-207`), not through `updateCrDr`.
 
 `api_v3/services/voc_msts.js` → `exports.updateVocStatus` (~L295). On approval (`pay_status` truthy) it currently **always** does:
 
@@ -43,6 +48,8 @@ if (!isOnAcPay) {
 
 ## Step 2.1 — Add an `updateAdvDep` helper
 
+**Status (2026-10-01):** ❌ superseded — there is no `updateAdvDep`. `advDepBalance` sums the approved deposits minus adjustments (`api_v3/services/voc_msts.js:215-235`) and `persistAdvDep` writes that total back to `dealer_custs.adv_dep`, clamping at 0 and throwing a 404 only when the relation is missing (`:243-253`; `6ae9aff`, 2026-05-27). The overdraw guard moved into `updateVocStatus`, before any write (`:342-354`; `4373024`).
+
 Place it next to `updateCrDr` (~L286) in `api_v3/services/voc_msts.js`.
 
 ```js
@@ -76,6 +83,8 @@ const updateAdvDep = async ({ dealer_id, cust_id, delta }) => {
 ---
 
 ## Step 2.2 — Branch the approval posting on `voc_type`
+
+**Status (2026-10-01):** ✅ `updateVocStatus` selects `voc_type` and `ref_voc_id` (`:295-299`) and branches on them (`:306-307`, posting `:400-457`); AdvDep never enters `month_crdrs`; invoices are skipped for AdvDep (`skipInvoices`, `:459`); a replayed approval is refused (`:367-369`); approving an AdvDep needs app ≥ 1.78 (`:320-333`, `e46d96a`). Tests: `test/api_v3/collections/voc_msts/advdep.test.js:81`, `:128`, `:313`.
 
 In `updateVocStatus`:
 
@@ -139,6 +148,8 @@ The downstream FULLPAID/PARTPAID block already no-ops when `invoices` is falsy, 
 
 ## Step 2.3 — App: let the dealer approve an AdvDep voucher
 
+**Status (2026-10-01):** ✅ `src/screens/Dealer/Payments/components/PromptPay.js:141` (`order.voc_type === VOC_TYPE.ADVDEP`). No app test covers this branch (`T07-N3` in 00-overview).
+
 **File:** `dzzlo_oms_app/src/screens/Dealer/Payments/components/PromptPay.js` (`handleDialogFCPaymentLogic`, ~L93-141)
 
 The cascade currently falls through to `alert('No conditions matched')` for AdvDep (no `inv_id`/`order_id`/`invs_adj`, remarks ≠ "On account payment."). Add an AdvDep branch **before** the `else`. Branch on `voc_type` (present on the order — `PaymentHeader` already reads `isSelectedOrder.voc_type` at L396).
@@ -178,6 +189,8 @@ No RTK changes: `useUpdateVocStatusMutation` already forwards the whole body.
 
 ## Step 2.4 — Make the manual `adv_dep` editor read-only (decision §6.1)
 
+**Status (2026-10-01):** ✅ further than planned — the editor is gone: `CustSettings` shows the deposit only inside the credit card (`CustSettings.js:956-963`), `handleAdvanceDeposits` no longer exists, and the API refuses an `adv_dep` write from builds older than 1.78 (`api_v3/services/dealer_custs.js:1423-1436`).
+
 Approval now mutates `adv_dep`, so the dealer's manual editor must stop writing it — otherwise the manual and voucher-driven paths double-count. Make the input **read-only**.
 
 **File:** `dzzlo_oms_app/src/screens/Dealer/Customers/CustSettings.js`
@@ -209,13 +222,17 @@ Then retire the now-unused writer `handleAdvanceDeposits` (~L378-387) and its `u
 
 ## Acceptance criteria (Phase 2 — the MVP gate)
 
-- [ ] Dealer approves an AdvDep voucher → `dealer_custs.adv_dep` increases by the amount.
-- [ ] After that approval, `month_crdrs` for that customer is **unchanged** (outstanding not affected).
-- [ ] The "Advance Deposits" column on the Accounts screen reflects the new balance; "Outstanding Bal." is unchanged; "Final Bal." drops by the amount (per `opening + outstanding − advance`).
-- [ ] Approving a normal **On-Account** payment still posts a CREDIT to `month_crdrs` exactly as before (regression check).
-- [ ] Approving the AdvDep voucher no longer shows "No conditions matched".
+**Status (2026-10-01):** 4 ✅ (flipped), 1 ❔ — marks at the end of each line.
+
+- [x] Dealer approves an AdvDep voucher → `dealer_custs.adv_dep` increases by the amount. — **2026-10-01:** ✅ flipped: `advdep.test.js:81`.
+- [x] After that approval, `month_crdrs` for that customer is **unchanged** (outstanding not affected). — **2026-10-01:** ✅ flipped: same describe (`:81`).
+- [ ] The "Advance Deposits" column on the Accounts screen reflects the new balance; "Outstanding Bal." is unchanged; "Final Bal." drops by the amount (per `opening + outstanding − advance`). — **2026-10-01:** ❔ device check; the column reads `adv_dep` (`src/screens/Common/Accounts/components.js:92-102`).
+- [x] Approving a normal **On-Account** payment still posts a CREDIT to `month_crdrs` exactly as before (regression check). — **2026-10-01:** ✅ flipped: `advdep.test.js:128`.
+- [x] Approving the AdvDep voucher no longer shows "No conditions matched". — **2026-10-01:** ✅ flipped: `PromptPay.js:141` (code; no test).
 
 ## Verification (simulator + DB)
+
+**Status (2026-10-01):** ❔ device and DB steps not re-run; steps 3 and 5 are pinned by `advdep.test.js:81-174`.
 
 1. Create an AdvDep voucher (Phase 1). Note customer's `adv_dep` and current month `month_crdrs`.
 2. As dealer: Payments → Unapproved → open the AdvDep voucher → Approve.

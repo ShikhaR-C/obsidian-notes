@@ -3,6 +3,9 @@
 > Originally deferred as **Phase 3D** in the learning docs.
 > Target: replace offset-based (`skip/limit`) pagination with cursor-based pagination on the API, and wire the existing (but unused) RTK Query pagination helpers to FlashList's `onEndReached` so every list becomes an infinite-scroll experience.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Partly done, in v4 only: the redesign built keyset paging (`api_v4/lib/cursor.js`, redesign D6) and infinite scroll on the two v2 lists (Dealer Customers, Daily Summary), with an app design that differs from §3.9 (no `merge`; next pages are written in by a separate query). The v3 half and every v1 list are untouched — of 7 phases: 1 ✅ (Phase 3, v2 form), 2 🟡 (Phases 1, 6), 1 ⬜ (Phase 4), 3 ❌ superseded as written (Phases 2, 5, 7 — v3 is frozen for features; to confirm with the user); no new tasks. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -21,6 +24,8 @@ Net effect: (a) drift bug goes away, (b) deep-page latency drops from hundreds o
 
 ### 1.1 API side
 
+**Status (2026-10-01):** still accurate for v3 — `calcPagination` defaults `limit` to 0 (api:`helpers/advancedResults.js:49`), `countDocuments` runs on every page (`:88`, `:196`), and no v3 endpoint has a cursor mode (`git grep cursor` over `api_v3/` → none). The only keyset path is v4's (Phase 1 status).
+
 | Concern                     | File                                     | Notes                                                            |
 | --------------------------- | ---------------------------------------- | ---------------------------------------------------------------- |
 | Pagination helper           | `helpers/advancedResults.js:46-59` (`calcPagination`) | Line 49: `const limit = parseInt(reqlimit, 10) \|\| 0` — **zero default**. NB: the legacy `advancedResults` middleware in the same file (lines 153-234) already defaults to 25; the bug is in the `calcPagination`/`getResults` path the service layer uses |
@@ -36,6 +41,8 @@ Net effect: (a) drift bug goes away, (b) deep-page latency drops from hundreds o
 | Total count                 | Returned by every paginated endpoint     | Used by the client for "X of Y" displays                         |
 
 ### 1.2 App side
+
+**Status (2026-10-01):** v1 rows still accurate — `paginatedQueryConfig` / `createPaginatedQueryConfig` in app:`src/store/apis/dzzlooms/invs.js:27,52`, `order_msts.js:40,76`, `so_msts.js:30`, the 500 cap (app:`src/store/apis/paginationHelpers.js:11`), `setupListeners` never called. New: the two v2 lists page by cursor (Phase 3 and 6 status).
 
 | Concern                 | File                                                         | Notes                                                                               |
 | ----------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
@@ -56,6 +63,8 @@ The **client-side infrastructure is ready and partially proven**. The pagination
 ---
 
 ## 2. Problem Statement
+
+**Status (2026-10-01):** true for v3 and every v1 list. The v4 path answers 2.1–2.3 for its two screens (keyset seek, no count, no `limit = 0` — api:`api_v4/lib/cursor.js:5-38`), and 2.4's infinite scroll now also runs on the two v2 lists.
 
 ### 2.1 Offset pagination is broken under inserts
 
@@ -190,6 +199,8 @@ Base64url encoding + a version byte is enough. Don't expose the internal shape i
 
 ### 3.7 Total count: keep, drop, or estimate?
 
+**Status (2026-10-01):** v4 never counts (api:`api_v4/lib/cursor.js:29-30`). Daily Summary sends its `summary` (with `count`) only on the first page (api:`api_v4/readmodels/dailySummary.js:349-355`) — this section's option 3; Customers returns its summary totals on every page, computed in memory.
+
 Total count is expensive on large collections (`countDocuments` scans the index). With cursor pagination, the client doesn't strictly need total count — infinite scroll just loads until `hasMore === false`.
 
 **Options:**
@@ -201,6 +212,8 @@ Total count is expensive on large collections (`countDocuments` scans the index)
 **Choice:** option 3. First-page response has `{items, nextCursor, hasMore, totalCount}`. Subsequent pages have `{items, nextCursor, hasMore}` (no totalCount).
 
 ### 3.8 Dual-mode: cursor + offset during migration
+
+**Status (2026-10-01):** not used — v4 is a separate path, so no dual mode was needed and the v3 endpoints are unchanged.
 
 We don't want to break every existing caller atomically. The API supports both:
 
@@ -216,6 +229,8 @@ The controller branches **only** on the presence of the `cursor` key (`'cursor' 
 This means the client can migrate screens one at a time without any coordinated big-bang release.
 
 ### 3.9 RTK Query `merge` and `serializeQueryArgs` — how they work
+
+**Status (2026-10-01):** v2 does not use `merge`: each list's page 1 is its own cache entry keyed by the body minus the cursor (`serializeQueryArgs`, `forceRefetch` on arg identity — app:`src/store/apis/v4/customers.js:122-131`), and next pages are separate queries whose results `pageAppender` writes into that entry (app:`src/store/apis/v4/nextPage.js:103-183`).
 
 The client-side half of infinite scroll relies on two RTK Query features:
 
@@ -260,6 +275,8 @@ forceRefetch: ({currentArg, previousArg}) => {
 The existing `paginationHelpers.js` has most of this for the page/offset case. The change is to (a) swap `page` for `cursor` as the pagination parameter and (b) update `forceRefetch`.
 
 ### 3.10 FlashList `onEndReached` specifics
+
+**Status (2026-10-01):** ✅ on both v2 lists — FlashList, threshold 0.5 (app:`src/screens/v2/Dealer/Customers/components/CustomerList.js:35,158`, app:`src/screens/v2/Common/DailySummary/components/OrderList.js:26,66`), guarded by app:`src/screens/v2/shared/useNextPage.js`.
 
 FlashList's `onEndReached` is called when the user scrolls within `onEndReachedThreshold` of the end. Defaults and best practices:
 
@@ -346,9 +363,13 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 ### Phase 1 — API: Cursor helper + indexes + default limit fix
 
+**Status (2026-10-01):** 🟡 the cursor helper and its tests exist in v4 form, indexes exist for the v4 lists only, and the `limit = 0` fix is not done (steps below).
+
 **Goal:** lay the groundwork. No endpoints migrated yet.
 
 #### Step 1.1 — Create cursor helper
+
+**Status (2026-10-01):** ✅ as api:`api_v4/lib/cursor.js` (not `helpers/cursorPagination.js`) — opaque base64url `{k, _id, t?}`, strict decode (ObjectId check, date check, scalar keys only, so no operator can ride in; every failure is one `VALIDATION` 400), `paginate` = `$and[filter, $or seek]` + `limit + 1`, default 25 / max 100 (`:37-38`, `clampLimit` `:121-129`); a `t: "date"` marker instead of a version byte.
 
 - New file: `helpers/cursorPagination.js`
 - Exports:
@@ -360,12 +381,16 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 #### Step 1.2 — Fix the `limit = 0` bug (proactively)
 
+**Status (2026-10-01):** ⬜ to do — still `parseInt(reqlimit, 10) || 0` (api:`helpers/advancedResults.js:49`). v4 designs it out instead (redesign D6; api:`test/api_v4/lib/conventions.test.js:38-47` forbids `advancedResults` in v4).
+
 - File: `helpers/advancedResults.js:49` — the `calcPagination` function (not the legacy `advancedResults` middleware at line 193, which already defaults to 25).
 - Change `parseInt(reqlimit, 10) || 0` → `Math.min(Math.max(parseInt(reqlimit, 10) || 25, 1), 100)`.
 - Default 25, max 100, floor 1 — the `Math.max` guard matters; without it a negative client-sent limit sails through `Math.min` into Mongoose.
 - **Caveat (code-verified):** no caller literally passes `limit: 0` in either repo — the only hits are two response stubs in `so_msts.js`. The risky callers **omit `limit` entirely** and rely on the 0-default to fetch a whole collection, so a grep for `limit: 0` cannot find them. Audit call sites of the paginated endpoints for a *missing* limit param (screens that expect complete lists — dealer lists, product rates, etc.) and give them explicit limits first, or the new default will silently truncate them to 25 rows.
 
 #### Step 1.3 — Add indexes
+
+**Status (2026-10-01):** 🟡 for the v4 lists only — `v4_dealer_cust_ondt {dealer_id, cust_id, on_dt: -1, _id: -1}` (api:`models/so_msts.js:63-66`) and `v4_dealer_cust_status_ondt {dealer_id, cust_id, order_status, on_dt: -1, _id: -1}` (api:`models/order_msts.js:82-85`), keyed on `on_dt` rather than `createdAt`; whether they exist on Atlas is unverifiable (X-REL-2 in tasks_01). No `{createdAt: -1, _id: -1}` index was added for the v3 lists.
 
 - For each collection planned to get cursor pagination (orders, invoices, vouchers, customers, dealers, users, drivers, dealer_custs):
   - Add `Schema.index({createdAt: -1, _id: -1})`.
@@ -375,6 +400,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 - Cross-check with `tasks_01/DB-1..DB-4` — don't duplicate existing indexes.
 
 #### Step 1.4 — Unit tests for cursor helper
+
+**Status (2026-10-01):** ✅ in v4 — api:`test/api_v4/lib/cursor.test.js` and api:`test/api_v4/harness/cursor.test.js` (round trip, malformed token → 400, tie-breaker).
 
 - `test/api_v3/helpers/cursorPagination.test.js`:
   - `encode → decode` round-trip
@@ -391,9 +418,13 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 ### Phase 2 — API: Migrate one endpoint (orders list)
 
+**Status (2026-10-01):** ❌ superseded as written — v3 is frozen for features (api:`AI.md:85-86`), and the redesign gives a list keyset paging when its screen moves to a v4 read model (redesign D1, D6); the orders list is still offset-paged in v3. Confirm with the user before dropping it.
+
 **Goal:** pilot on the heaviest list: `order_msts`. Dual-mode (accepts both old and new).
 
 #### Step 2.1 — Update the controller
+
+**Status (2026-10-01):** ❌ superseded with Phase 2.
 
 - File: `api_v3/controllers/collections/order_msts.js` (lines 66-74 area)
 - Branch logic — discriminate **only** on explicit cursor presence:
@@ -408,6 +439,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
   Do **not** treat "no `page` param" as cursor mode: legacy callers omitting both `page` and `cursor` get offset defaults today, and silently flipping them to the `{items, nextCursor}` shape breaks old app installs. New clients always send the `cursor` key (`null` on the first page — §4.2 already includes it).
 
 #### Step 2.2 — Implement `getOrdersCursor` in the service
+
+**Status (2026-10-01):** ❌ superseded with Phase 2.
 
 - File: `api_v3/services/order_msts.js`
 - New function `getPSOrdersCursor({tenancyFilter, filters, cursor, limit})`.
@@ -438,6 +471,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 #### Step 2.3 — Integration tests
 
+**Status (2026-10-01):** ❌ superseded with Phase 2.
+
 - Seed 100 orders with known `createdAt` values.
 - Call first page (`{limit: 25}`) → 25 items, `hasMore: true`, `totalCount: 100`, `nextCursor: "..."`.
 - Call second page (`{limit: 25, cursor}`) → next 25 items.
@@ -455,15 +490,21 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 ### Phase 3 — App: Upgrade paginationHelpers for cursor mode
 
+**Status (2026-10-01):** ✅ in v2 form — not `createCursorPaginatedQueryConfig` / `useCursorList` but app:`src/store/apis/v4/nextPage.js` (`nextPageQuery`, `pageAppender`: dedupe by id, newer copy wins, a 500-row window — app:`src/store/apis/v4/customers.js:26`, `daily_summary.js:26`) plus app:`src/screens/v2/shared/useNextPage.js` (double-ask guard, `abandon` on refresh).
+
 **Goal:** extend the existing `paginationHelpers.js` to support cursors alongside pages.
 
 #### Step 3.1 — Add `createCursorPaginatedQueryConfig`
+
+**Status (2026-10-01):** ✅ different shape: page 1 stays its own entry with no `merge` (app:`src/store/apis/v4/customers.js:122-131`) and next pages are separate queries with `keepUnusedDataFor: 0` (app:`src/store/apis/v4/nextPage.js:162-183`); the old helpers stay for v1 (app:`src/store/apis/paginationHelpers.js:11`).
 
 - File: `src/store/apis/paginationHelpers.js` (extend, don't break)
 - New export: `createCursorPaginatedQueryConfig({tagType})` returns an object with `serializeQueryArgs`, `merge`, `forceRefetch`, `providesTags`.
 - Keep the old `paginatedQueryConfig` and `createPaginatedQueryConfig` for endpoints still in offset mode.
 
 #### Step 3.2 — Helper hook for screens
+
+**Status (2026-10-01):** ✅ as `useNextPage` plus each screen's own model hook; `src/hooks/useCursorList.js` does not exist.
 
 - New file: `src/hooks/useCursorList.js`
 - Signature: `useCursorList(queryHook, filters, {limit = 25})`
@@ -473,6 +514,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 - This encapsulates all the boilerplate from the "FlashList usage pattern" sketch above. Screens use the hook and don't touch cursor state directly.
 
 #### Step 3.3 — Unit tests for the hook
+
+**Status (2026-10-01):** 🟡 covered through both screens' Tier 2 and Tier 3 suites (app:`src/store/apis/v4/__tests__/customers.msw.test.js`, `daily_summary.msw.test.js`); `useNextPage` has no suite of its own.
 
 - Jest + React Testing Library.
 - Mock the query hook.
@@ -490,15 +533,21 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 
 ### Phase 4 — App: Migrate the Orders list screen
 
+**Status (2026-10-01):** ⬜ to do — app:`src/screens/Common/Orders/index.js` is still v1 on `fetch_order_so_POST` with `createPaginatedQueryConfig` (app:`src/store/apis/dzzlooms/order_msts.js:76`).
+
 **Goal:** wire the first screen end-to-end. Validates the whole pipeline.
 
 #### Step 4.1 — Update the RTK Query endpoint
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `src/store/apis/dzzlooms/order_msts.js`
 - For `fetch_order_so_POST`, replace `createPaginatedQueryConfig('data', 'pagination', {nestedPageIn: 'filterProps'})` (current call at `order_msts.js:76-78`) with `createCursorPaginatedQueryConfig({tagType: 'order_msts'})`.
 - The endpoint now takes `{cursor, limit, refresh, filterProps}`.
 
 #### Step 4.2 — Migrate the screen
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `src/screens/Common/Orders/index.js` (and Dealer / Customer variants that share the hook)
 - Replace the current `useLazyFetch_order_so_POSTQuery` call with:
@@ -512,6 +561,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 - Wire `onEndReached={loadMore}` and `onRefresh={refresh}` on the FlashList.
 
 #### Step 4.3 — Manual test
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Open Orders screen → 25 items loaded, "scroll me" UX is present.
 - Scroll → more items appear at ~50% scroll position.
@@ -527,6 +578,8 @@ This pattern is copy-pasted across every list screen with only `filters` and `re
 ---
 
 ### Phase 5 — API: Migrate remaining high-traffic list endpoints
+
+**Status (2026-10-01):** ❌ superseded as written, as Phase 2 — each v3 list gets keyset paging when its screen gets a v4 read model.
 
 **Goal:** apply the Phase 2 pattern to the next batch of endpoints.
 
@@ -547,6 +600,8 @@ For each endpoint below, repeat the Phase 2 recipe (dual-mode branching, service
 ---
 
 ### Phase 6 — App: Migrate remaining list screens
+
+**Status (2026-10-01):** 🟡 one table row done — `Dealer/Customers` (v2: cursor, 12 per page, footer spinner or error with Retry; app:`src/screens/v2/Dealer/Customers/components/CustomerList.js:35,150-167`) — plus Daily Summary, which the table did not list; every other row ⬜ (v1, offset or single page; e.g. `veh_trns/paginated` pages by `page` / `limit = 15`, app:`src/store/apis/dzzlooms/veh_trns.js:56-72`). The Customers read model reads all of a dealer's relations per request and pages in memory (unbounded by design; 2,000 relations → 134 ms on the scale seed, api:`docs/v4-performance.md:253`).
 
 **Goal:** wire `useCursorList` into every screen that renders a list.
 
@@ -587,12 +642,18 @@ Ship 2-3 screens per PR. Don't batch them all or QA becomes unmanageable.
 
 ### Phase 7 — Monitoring and retirement of offset mode
 
+**Status (2026-10-01):** ❌ superseded as written — no dual mode exists to retire (steps below).
+
 #### Step 7.1 — Telemetry
+
+**Status (2026-10-01):** 🟡 the app logs an `api_call` event per request with its endpoint name (app:`src/store/middleware/rtkQueryPerfLogger.js:42`), which separates `v4_screen_*` calls from v3 ones; there is no server-side log by mode.
 
 - Log every list call with `{endpoint, mode: 'cursor'|'offset'}`.
 - Dashboard: count of offset-mode calls per hour. Watch it trend toward zero as screens migrate.
 
 #### Step 7.2 — Retirement of offset mode
+
+**Status (2026-10-01):** ❌ superseded — v3 offset routes retire with their v1 screens, once the version gate admits no app version that calls them (redesign D3).
 
 When offset-mode calls drop below 1% of traffic **and** that 1% is from known old-app versions (check User-Agent), remove the offset branch from the controllers. This is a T+60-day cleanup PR.
 
@@ -642,6 +703,8 @@ When offset-mode calls drop below 1% of traffic **and** that 1% is from known ol
 
 ### 8.1 API tests
 
+**Status (2026-10-01):** ✅ for the v4 path (the cursor lib and harness suites above, and the Daily Summary suite's keyset pages, api:`test/api_v4/screens/daily-summary.test.js`); ⬜ for v3, which has no cursor mode to test.
+
 Per endpoint:
 
 - Happy-path walk: page 1, 2, 3, ..., last. Verify no duplicates, no skips, correct total on page 1 only.
@@ -655,10 +718,14 @@ Per endpoint:
 
 ### 8.2 App tests
 
+**Status (2026-10-01):** ✅ for the two v2 lists (the Tier 2 MSW suites cover both next-page endpoints); there is no `useCursorList` to test.
+
 - Jest test for `useCursorList` hook covering all state transitions.
 - Integration test with a mocked endpoint returning multi-page data.
 
 ### 8.3 Manual QA checklist
+
+**Status (2026-10-01):** ❔ device runs for the two v2 lists are recorded in app:`docs/screens/`; the Orders-list checklist waits on Phase 4.
 
 - [ ] Fresh app launch → orders list loads 25 items
 - [ ] Fast scroll → pages load ahead of the viewport (no blank rows)
@@ -672,6 +739,8 @@ Per endpoint:
 
 ## 9. Interaction with Other `tasks_02` Initiatives
 
+**Status (2026-10-01):** for the v2 lists, invalidating a list's tag refetches its page 1 (no `merge`), so the first bullet's concern does not arise for them; the third bullet holds (CI runs the tests).
+
 - **`02-websocket-realtime.md`:** when a socket event invalidates a list's tag (e.g. `order:created`), RTK Query re-fetches **only the first page** (by resetting the cursor chain via `refresh: true`). New items appear at the top. Implementation note: the socket handler should dispatch `refresh` on the hook, not naïvely `invalidateTags`, because `invalidateTags` would re-fetch with the current cursor and miss the new items. Build a helper `refreshCursorList(tagType)` that clears the cache entry and re-fetches fresh.
 - **`03-bff-composite-endpoints.md`:** BFF responses don't paginate internal lists. If a BFF's internal list grows, link out to the cursor-paginated endpoint. Don't try to paginate inside a BFF.
 - **`05-cicd-github-actions.md`:** no direct interaction. Tests run in CI.
@@ -679,6 +748,8 @@ Per endpoint:
 ---
 
 ## 10. Open Questions
+
+**Status (2026-10-01):** Q2 answered by the v4 build — the cursor carries whatever the sort key is (`encode({k, _id})`), so Customers pages under six sorts (api:`api_v4/readmodels/customers.js:162-249`); Q4: depth is capped by the 500-row client window; Q1, Q3 and Q5 open.
 
 1. **Should list endpoints support a `prevCursor` for backwards pagination?** Not for infinite scroll. Add only if/when a paginated table UI is built.
 2. **Sort orders other than `-createdAt`?** Most screens sort by date. If a specific screen needs `-totalAmount` or similar, the cursor must encode that field instead. Defer until a real use case appears. Keep the cursor helper extensible (`encodeCursor({keys})`).
@@ -689,6 +760,8 @@ Per endpoint:
 ---
 
 ## 11. Security
+
+**Status (2026-10-01):** v4 meets items 1–5: strict decode and one generic 400 (api:`api_v4/lib/cursor.js:92-118`), no client `limit` (a fixed 12), tenancy inside the filter, no count, a per-user limiter. Item 6 holds for v4; for the v3 routes see the security items in tasks_01 (X-SEC-1).
 
 Current posture, code-verified in `dzzlo_oms.js`: global `sanitizeMongo()` / mongo-sanitize (`:82`), helmet (`:85`), `express.json({ limit: "1mb" })` (`:59`). No input-validation library exists anywhere; the global rate limiter is commented out (`:88-95`); per-route `protect`/`authorize` are mostly commented out in collection routes.
 

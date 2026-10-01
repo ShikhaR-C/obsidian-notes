@@ -5,9 +5,14 @@
 
 > This is the irreversible part. **Take a DB backup first.** `0` means opposite things before vs after; without a backup there is no clean rollback.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). 🟡 The counts-only script is in the repo (`scripts/migrate_max_cr_lmt.js`, `8d0a6d9`, 2026-06-02), but the production `mongosh` steps, their order around the 1.5.4 deploy and the `VERIFY=1` pass are recorded nowhere in the repos ❔ — the user can confirm. §4's write gate is live and tested, and its "display skew" is closed by the presenter shim. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. What each existing value must become
+
+**Status (2026-10-01):** ❔ whether production now holds only `null`, `0` and values ≥ 1 is not visible from the repos — the script's `VERIFY=1` run answers it.
 
 | Existing value (old meaning)                      | Migrate to   | New meaning |
 | ------------------------------------------------- | ------------ | ----------- |
@@ -22,6 +27,8 @@
 ---
 
 ## 2. Migration script (counts/verification only)
+
+**Status (2026-10-01):** ✅ committed as specified — counts, `VERIFY=1` and the `DB=dip` option (`scripts/migrate_max_cr_lmt.js:6-19`, `:24`, `:48-54`); the `mongosh` writes are manual — executed ❔.
 
 > **The production writes are performed MANUALLY via `mongosh`** (the one-liners below). The Node script below **performs no writes at all** — it exists only to (a) review the dry-run counts before each manual step and (b) verify the post-migration invariant afterward.
 
@@ -108,6 +115,8 @@ Before each manual `updateMany`, confirm the affected-row count with `countDocum
 
 ## 3. Rollout sequence (no mis-classification window)
 
+**Status (2026-10-01):** ❔ the sequence is not recorded in the repos; the API has no deploy workflow, so deploy evidence lives outside them.
+
 Run in exactly this order. The reasoning column shows what every value class means at each moment.
 
 | #   | Action                                                           | `0` rows                            | `(0,1)` rows                   | `null`/unset | `>=1`     |
@@ -125,15 +134,21 @@ Run in exactly this order. The reasoning column shows what every value class mea
 
 ### Cutover-window caveat (step 1 → deploy gap)
 
+**Status (2026-10-01):** ❔ (production step); moot for new writes since 1.78 shipped — a `0` from a ≥ 1.78 build is a deliberate block.
+
 Between running step 1 and deploying the new code, a **v1.77 dealer** can still write a fresh `0` (intending _unlimited_) through the un-gated old `updateDealerCust`. After deploy, that `0` would read as blocked. To avoid it: keep the step-1→deploy gap as short as possible (same maintenance window), **and re-run the STEP-1 `updateMany` once manually immediately after deploy** to sweep any `0`s created during cutover. This post-deploy sweep is safe **only until the v1.78 app build is released** — after that, new `0`s are legitimate blocks, so the sweep must not be run again (the script's `STEP` guard makes this a deliberate choice, not an accident).
 
 ### Rollback hazard
+
+**Status (2026-10-01):** ⬜ the note asked for here is not in API `docs/runbook.md` (no `max_cr_lmt` mention); the hazard still applies to any v3 rollback below 1.5.4.
 
 If you **roll back the v3 code** after migrating, the stored `0`s (v1.78 blocks) will be read by the old code as **unlimited** — silently un-blocking those customers (money risk). A code rollback therefore requires either restoring the DB backup or first running `db.dealer_custs.updateMany({ max_cr_lmt: 0 }, { $unset: { max_cr_lmt: "" } })` to neutralize blocks before the old code runs. Document this in the deploy runbook.
 
 ---
 
 ## 4. v1.77 compatibility (covered by the write-gate)
+
+**Status (2026-10-01):** ✅ the write gate is live and pinned (`test/api_v3/collections/dealer_custs/index.test.js:126-149`); the "display skew" bullet is closed — `legacy_credit_presenter` (`helpers/middlewares.js:167`, mounted in `api_v/api2.js:20` and `api_v/api3.js:19`) shows a stored `0` to ≤ 1.77 clients as their own blocked sentinel (`test/api_v3/features/credit/index.test.js:403-470`).
 
 The live v1.77 app hits the same backend. The Phase 1 **write-gate** (§2/§3) is what makes this safe:
 
@@ -146,6 +161,8 @@ To minimize the display skew, ship Phase 3 + Phase 4 (app) in the same release a
 ---
 
 ## 5. Phase 2 acceptance
+
+**Status (2026-10-01):** ❔ all five are production database steps and none is recorded in the repos — the user can confirm (the script's `VERIFY=1` run answers the last one).
 
 - [ ] DB backup taken and verified restorable.
 - [ ] `node scripts/migrate_max_cr_lmt.js` counts reviewed and sane (esp. how many `0` rows exist — these are your current "unlimited" customers). Re-run with `DB=dip` if `database_dip` serves `dealer_custs`.

@@ -3,9 +3,14 @@
 > Start with zero-infrastructure in-process caching. Redis comes later when justified.
 > Each task builds on the previous but can be tested independently.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). CACHE-2 and CACHE-3 are done; CACHE-1 is only partly in effect — the cache moved to `api_v3/auth.js` and the per-request lookup in `logging()` has been uncached since `d6ad454`; CACHE-4 is to do and CACHE-5 stays future (2 ✅, 1 🟡, 1 ⬜, 1 ⏸). The v4 work added a 60 s in-process cache for the screen toggles; new here: `X-PERF-1`, `X-APP-3`, `T01-N1`. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## CACHE-1: Cache `getUserFromToken()` with in-process Map (API)
+
+**Status (2026-10-01):** 🟡 partly — `82b20ad` put the Map in `helpers/auth.js`; `39eb4cc` / `d6ad454` (2026-04-29) moved it to `api_v3/auth.js:6-57` (30 s TTL, not 3 min, with `bustUserCache`), but the global `logging()` still calls the helper, now uncached (`helpers/middlewares.js:3,212` → `helpers/auth.js:17-21`): one `users.findOne` per request. `X-PERF-1` below.
 
 **Size:** S (30 min)
 **File:** `helpers/auth.js`
@@ -47,7 +52,7 @@ exports.getUserFromToken = async (header) => {
 - API: All endpoints should work identically. Add a console.log on cache hit/miss to verify.
 - App: No change needed. Same responses.
 
-**Discussion:** Key by user ID (from decoded JWT), not the raw token string. Multiple tokens for the same user share the cache entry. The 3-min TTL (Time To Live — each entry auto-expires after 3 minutes) means if a user's role changes, it takes at most 3 minutes for the logging middleware to see the update. Since this is just for logging (not authorization), that's completely acceptable.
+**Discussion:** Key by user ID (from decoded JWT), not the raw token string. Multiple tokens for the same user share the cache entry. The 3-min TTL (Time To Live — each entry auto-expires after 3 minutes) means if a user's role changes, it takes at most 3 minutes for the logging middleware to see the update. ~~Since this is just for logging (not authorization), that's completely acceptable.~~ _(2026-10-01: no longer true — the same object now feeds `protect`, v4's tenancy and the company-status gate (`helpers/middlewares.js`, `api_v3/auth.js`), which is why `api_v3/auth.js` uses a 30 s TTL and busts on writes.)_
 
 **Why `Map` here, not `lru-cache`.** CACHE-2 uses `lru-cache` with a byte-based ceiling because its values are heterogeneous response bodies (50 KB–2 MB) and its key space is per-tenant × per-endpoint × per-query-variation, which can blow up. CACHE-1 has the opposite profile on every axis, so plain `Map` is not just acceptable — it's the right call:
 
@@ -68,6 +73,8 @@ With the 3-min TTL, the Map size tracks concurrent active users and naturally sh
 ---
 
 ## CACHE-2: Add in-process cache for reference data GET endpoints (API)
+
+**Status (2026-10-01):** ✅ done — `4167975`; `helpers/cacheMiddleware.js:3-38` (50 MB / 10,000 entries, keyed `co_id` + URL, fail-closed) on the 7 planned routes that exist — `cust_msts` ×3, `dealer_msts`, `dvr_msts` ×2, `users` (`prod_msts` / `rate_msts` `GET /` are commented out as unused, `veh_msts` has none); writes clear it through `autoBust`. Gaps: `T01-N1` below.
 
 **Size:** S (30 min)
 **Files:** New `helpers/cacheMiddleware.js`, route files for all cached collections (see list below)
@@ -193,6 +200,8 @@ Whichever ceiling is hit first triggers LRU eviction. In practice `maxSize` will
 
 ## CACHE-3: Add cache stats monitoring endpoint (API)
 
+**Status (2026-10-01):** ✅ done — `75964c8`; a stats endpoint in the superadmin routes (`api_v3/routes/sadmin/index.js`). Two caveats: its `userCache` is the `api_v3/auth.js` one, off the per-request path (CACHE-1), and its access control is part of `X-SEC-2` in [02](./02-security-hardening.md).
+
 **Size:** XS (10 min)
 **Files:** Route file (e.g., health or admin routes)
 
@@ -245,6 +254,8 @@ app.get("/admin/cache-stats", (req, res) => {
 ---
 
 ## CACHE-4: Add ETag support for conditional requests (API)
+
+**Status (2026-10-01):** ⬜ to do — no ETag middleware in the API and no `If-None-Match` wrapper in the app (greps for `etag` / `if-none-match` find nothing in either repo's code). Express's own default weak ETag presumably still applies (inferred), but the app never revalidates.
 
 **Size:** S (30 min)
 **File:** New `helpers/etag.js`, `dzzlo_oms.js`
@@ -304,6 +315,8 @@ To actually benefit, wrap `rawBaseQuery` in `dzzlo_oms_app/src/store/apis/create
 
 ## CACHE-5: Redis setup for shared caching (API) — FUTURE
 
+**Status (2026-10-01):** ⏸ future, as planned — no Redis client in the API. Note the trigger it names is nearer than it looks: the API runbook describes two servers, so every in-process cache, bust and the v4 limiter are already per server (`api_v4/lib/rateLimit.js:23-26`) — `X-OPS-1` in [07](./07-resilience-ops.md).
+
 **Size:** M-L (2-4 hours)
 **Files:** New `helpers/cache.js` (Redis client), `.env` updates
 
@@ -338,3 +351,17 @@ To actually benefit, wrap `rawBaseQuery` in `dzzlo_oms_app/src/store/apis/create
 | CACHE-5: Redis (future)                    | M-L  | Shared cache for cluster mode       | ~$12-25/month    |
 
 **Recommended order:** CACHE-1 → CACHE-2 → CACHE-3 → CACHE-4 → CACHE-5 (only when needed)
+
+---
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+**What the v4 work added here.** API: the D10 screen toggles are read through a 60 s in-process cache that falls back to the last value on a DB error and is cleared on a superadmin write in the same process (`helpers/appFeatures.js:44,88-106`); v4 read models cache nothing. App: the toggle map is re-read on sign-in and on every foreground with a 60 s dedupe (`src/navigation/useScreenFlag.js`); each v2 list keeps one RTK Query entry per request body, next pages `keepUnusedDataFor: 0` (`src/store/apis/v4/nextPage.js:168`); Customers shares the v3 `relations / CUSTOMERS_LIST` tag, so five v1 writes refresh it (`src/store/apis/v4/customers.js:39,145`).
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-PERF-1 | 🆕 API-4 re-scoped: give the global `logging()` the cached user lookup | `logging()` runs on every route (`dzzlo_oms.js:73`) and calls the uncached `helpers/auth.js` getter — one `users.findOne` per request (`helpers/middlewares.js:3,212` → `helpers/auth.js:17-21`); the 30 s cache with `bustUserCache` lives in `api_v3/auth.js:6-57` and serves only `api_v3/controllers/collections/users.js:101` and `veh_trns.js:40,50`; the helper lost its cache in `d6ad454` (2026-04-29); cost 0.1 ms locally, one Atlas round trip per request in production (`docs/v4-performance.md:145,167-173`) | API | S | `X-OPS-1` ([07](./07-resilience-ops.md)) — busts are per process |
+| X-APP-3 | 🆕 Give Daily Summary a cache tag that SO, invoice and PO writes invalidate | Its cache provides only `order_msts_POST / LIST` (`src/store/apis/v4/daily_summary.js:105-118`); `add_so_msts` / `update_so_msts` / `delete_so_msts` (`src/store/apis/dzzlooms/so_msts.js:65,73,81`), `add_invs` / `update_invs` (`invs.js:72,80`) and `add_order_msts` / `update_order_msts` / `delete_order_msts` (`order_msts.js:138-160`) invalidate nothing, so a new SO, invoice or PO reaches the screen only on refocus or pull | app | S | — |
+| T01-N1 | 🆕 Close two invalidation gaps in the reference-data cache | (a) `autoBust("/dealer_msts/")` deletes keys containing `/dealer_msts/` (`api_v3/routes/collections/dealer_msts.js:5`, `helpers/cacheMiddleware.js:40-60`), but Customer › Add Dealers reads `GET /api/v3/dealer_msts?…` (`src/store/apis/dzzlooms/dealer_msts.js:28-41`), keyed `<co_id>:/api/v3/dealer_msts?…`, so a dealer write never clears it and it lives its full 30 min (`dealer_msts.js:25`); (b) `autoBust` and `bustUserCache` clear only the process that took the write, so on two servers the other keeps serving until the TTL. Inferred from code | API | S | `X-OPS-1` ([07](./07-resilience-ops.md)) |
+
+The full list is in [00-overview](./00-overview.md).

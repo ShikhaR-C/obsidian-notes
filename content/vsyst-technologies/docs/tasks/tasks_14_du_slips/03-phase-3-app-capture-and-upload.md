@@ -3,11 +3,16 @@
 **Blocked by:** Phase 2 (endpoints must exist).
 **Runs alongside:** Phase 5 — the manifest shape and consent flow constrain the library choice, so read that doc before installing anything.
 
-Target app: **RN 0.84.1 / React 19.2.3, New Architecture ON both platforms** (`android/gradle.properties:35 newArchEnabled=true`, `ios/…/Info.plist:61-62 RCTNewArchEnabled=true`). Android `minSdk 24 / compileSdk 36 / targetSdk 36`, `versionName 1.78` / `versionCode 103`. iOS `MARKETING_VERSION 1.78` / build 9, deployment target 15.1.
+Target app: **RN 0.84.1 / React 19.2.3, New Architecture ON both platforms** (`android/gradle.properties:35 newArchEnabled=true`, `ios/…/Info.plist:61-62 RCTNewArchEnabled=true`). Android `minSdk 24 / compileSdk 36 / targetSdk 36`, ~~`versionName 1.78` / `versionCode 103`~~ `1.79` / `105` since 2026-10-01 (`android/app/build.gradle:89-90`). iOS ~~`MARKETING_VERSION 1.78` / build 9~~ `1.79` / build 4 (`project.pbxproj:447,458`), deployment target 15.1.
+
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 12 definition-of-done items — no picker, scanner, resizer, upload or queue code, and none of those libraries in `package.json`; the SO screens are unchanged since 1.78. The app now has a v4 client and a test harness this plan predates (§3.3, Phase 7). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
 
 ---
 
 ## 1. Starting position
+
+**Note (2026-10-01):** still true at `ea7e7222` — `ImagePicker/index.js` imports two libraries absent from `package.json` and nothing imports it; its upload (`:165-175`) targets a route no API version serves, so it is no base to build on. `Download/Invoice.js` is still dead; `react-native-html-to-pdf` is still a dependency (`package.json:52`).
 
 **There is no working native media capability in the app.** Three files reference such libraries — `src/components/ImagePicker/index.js:12,14` (`react-native-image-picker`, `react-native-permissions`) and `src/components/Download/Invoice.js:1` (`rn-fetch-blob`) — and **all three libraries are absent from both `package.json` and `node_modules`**. Grep confirms nothing imports those files. They are dead code that would fail Metro resolution if ever wired up. Treat them as reference sketches, not a foundation — note in particular that the `FormData` snippet at `ImagePicker/index.js:148-181` **omits the auth header entirely**.
 
@@ -18,6 +23,8 @@ Also absent: any share code (`Share` appears only inside commented-out blocks in
 ---
 
 ## 2. D5 — capture: system document scanner, not a custom native module
+
+**Status (2026-10-01):** ⬜ to do — wrapper audit not done; no scanner, picker or camera library in `package.json`.
 
 ### 2.1 The verdict on building our own
 
@@ -32,6 +39,8 @@ Writing a CameraX + AVFoundation module means owning camera API churn, device fr
 
 ### 2.2 Fallback: `react-native-image-picker`
 
+**Status (2026-10-01):** ⏸ needs a user decision first — `jest.setup.js:245-257` records a team decision of 2026-07-05 to keep `react-native-image-picker` and `react-native-permissions` stubbed and not installed; adopting this fallback reverses it.
+
 It is the natural fit for the compliance design (Phase 5): `launchImageLibrary` uses the **Android Photo Picker** and **iOS PHPickerViewController**; `launchCamera` uses `ACTION_IMAGE_CAPTURE`. Both mean **zero Android runtime permissions**.
 
 Two requirements from its README that apply here:
@@ -45,6 +54,8 @@ Two requirements from its README that apply here:
 ---
 
 ## 3. D7 — upload transport
+
+**Status (2026-10-01):** ⬜ to do — nothing exists.
 
 ### 3.1 Use `XMLHttpRequest` with a `{uri}` body
 
@@ -83,6 +94,8 @@ At 300–400 KB neither hurts, but `{uri}` is strictly better on Android and nev
 
 ### 3.3 The shared RTK Query baseQuery is unusable for uploads
 
+**Status (2026-10-01):** ⬜ to do — still true, anchors moved: `fetchBaseQuery` `:22`, `timeout: 10000` `:48`, `retry` `:96` (`maxRetries: 2`, `:105`), tag types `:114-124` with no `so_msts`. A `so_msts` tag would also serve X-APP-3 (tasks_01); on v4 the endpoints belong in `src/store/apis/v4/` (absolute URLs, envelope unwrap — `v4/base.js:25,36`).
+
 `src/store/apis/createApi.js` builds `fetchBaseQuery` (`:21`) → `baseQueryWithPerf` (`:63`) → `retry(…, {maxRetries: 2})` (`:95`). Three blockers:
 
 - **`timeout: 10000` (`:47`)** is hard-coded and global. A 400 KB upload over EDGE will `TIMEOUT_ERROR`.
@@ -98,6 +111,8 @@ Structural template for the whole feature: **`src/screens/Dealer/Payments/BSheet
 ---
 
 ## 4. Image processing on device
+
+**Status (2026-10-01):** ⬜ to do — no resizer; the glare/blur gate is unbuilt.
 
 ### 4.1 Capture high, downscale in software
 
@@ -136,6 +151,8 @@ Google's own ML Kit guidance endorses the pattern: *"If you aren't getting accep
 
 ## 5. Offline queue
 
+**Status (2026-10-01):** ⬜ to do — still no queue or persistence library, and the `Network/index.js:19` listener leak remains (cleanup `:25-27`). Small AsyncStorage stores now exist to copy (`src/helpers/Auth/authStep.js:31`, `src/helpers/DateRange/rememberedDayStart.js:12`).
+
 The app has `@react-native-community/netinfo` ^12.0.1 in three components (`src/components/Network/index.js`, `NoNetwork/index.js`, `NoNetwork/Undraw.js`) — **all purely presentational. There is no queue, no retry-on-reconnect, no persistence, no offline mutation cache.** The only retry anywhere is RTK Query's in-memory `retry()` at `createApi.js:95-111`, which dies with the process.
 
 ⚠️ Also note a real bug to avoid copying: `src/components/Network/index.js:19` discards the `addEventListener` unsubscribe function; cleanup only flips an `isMounted` flag (`:25-27`). Listener leak per mount.
@@ -171,6 +188,8 @@ One credible package exists — `@kesha-antonov/react-native-background-download
 ---
 
 ## 6. UI integration
+
+**Status (2026-10-01):** ⬜ to do — `EditSalesOrder` and `NewSalesOrder` are v1 screens unchanged since 1.78 (the created SO is still dropped at `:325-336`, `goBack` at `:341`); no v2 SO screen exists.
 
 ### 6.1 Build EditSalesOrder first
 
@@ -220,6 +239,8 @@ src/helpers/DuSlips/{quality.js, resize.js, queue.js}
 
 ## 7. Config gotcha
 
+**Note (2026-10-01):** still true (`babel.config.js:7-13`), with five env files now — `.env.ci` is tracked and CI copies it to `.env.testing` (`.github/workflows/test.yml:26`).
+
 `babel.config.js:6-15` runs `module:react-native-dotenv` with **`safe: true, allowUndefined: false`**. **Any new `@env` var missing from *any* of `.env.development` / `.env.testing` / `.env.production` / `.env.example` fails the bundle** — not at runtime, at build. Add new vars to all four in the same commit.
 
 Also: `babel-plugin-optional-require` (`babel.config.js:23`) exists solely so `react-native-paper` can skip the un-installed `react-native-vector-icons` (hence the hand-rolled `src/components/SVG/RNVI/*` icon set). It is **not** a general conditional-native-module mechanism — don't plan around it.
@@ -229,6 +250,8 @@ iOS pods: `ios/Podfile:20-40` forces RNFirebase pods static (`$RNFirebaseAsStati
 ---
 
 ## 8. Definition of done
+
+**Status (2026-10-01):** ⬜ 0 of 12 — none done.
 
 - [ ] Document-scanner wrapper audited (§2.1) and a decision recorded — scanner or `react-native-image-picker` fallback
 - [ ] Merged manifest verified to contain **no** `CAMERA` and **no** media permissions (`./gradlew :app:processReleaseManifest`, then read the merged output)

@@ -3,6 +3,9 @@
 **Researched:** 2026-08-05 (NIC docs fetched live). **Constraint:** no GSP, no paid aggregator.
 **One-line answer:** **fully doable, ₹0 in government fees.** The sanctioned pattern: DZZLO registers once as a NIC **"registered ERP"** (sandbox test → test-summary report → IP whitelisting, ~3–6 weeks) and then **each dealer self-creates an API user bound to our ERP in minutes on the portal**. One credential set works on both the e-way-bill and e-invoice systems. Private IRPs (IRIS/Clear) add a fully self-service free lane for IRN generation.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research only; nothing built — no e-way bill, IRN or NIC client code in either repo (grep). The GST invoice renderers have no IRN or signed-QR fields (API `api_v3/services/invoice/htmlTemplates/GST/`, app `src/helpers/Download/gstInvHTML/`), so e-invoicing also changes the invoice document and the `invs` model (T15-N2 in the overview). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Petroleum reality check first — what's even in scope

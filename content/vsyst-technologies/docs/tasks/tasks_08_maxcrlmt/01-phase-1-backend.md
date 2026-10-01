@@ -5,9 +5,14 @@
 
 > Do NOT deploy this phase until you've read **Phase 2 (migration & rollout)**. Deploying before migration step 1 will instantly block every currently-unlimited (`0`) customer.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Built as specified (API `bf063d4`, 2026-06-20, released in 1.5.4) and now pinned by tests — all 9 acceptance lines flipped below (`test/api_v3/features/credit/index.test.js`, `test/api_v3/collections/dealer_custs/index.test.js:90-178`). One deviation: the `api_v2` order checks were moved to the new contract as well (§5). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Order enforcement — `api_v3/services/order_msts.js`
+
+**Status (2026-10-01):** ✅ create `api_v3/services/order_msts.js:827-837`, edit `:963-974` (keeps `- oldAmt`); pinned by `test/api_v3/features/credit/index.test.js:106-345` (unlimited, capped fits / exceeds, blocked, blocked + deposit, inclusive cap, edit).
 
 Two near-identical blocks: **create** (~`781`) and **edit/process** (~`920`). In each, (a) drop `&& Number(...) !== 0` from the outer guard and (b) drop `!!dealer_cust.max_cr_lmt &&` from the inner `if`.
 
@@ -87,6 +92,8 @@ if (typeof dealer_cust.max_cr_lmt === "number") {
 
 ## 2. Write normalization + v1.77 compatibility — `updateDealerCust` (~`1450`)
 
+**Status (2026-10-01):** ✅ gate and normalisation in `api_v3/services/dealer_custs.js:1479-1494` (`Invalid credit limit` → 400); the controller passes `meta` (`api_v3/controllers/collections/dealer_custs_v1.js:39-46`); pinned by `test/api_v3/collections/dealer_custs/index.test.js:90-178` and `features/credit/index.test.js:346-402`.
+
 This funnel must do two things: (a) normalize the new contract, and (b) **stay compatible with the v1.77 app still in users' hands**. The old app's bare `TextInput` writes `0` to mean _unlimited_, so a `0` from a `<= 1.77` client must be mapped to `null` (unlimited) — never stored as blocked. Use the same `meta`→`version` gate already used across the API (e.g. `order_msts.js:743`, `email.js:36`).
 
 ### 2a. Pass `meta` from the controller
@@ -149,6 +156,8 @@ Notes:
 
 ## 3. New-relationship default (v1.77-gated) — `createDC` (~`1332`)
 
+**Status (2026-10-01):** ✅ `api_v3/services/dealer_custs.js:1318-1320`; controller `dealer_custs_v1.js:30-34`; pinned by `features/credit/index.test.js:480-550` (1.77 → `null`; versionless, 1.78 and the test version → `0`).
+
 New rows default to **blocked** (decision 2) — **but only for `>= 1.78` clients.** A `<= 1.77` client creating a relationship expected the old _unlimited_ default; keep that for them so old apps behave exactly as before.
 
 ### 3a. Pass `meta` from the controller
@@ -192,6 +201,8 @@ This is the single create funnel (`POST /dealer_custs` → `CreateDC` → `creat
 
 ## 4. Model doc only — `models/dealer_custs.js:84`
 
+**Status (2026-10-01):** ✅ `models/dealer_custs.js:84`.
+
 No behavioral change. Update the comment to record the contract:
 
 ```js
@@ -204,18 +215,22 @@ No behavioral change. Update the comment to record the contract:
 
 ## 5. Decision 3 — v1/v2 left untouched (residual risk)
 
+**Status (2026-10-01):** ❌ superseded — `bf063d4` moved `api_v2`'s create and edit checks to the new contract too (`api_v2/controllers/collections/order_msts.js:342-359`, `:527-545`), and `/api/v1` is not mounted (`dzzlo_oms.js:107`), so the residual risk is closed. The 1.79 app defines only v3, v4 and an unused v1 base URL (`src/utils/API/index.js`).
+
 `api_v1/controllers/App/order_msts.js:234,409` and `api_v2/controllers/collections/order_msts.js:342,530` still use the old `!!max_cr_lmt` / `!== 0` pattern, so **on those paths `0` still means unlimited** — a blocked customer ordering through a v1/v2 endpoint would NOT be blocked. The app's live order path is v3 (`order_msts/a/poso`, `/process/:id`), so this is acceptable per decision. **Before deploy, confirm no client build still posts orders to v1/v2.** If one does, either patch those four lines (same edit as §1) or retire the route.
 
 ---
 
 ## 6. Phase 1 acceptance
 
-- [ ] Order create/process: customer with `max_cr_lmt = 0` and no covering advance → "Credit Limit Exceeded".
-- [ ] Same customer with advance deposit ≥ order → order succeeds (decision 1).
-- [ ] Customer with `max_cr_lmt = null`/unset → orders unrestricted.
-- [ ] Customer with `max_cr_lmt = 50000` → blocked only past 50000.
-- [ ] `PUT dealer_custs` with `max_cr_lmt: "-5"` or `"abc"` → `400 Invalid credit limit`.
-- [ ] `PUT` with `"50000.999"` → stored `50001` (2dp); `null` → stored `null`.
-- [ ] **v1.77 compat (write):** `PUT` with `max_cr_lmt: 0` and `meta` header `{"version":"1.77"}` → stored **`null`** (unlimited, old meaning). Same `PUT` with `{"version":"1.78"}` → stored **`0`** (blocked).
-- [ ] **v1.77 compat (create):** `POST dealer_custs` without `max_cr_lmt`, `meta {"version":"1.77"}` → row `max_cr_lmt: null`; with `{"version":"1.78"}` (or no `meta`) → row `max_cr_lmt: 0`.
-- [ ] `meta` header `{"version":"1.510"}` (test bypass) is treated as **new** contract (`0` → blocked).
+**Status (2026-10-01):** 9 ✅ — all flipped; each is pinned by a test.
+
+- [x] Order create/process: customer with `max_cr_lmt = 0` and no covering advance → "Credit Limit Exceeded". — **2026-10-01:** ✅ flipped: `features/credit/index.test.js:173` (create; the edit path is pinned with a capped limit, `:287-345`).
+- [x] Same customer with advance deposit ≥ order → order succeeds (decision 1). — **2026-10-01:** ✅ flipped: `:196`.
+- [x] Customer with `max_cr_lmt = null`/unset → orders unrestricted. — **2026-10-01:** ✅ flipped: `:106`, `:338`.
+- [x] Customer with `max_cr_lmt = 50000` → blocked only past 50000. — **2026-10-01:** ✅ flipped: capped cases `:128-172`, inclusive cap `:225-286`.
+- [x] `PUT dealer_custs` with `max_cr_lmt: "-5"` or `"abc"` → `400 Invalid credit limit`. — **2026-10-01:** ✅ flipped: `collections/dealer_custs/index.test.js:168-178`.
+- [x] `PUT` with `"50000.999"` → stored `50001` (2dp); `null` → stored `null`. — **2026-10-01:** ✅ flipped: `:150-161`.
+- [x] **v1.77 compat (write):** `PUT` with `max_cr_lmt: 0` and `meta` header `{"version":"1.77"}` → stored **`null`** (unlimited, old meaning). Same `PUT` with `{"version":"1.78"}` → stored **`0`** (blocked). — **2026-10-01:** ✅ flipped: `:126-137`.
+- [x] **v1.77 compat (create):** `POST dealer_custs` without `max_cr_lmt`, `meta {"version":"1.77"}` → row `max_cr_lmt: null`; with `{"version":"1.78"}` (or no `meta`) → row `max_cr_lmt: 0`. — **2026-10-01:** ✅ flipped: `features/credit/index.test.js:480-550`.
+- [x] `meta` header `{"version":"1.510"}` (test bypass) is treated as **new** contract (`0` → blocked). — **2026-10-01:** ✅ flipped: `collections/dealer_custs/index.test.js:144`, `features/credit/index.test.js:532`.

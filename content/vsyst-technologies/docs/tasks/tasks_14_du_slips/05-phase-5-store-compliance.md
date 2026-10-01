@@ -4,9 +4,14 @@
 
 **Bottom line up front:** the picker-first design (D6) makes this feature **zero runtime permissions on Android and exactly one on iOS**, sidesteps Play's Photo & Video declaration entirely, and satisfies Apple 5.1.1(iii) by construction. The two genuinely new obligations are (a) explicit, named, withdrawable consent for the OCR hop, and (b) reconciling DPDP Rule 8(3)'s one-year minimum retention against the account-deletion both stores require.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Store, console and legal paperwork was not re-assessed. The app baseline in §0 is unchanged at `ea7e7222` (manifest and privacy manifest byte-identical to 1.78), and none of the manifest, plist or privacy-manifest edits in §1, §3 and §6 has been made. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 0. Repo baseline
+
+**Note (2026-10-01):** re-verified at `ea7e7222` — `minSdk 24` / `compileSdk 36` / `targetSdk 36` (`android/build.gradle:4-6`); manifest declares only `INTERNET` (`AndroidManifest.xml:3`); the three `NSLocation*` keys at `Info.plist:49-53`; `85F4.1` and an empty `NSPrivacyCollectedDataTypes` (`PrivacyInfo.xcprivacy:38,42-43`). Pods were not re-checked.
 
 | Fact | Value | Implication |
 | --- | --- | --- |
@@ -303,6 +308,8 @@ The OCR vendor doesn't change the label (Apple's "collect" already spans *"you a
 
 ### 3g. ⚠️ Pre-existing issue to fix in the same release
 
+**Status (2026-10-01):** ⬜ still open — the keys and their string are unchanged (`Info.plist:49-53`), and no location API appears in `src/` or `package.json` (grep; pods not checked).
+
 `ios/dzzlo_oms_app/Info.plist:49-53` declares all three `NSLocation*` keys with *"$(PRODUCT_NAME) needs Location access for good user experience!"*. If the app doesn't use location, that's an unnecessary protected-resource declaration (5.1.1(iii)) **with** a vague purpose string (5.1.1(ii)) — a classic rejection pair.
 
 **Remove the keys if unused; rewrite the string if used.** Do it in this release, because adding new permission keys invites a fresh privacy audit of the whole plist.
@@ -430,6 +437,8 @@ Android's permanent-denial rule: *"if the user taps Deny for a specific permissi
 ---
 
 ## 6. Pre-submission checklist
+
+**Status (2026-10-01):** Android and iOS build items ⬜ none done (no `<queries>`, `FileProvider`, camera `uses-feature` guards, `NSCameraUsageDescription` or `E174.1` at `ea7e7222`). Play Console, App Store Connect and DPDP items: not assessed.
 
 ### Android build
 - [ ] `targetSdkVersion 36` ✅ (re-verify after any Gradle bump)

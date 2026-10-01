@@ -3,6 +3,9 @@
 **Researched:** 2026-08-05. **Constraint:** no paid aggregators.
 **Legal reality first:** a private company cannot simply call UIDAI's authentication API. Online Aadhaar auth/e-KYC is a licensed, statutorily gated ecosystem. But **two fully legal, direct, ₹0 routes exist today** — offline verification as an **OVSE** (QR / new Aadhaar app), and the **DigiLocker e-Aadhaar consent pull** — and both are API-shaped and work in-app. June 2025 is also a cautionary tale: MeitY **blocked Zoop, Surepass and Digitap** for unauthorised Aadhaar/PAN access — the no-aggregator instinct is correct here.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research only; nothing built — no Aadhaar field, QR / OVSE or DigiLocker code in either repo (grep). One assumption to revisit: drivers are not app users — the only roles are superadmin, dealer and customer (`models/users.js:85-89`), and drivers are SMS-only `dvr_msts` records (`models/dvr_msts.js:15-37`); see T15-N1 in the overview. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Routes ranked for us

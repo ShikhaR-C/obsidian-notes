@@ -5,9 +5,14 @@
 
 > **TDD lens:** before writing more tests, make the harness one you'd bet a release on. Most of this phase is _verifying and documenting_ what already works, then fixing the three real weaknesses found in review (middleware divergence, unpinned mongod binary, dangerous legacy suite).
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Phase 1 holds at `master`: the test app mirrors the production chain and now also mounts the v4 hub through it; of the checklist's 8 items 6 are ✅, the legacy deletion is ⏸ (awaiting the go-ahead) and the optional `counters` re-hydration is ⬜. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1.1 What already works — keep it, write it down
+
+**Status (2026-10-01):** 🟡 isolation and uproot still hold (`test/dzzlo_oms_test.js:26-32` still leaves out `helpers/db_conn.js`), but "no cloud contact" has one hole: `processOrder` calls 2factor.in whatever `notify` says (`api_v3/services/order_msts.js:634`) — `T12-N1` in 00-overview.
 
 Verified 2026-07-02 (do not "fix" these):
 
@@ -18,6 +23,8 @@ Verified 2026-07-02 (do not "fix" these):
 These facts go into the new runbook (§1.5) so nobody re-litigates them.
 
 ## 1.2 Close the test-app ↔ production middleware divergence
+
+**Status (2026-10-01):** ✅ done — `test/dzzlo_oms_test.js:41-62` mounts `api_key_v1`, `logging` and `check_user_version` in production order, `errorHandler` last (`:115`), and the v4 hub through the same chain (`:106`); smoke suite `test/api_v3/harness/middleware_chain/index.test.js`.
 
 **Finding:** `dzzlo_oms.js` mounts `api_key_v1()` → `logging()` → `check_user_version()` globally, but `test/dzzlo_oms_test.js` mounts only the routers. Consequences:
 
@@ -47,6 +54,8 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
 **Verify:** all existing suites still green; a new throwaway test can log in via OTP, call a `protect`-gated route with `Authorization: Bearer <jwt>` and get 200, and get 401 without it. (The real authorization suite lands in Phase 2.)
 
 ## 1.3 Determinism & ergonomics fixes
+
+**Status (2026-10-01):** ✅ items 1–3 — mongod `8.2.1` pinned (`package.json` `config.mongodbMemoryServer`; CI cache key in `.github/workflows/test.yml:29`), `seed` = `yarn uproot && …`, `test:watch` / `test:file` / `test:coverage` present. Item 4 ⬜ — no `counters` branch in `test/api_v3/helper/beforeAll/index.js`.
 
 1. **Pin the mongod binary** so every machine/CI run uses the same engine and works offline after first download. Add `.mongodb-memory-server/mongodb-memory-server.config.js` (or `mongodb-memory-server` key in `package.json`) pinning `version` to the team standard; document the binary cache (`~/.cache/mongodb-binaries`) in the runbook.
 2. **Make `yarn seed` idempotent** — today a same-day re-seed silently overwrites into `data/v3_<date>/`; a _different-day_ re-seed leaves two dirs (harmless — loader picks latest — but confusing). Change:
@@ -82,6 +91,8 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
 
 ## 1.4 Legacy suite triage — verdicts (✅ Q4 verdicts approved 2026-07-05; `git rm` still needs a separate explicit go-ahead)
 
+**Status (2026-10-01):** 🟡 verdicts written (API `docs/testing.md` §6, `:191-208`); deletion ⏸ — `test/202405_v2` (29), `test/api_v1_test` (28), `test/api_v1` (16) and `test/api_v2` (18 test files) are still in the tree, ignored by `jest.config.js:4-10`. The `api_v2` trigger (min supported app ≥ 1.78) is not met: the hard gate still blocks only ≤ 1.68 (`helpers/middlewares.js:123-128`).
+
 | Suite                                                  | Facts                                                                                                                                                                     | Verdict                                                                                     | Rationale / what (if anything) to port                                                                                                                                                            |
 | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `test/202405_v2/` (~29 test files, ~18.6k LOC total)   | Direct predecessor of api_v3; every test file has a same-named api_v3 counterpart                                                                                         | **Retire & delete**                                                                         | Strict subset — contributes zero unique coverage. Safe immediately.                                                                                                                               |
@@ -92,6 +103,8 @@ Notes: confirm `logging()`'s response-`finish` log write is harmless under memor
 Actions in this phase: add the verdict table to `docs/testing.md`; leave `testPathIgnorePatterns` as-is — deletion of `202405_v2`/`api_v1_test`/`api_v1` is approved in principle but the actual `git rm` still needs a separate explicit go-ahead before it's executed (the ignore entries are load-bearing until then).
 
 ## 1.5 Runbook — `dzzlo_oms_api/docs/testing.md` (new)
+
+**Status (2026-10-01):** ✅ done — `docs/testing.md` (728 lines): quick start, harness, debugging, seed, auth, legacy verdicts, env matrix, flow→test map (§8), release gate (§9), daily workflow (§10) and API v4 (§11).
 
 Outline (repo `docs/` already exists):
 
@@ -105,6 +118,8 @@ Outline (repo `docs/` already exists):
 
 ## 1.6 Verification — how we know Phase 1 is done
 
+**Status (2026-10-01):** ✅ recorded 2026-07-09; CI now re-proves `test:full` on every PR — latest green run 1,664 passed / 47 skipped / 1 todo in 130.9 s (run 36788793446, PR #46, 2026-09-30).
+
 - `yarn test:full` green **twice consecutively** on a clean checkout (proves idempotent seed + no inter-run state).
 - `yarn test` without seed data fails fast with the actionable "run the seed command first" error.
 - `kill -9` a mid-run `yarn test`; the next `yarn test:full` passes with no manual cleanup.
@@ -113,16 +128,20 @@ Outline (repo `docs/` already exists):
 
 ## Phase 1 checklist
 
-- [x] `test/dzzlo_oms_test.js` mirrors production middleware chain (`api_key_v1`, `logging`, `check_user_version`, `errorHandler`) — plus `query parser: extended` + `json 1mb`, in production order
-- [x] mongod binary version pinned (`8.2.1` via `package.json` `config.mongodbMemoryServer`) + cache path documented
-- [x] `seed` script made idempotent (`uproot &&` prefix) + `try/finally` around factory run (+ non-zero exit on seed failure)
-- [x] `test:watch` / `test:file` / `test:coverage` scripts added
-- [ ] (optional) `counters` re-hydration branch in `helper/beforeAll/index.js` — **deferred to Phase 2** (add when a numbering / version-gate test needs it)
-- [x] Legacy verdict table written into `docs/testing.md`; deletion still **gated on a separate go-ahead** (no `git rm` executed)
-- [x] `docs/testing.md` runbook written _(committing is the user's call)_
-- [x] Verification steps in §1.6 all pass
+**Status (2026-10-01):** 6 ✅ · 1 ⏸ · 1 ⬜ — marks at the end of each line.
+
+- [x] `test/dzzlo_oms_test.js` mirrors production middleware chain (`api_key_v1`, `logging`, `check_user_version`, `errorHandler`) — plus `query parser: extended` + `json 1mb`, in production order — **2026-10-01:** ✅ still true (`test/dzzlo_oms_test.js:41-62`, `:115`).
+- [x] mongod binary version pinned (`8.2.1` via `package.json` `config.mongodbMemoryServer`) + cache path documented — **2026-10-01:** ✅ (`package.json` `config`; CI cache `test.yml:25-29`).
+- [x] `seed` script made idempotent (`uproot &&` prefix) + `try/finally` around factory run (+ non-zero exit on seed failure) — **2026-10-01:** ✅.
+- [x] `test:watch` / `test:file` / `test:coverage` scripts added — **2026-10-01:** ✅.
+- [ ] (optional) `counters` re-hydration branch in `helper/beforeAll/index.js` — **deferred to Phase 2** (add when a numbering / version-gate test needs it) — **2026-10-01:** ⬜ still absent.
+- [x] Legacy verdict table written into `docs/testing.md`; deletion still **gated on a separate go-ahead** (no `git rm` executed) — **2026-10-01:** ✅ verdicts; ⏸ deletion (all four folders still present).
+- [x] `docs/testing.md` runbook written _(committing is the user's call)_ — **2026-10-01:** ✅.
+- [x] Verification steps in §1.6 all pass — **2026-10-01:** ✅ (historical; CI green on PRs since).
 
 ## Phase 1 — implementation notes (executed 2026-07-09, branch `api_tdd`)
+
+**Status (2026-10-01):** finding 1 still stands at `master`; wiring the guards into v3 routes is tracked as `X-SEC-1` in tasks_01. Finding 2 stays fixed (`test/api_v3/temp/seed/uproot.js:12` uses `fs.rmSync`).
 
 **Result:** api_v3 suite **614 passing** (was 607; +7 harness smoke tests), 47 skipped, 0 failing; `test:full` green **twice consecutively** (~2 min/run). Only `test/`, `package.json`, and `docs/` were touched — no production source (`helpers/`, `models/`, `api_v*`), honoring the repo's "write only inside api_v3 / test" rule. The §1.2 middleware chain is proven by a new harness self-test `test/api_v3/harness/middleware_chain/index.test.js` (Bearer→200, no/bad token→401, wrong `x-api-key`→403, old `meta` version→403) against a harness-only `/__smoke/whoami` probe.
 

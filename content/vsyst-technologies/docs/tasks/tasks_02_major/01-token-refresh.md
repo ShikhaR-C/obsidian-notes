@@ -3,6 +3,9 @@
 > Originally deferred as **Phase 4D** in `docs/learning/api-pattern-problems/phase-4-security-hardening.md`.
 > Fixes the "30-day JWT blast radius" problem while preserving the existing OTP-based login UX.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: none of the 7 phases or 27 steps exists — no refresh route, no refresh-token field, no `async-mutex` or keychain in the app — and Step 5.4 is dropped because axios is gone (26 ⬜, 1 ❌). Two premises changed since July: the global per-request token check has no cache any more, and the v4 routes accept the same 30-day bearer; one new task, T02-N1 (rows at the end). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -19,6 +22,8 @@ Net effect: stolen access-token exposure window drops from **30 days → 15 minu
 
 ### 1.1 API side
 
+**Status (2026-10-01):** partly stale. Still true: 30-day tokens (api:`.env.example:28`, api:`api_v3/controllers/auth/index.js:38-44`), no server-side revocation on logout (`:6-12`), no session field on users (api:`models/users.js`). Changed: `getUserFromToken` (api:`helpers/auth.js:6-28`) has no cache — `d6ad454` moved it to api:`api_v3/auth.js:6-57` (30 s, not on the global `logging()` path; see X-PERF-1 in tasks_01) — and `protect` for v3 and v4 is api:`api_v3/auth.js:61-75`.
+
 | Concern                 | File                                                           | Notes                                                                              |
 | ----------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Active version          | `api_v3` (v2 fallback, v1 disabled)                            | `dzzlo_oms.js:107-117`                                                             |
@@ -32,6 +37,8 @@ Net effect: stolen access-token exposure window drops from **30 days → 15 minu
 
 ### 1.2 App side
 
+**Status (2026-10-01):** partly stale. Axios is gone (app `0bfdd36f`, 2026-04-14; `src/utils/API/axiosReqRes.js` absent), so the 401 → `logoutUser()` path is app:`src/store/middleware/rtkQueryErrorLogger.js:30-34`. Current lines: `loginUser` stores token + `expiryDate` (app:`src/store/slices/auth.js:22-38`), `prepareHeaders` reads them per request (app:`src/store/apis/createApi.js:24-47`), retry `:96-108`, expiry check app:`src/screens/StartupScreen.js:55-64`.
+
 | Concern              | File                                                            | Notes                                                                     |
 | -------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | Token storage        | `src/store/slices/auth.js:22-33`                                | AsyncStorage key `'userData'`, JSON: `{userId, token, expiryDate, ...}`   |
@@ -44,6 +51,8 @@ Net effect: stolen access-token exposure window drops from **30 days → 15 minu
 
 ### 1.3 What exists that we can reuse
 
+**Status (2026-10-01):** bullet 2 no longer holds — the global per-request lookup is uncached (api:`helpers/middlewares.js:212` → `helpers/auth.js:17`; X-PERF-1 in tasks_01), one `users.findOne` per request whatever the token lifetime. Bullet 3 holds and widens: the v4 endpoints use the same base query with absolute URLs (app:`src/store/apis/v4/base.js:25`), so one re-auth wrapper covers v3 and v4.
+
 - OTP flow works end-to-end. Refresh tokens are **added on top** — the OTP login still mints a refresh token the first time.
 - The 3-minute `getUserFromToken` cache in `helpers/auth.js` means short access tokens don't hammer MongoDB.
 - `baseQueryWithSmartRetry` is already a wrapper around `fetchBaseQuery`, so intercepting 401s to trigger refresh is a small surgical change — no need to swap out the base query entirely.
@@ -51,6 +60,8 @@ Net effect: stolen access-token exposure window drops from **30 days → 15 minu
 ---
 
 ## 2. Problem Statement
+
+**Status (2026-10-01):** all five problems still stand. Problem 5's cascade now lives in app:`src/store/middleware/rtkQueryErrorLogger.js:30-34` (any 401 outside four auth endpoints logs out), and its latch is cleared in the same tick it is set, so a burst of 401s can dispatch several logouts (inferred — T02-N1).
 
 1. **Blast radius:** a 30-day JWT that leaks (via logs, device compromise, network MITM on a misconfigured proxy) gives an attacker a full month of access. Industry standard is 5–15 minutes.
 2. **No revocation:** the only way to invalidate a stolen token today is rotating `JWT_SECRET`, which logs out **every user on every device simultaneously**. That's unusable as an incident response tool.
@@ -242,9 +253,13 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 
 ### Phase 1 — API: Schema & feature flag (no behavior change)
 
+**Status (2026-10-01):** ⬜ to do — nothing of it exists (steps below). Governance first: api:`AI.md:85-90` keeps `models/` unchanged and lets `helpers/` gain only additive, user-approved files, so this phase needs the user's approval.
+
 **Goal:** lay the DB groundwork without changing user-visible behavior. Zero risk.
 
 #### Step 1.1 — Add `refreshTokens[]` to User schema
+
+**Status (2026-10-01):** ⬜ to do — no `refreshTokens`, `devices` or `sessions` field in api:`models/users.js` (grep → none).
 
 - File: `models/users.js`
 - Add subschema and field (including `revokedAt` and `replacedByHash` — see §3.6). Default `[]`.
@@ -252,6 +267,8 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - Run migration locally: `db.users.updateMany({}, {$set: {refreshTokens: []}})` — safe because the field is optional.
 
 #### Step 1.2 — Add env vars
+
+**Status (2026-10-01):** ⬜ to do — api:`.env.example:26-29` still carries only `JWT_SECRET`, `JWT_EXPIRE=30d` and `JWT_COOKIE_EXPIRE`.
 
 - `.env.example` (and all `.env.*` copies):
   ```
@@ -265,6 +282,8 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - Keep the existing `JWT_EXPIRE=30d` for now — we'll gate on `TOKEN_REFRESH_ENABLED`.
 
 #### Step 1.3 — Helper module for refresh token CRUD
+
+**Status (2026-10-01):** ⬜ to do — no `helpers/refreshTokens.js`; `git grep -i refresh` over the API's code finds no auth code.
 
 - New file: `helpers/refreshTokens.js`
 - Functions:
@@ -287,15 +306,21 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 
 ### Phase 2 — API: `/auth/refresh` and `/auth/logoutAll` endpoints (behind flag)
 
+**Status (2026-10-01):** ⬜ to do — the only session route in the auth router is `GET /logout` (api:`api_v3/routes/auth/index.js:63`).
+
 **Goal:** add the new endpoints. Still gated by `TOKEN_REFRESH_ENABLED=false`. Existing login still issues 30-day JWTs.
 
 #### Step 2.1 — New routes
+
+**Status (2026-10-01):** ⬜ to do — neither route exists.
 
 - File: `api_v3/routes/auth.js` (or wherever auth routes are registered)
   - `POST /api/v3/auth/refresh`
   - `POST /api/v3/auth/logoutAll`
 
 #### Step 2.2 — Controller: `refreshToken`
+
+**Status (2026-10-01):** ⬜ to do — no controller. An IP-keyed limiter already guards the login routes (api:`api_v3/routes/auth/index.js`); the per-token key this step asks for does not exist.
 
 - File: `api_v3/controllers/auth/refresh.js`
 - Accepts `{refreshToken, deviceId}` in body.
@@ -315,6 +340,8 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 
 #### Step 2.3 — Controller: `logoutAll`
 
+**Status (2026-10-01):** ⬜ to do. The cache to invalidate is now `bustUserCache` in api:`api_v3/auth.js:29-32` (30 s, per process); the global lookup has no cache, so the "3-min cache" wording no longer applies.
+
 - File: `api_v3/controllers/auth/logout.js`
 - Requires access token (uses existing `protect` middleware).
 - Calls `revokeAllRefreshTokens(req.user._id)`.
@@ -322,6 +349,8 @@ Each phase is a separate PR. Ship them **in order**, verify staging after each, 
 - The same two calls (`revokeAllRefreshTokens` + cache invalidation) must also fire from account-state mutations — `inActivateUser`, `removeUser`, company blacklist (`api_v3/services/users.js`). Otherwise a deactivated user's device keeps a working refresh token for up to 7 days. `02-websocket-realtime.md` Phase 2 touches the same functions; wire both there.
 
 #### Step 2.4 — Update `sendTokenResponse`
+
+**Status (2026-10-01):** ⬜ to do — unchanged: one `token` and `expiresIn = 30 * 24 * 60 * 60` (api:`api_v3/controllers/auth/index.js:38-44`).
 
 - File: `api_v3/controllers/auth/index.js:38-45`
 - When `process.env.TOKEN_REFRESH_ENABLED === 'true'`:
@@ -351,19 +380,27 @@ This dual-mode response lets us ship the API change before the app change. The a
 
 ### Phase 3 — API: Wire OTP login to emit both tokens (staging flag on)
 
+**Status (2026-10-01):** ⬜ to do — waits on Phases 1–2. The v4 routes accept the v3 login's bearer as-is (api:`api_v/api4.js:1-6`), so the flag flip must be tested against `/api/v4` too.
+
 **Goal:** on staging with `TOKEN_REFRESH_ENABLED=true`, the login response includes both tokens. Production still off.
 
 #### Step 3.1 — Update OTP verify path
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/services/auth.js:256-287` (loginOTP)
 - On success, call the updated `sendTokenResponse` (which now branches on the flag).
 
 #### Step 3.2 — Update credentialless-verified path
 
+**Status (2026-10-01):** ⬜ to do.
+
 - File: `api_v3/controllers/auth/app_redux.js:12-18` and related "special users" direct login
 - Same change.
 
 #### Step 3.3 — Update `protect` middleware to reject non-access tokens
+
+**Status (2026-10-01):** ⬜ to do. `protect` does not decode the JWT (api:`api_v3/auth.js:61-75`, mounted for v4 at api:`api_v4/index.js:73`); verification happens in the global `logging()` through api:`helpers/auth.js:15`, which is where the type check belongs.
 
 - File: `helpers/auth.js`
 - When decoding JWT, reject with 401 only when `payload.type` is **present and not `'access'`**. Legacy 30-day JWTs minted before the flip carry no `type` claim and must keep working until Step 6.4 removes them — a strict `payload.type === 'access'` check would 401 every existing session the moment this deploys.
@@ -371,6 +408,8 @@ This dual-mode response lets us ship the API change before the app change. The a
 - (In our design refresh tokens are opaque, so this is a belt-and-suspenders guard in case a refresh token is ever mistakenly signed as a JWT.)
 
 #### Step 3.4 — Smoke test on staging
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Enable `TOKEN_REFRESH_ENABLED=true` on staging.
 - Use Postman/curl to:
@@ -392,9 +431,13 @@ This dual-mode response lets us ship the API change before the app change. The a
 
 ### Phase 4 — App: Install `async-mutex` and `react-native-device-info` (if not present)
 
+**Status (2026-10-01):** ⬜ to do — `async-mutex` is not in app:`package.json`; `react-native-device-info` ^15.0.2 is (app:`package.json:50`).
+
 **Goal:** add dependencies. No runtime behavior change.
 
 #### Step 4.1 — Add packages
+
+**Status (2026-10-01):** ⬜ to do — `async-mutex` absent.
 
 ```bash
 cd dzzlo_oms_app
@@ -403,6 +446,8 @@ yarn add async-mutex
 ```
 
 #### Step 4.2 — iOS pod install
+
+**Status (2026-10-01):** ⬜ to do — nothing to install yet.
 
 ```bash
 cd ios && pod install && cd ..
@@ -420,9 +465,13 @@ No native config needed for `async-mutex` (pure JS).
 
 ### Phase 5 — App: Refactor baseQuery with auto-reauth
 
+**Status (2026-10-01):** ⬜ to do — the only trace is the comment "Future seam: perf metrics, global response transforms, auth-refresh." (app:`src/store/apis/createApi.js:50`).
+
 **Goal:** the RTK Query base query now transparently refreshes access tokens on 401.
 
 #### Step 5.1 — New helper: token storage abstraction
+
+**Status (2026-10-01):** ⬜ to do — `src/store/apis/tokenStorage.js` absent; `prepareHeaders` reads `userData` from AsyncStorage inline (app:`src/store/apis/createApi.js:26-31`).
 
 - New file: `src/store/apis/tokenStorage.js`
 - Exports:
@@ -436,10 +485,14 @@ All RTK + Axios code should go through this helper — no more direct AsyncStora
 
 #### Step 5.2 — Update `createApi.js` `prepareHeaders`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - File: `src/store/apis/createApi.js:20-37`
 - Replace the inline AsyncStorage read with `await getAccessToken()`.
 
 #### Step 5.3 — Add mutex-protected re-auth wrapper
+
+**Status (2026-10-01):** ⬜ to do — `baseQueryWithSmartRetry` still wraps the perf-metric base query directly (app:`src/store/apis/createApi.js:96-113`); the v4 endpoints go through it too (app:`src/store/apis/v4/base.js:25`), so the wrapper would cover them.
 
 Following the [RTK Query official pattern](https://redux-toolkit.js.org/rtk-query/usage/customizing-queries#automatic-re-authorization-by-extending-fetchbasequery):
 
@@ -505,11 +558,15 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 #### Step 5.4 — Update axios interceptor to use the same flow
 
+**Status (2026-10-01):** ❌ dropped — axios left the app on 2026-04-14 (`0bfdd36f`; `src/utils/API/axiosReqRes.js` absent). The one app → API call outside RTK Query, the image-upload `fetch()` (app:`src/components/ImagePicker/index.js:165-175`), sits outside any base-query wrapper and needs its own look when this plan lands.
+
 - File: `src/utils/API/axiosReqRes.js:91-100`
 - Instead of logging out on 401, do the same refresh dance. Share the same mutex instance exported from `createApi.js`.
 - **Important:** axios and RTK Query must share one mutex, otherwise two concurrent refresh attempts can happen (one from each).
 
 #### Step 5.5 — Update `loginUser` thunk to store both tokens
+
+**Status (2026-10-01):** ⬜ to do — `loginUser` stores `token` and an `expiryDate` derived from `expiresIn` (app:`src/store/slices/auth.js:22-38`).
 
 - File: `src/store/slices/auth.js:17-44`
 - Accept `accessToken` and `refreshToken` in the login response, and read `accessExpiresIn` (not the legacy `expiresIn`, which stays at the 30-day value for old clients — Step 2.4).
@@ -517,10 +574,14 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 #### Step 5.6 — Update `logoutUser` thunk
 
+**Status (2026-10-01):** ⬜ to do — `logoutUser` calls `GET /auth/logout` and clears storage (app:`src/store/slices/auth.js:7-20`); there is no refresh token to revoke.
+
 - Add a call to `POST /auth/logout` with `{refreshToken}` body so the server can revoke it.
 - Best-effort: if the call fails (offline, or the user was already removed server-side → 401), still clear both tokens locally.
 
 #### Step 5.7 — Update the startup expiry check
+
+**Status (2026-10-01):** ⬜ to do — an expired `expiryDate` still logs out (app:`src/screens/StartupScreen.js:59-63`). Since 1.79 the same screen restores a pending OTP step (app:`src/helpers/Auth/authStep.js`, `StartupScreen.js:23-36`; `fcec16e3`→`4d3ad441`) — keep that hand-off when this step lands.
 
 - File: `src/screens/StartupScreen.js:18-64`
 - Today it logs out whenever the stored `expiryDate` has passed. With a 15-minute access token that fires on nearly every cold start — the user would be re-prompted for OTP constantly, defeating the whole design.
@@ -540,15 +601,21 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 ### Phase 6 — Production rollout
 
+**Status (2026-10-01):** ⬜ to do — waits on Phases 1–5.
+
 **Goal:** flip the flag on, monitor, keep the old code path as a one-line rollback.
 
 #### Step 6.1 — Deploy API with flag on
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Set `TOKEN_REFRESH_ENABLED=true` in production `.env`.
 - `pm2 restart dzzlo-oms`.
 - Existing app users continue to work — they still have 30-day JWTs minted before the flip, and the flag only affects **new** logins.
 
 #### Step 6.2 — Ship app update
+
+**Status (2026-10-01):** ⬜ to do. Its version numbers are stale — the app is at Android 105 / iOS 4, v1.79 (app:`android/app/build.gradle:89-90`).
 
 - Bump versionCode 100 → 101, versionName "1.76" → "1.77".
 - Release via Play Store / TestFlight.
@@ -557,6 +624,8 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 
 #### Step 6.3 — Monitor
 
+**Status (2026-10-01):** ⬜ to do.
+
 - Dashboard/logs for the first 72 hours:
   - Count of `/auth/refresh` calls per hour (expected: roughly DAU × (active hours / 0.25))
   - Count of `401 TOKEN_REUSE` responses (expected: ~0, any nonzero is worth investigating)
@@ -564,6 +633,8 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
   - 401 rate on protected endpoints (should stay flat — refresh should be invisible to users)
 
 #### Step 6.4 — Drop legacy `token` field (T+30 days)
+
+**Status (2026-10-01):** ⬜ to do.
 
 Once Play Store + TestFlight rollout reaches ~99% adoption (track by `User-Agent` / app version header):
 
@@ -581,11 +652,15 @@ Once Play Store + TestFlight rollout reaches ~99% adoption (track by `User-Agent
 
 ### Phase 7 — Optional: Secure refresh token storage (`react-native-keychain`)
 
+**Status (2026-10-01):** ⬜ to do — no keychain or encrypted-storage package in app:`package.json`.
+
 **Goal:** move the refresh token out of AsyncStorage into the iOS Keychain / Android EncryptedSharedPreferences.
 
 This is a separate PR because `react-native-keychain` requires pod install and native module verification.
 
 #### Step 7.1 — Install
+
+**Status (2026-10-01):** ⬜ to do.
 
 ```bash
 yarn add react-native-keychain
@@ -594,10 +669,14 @@ cd ios && pod install && cd ..
 
 #### Step 7.2 — Update `tokenStorage.js`
 
+**Status (2026-10-01):** ⬜ to do — `tokenStorage.js` does not exist yet (Step 5.1).
+
 - `getRefreshToken` / `setTokens` → use `Keychain.setGenericPassword('refreshToken', value, {service: 'dzzlo_oms'})` and `Keychain.getGenericPassword`.
 - Access token stays in AsyncStorage (it's short-lived, less valuable).
 
 #### Step 7.3 — Migration
+
+**Status (2026-10-01):** ⬜ to do.
 
 - On first launch of the keychain-enabled version, migrate any existing refresh token from AsyncStorage → Keychain and delete from AsyncStorage.
 - Guard with a migration flag in AsyncStorage so it only runs once.
@@ -655,6 +734,8 @@ Revocation caveat: revoking refresh tokens does **not** invalidate already-issue
 
 ### 8.1 API unit tests
 
+**Status (2026-10-01):** ⬜ to do — neither test file exists (no refresh-token test anywhere under api:`test/`).
+
 - `test/api_v3/helpers/refreshTokens.test.js`:
   - hashRefreshToken determinism
   - addRefreshToken evicts oldest when at limit
@@ -671,12 +752,16 @@ Revocation caveat: revoking refresh tokens does **not** invalidate already-issue
 
 ### 8.2 App unit tests
 
+**Status (2026-10-01):** ⬜ to do — there is no re-auth wrapper to test.
+
 - Jest test for `baseQueryWithReauth`:
   - Mock fetch: first call returns 401, refresh call returns 200, original retried → 200
   - 5 parallel 401s → exactly 1 refresh call
   - Refresh fails → `logoutUser` dispatched
 
 ### 8.3 Manual QA
+
+**Status (2026-10-01):** ⬜ to do — waits on Phase 5.
 
 - Staging soak: 24h with `JWT_ACCESS_EXPIRE=1m` so refresh happens constantly. Use the app normally; nothing should feel off.
 - "Log out everywhere" test: log in on two emulators, call `/auth/logoutAll` via Postman, verify both emulators log out on next request.
@@ -686,6 +771,8 @@ Revocation caveat: revoking refresh tokens does **not** invalidate already-issue
 ---
 
 ## 9. Post-launch Monitoring (week 1)
+
+**Status (2026-10-01):** ⬜ to do — waits on Phase 6.
 
 - Log every `/auth/refresh` with `{userId, deviceId, outcome: success|reuse|expired|unknown}`.
 - Dashboard panels (CloudWatch or whatever is wired in `tasks_01/08-cloudwatch-setup.md`):
@@ -699,8 +786,18 @@ Revocation caveat: revoking refresh tokens does **not** invalidate already-issue
 
 ## 10. Open Questions (resolve before Phase 3)
 
+**Status (2026-10-01):** all five still open — no answer in code or in the redesign's decision logs. Question 2's premise "rate limit is re-enabled per `tasks_01/SEC-2`" does not hold at master — see SEC-2's status in tasks_01.
+
 1. **Refresh token in body or cookie?** Body is simpler for mobile. If a future web client needs it, cookies (httpOnly, SameSite=strict) are stronger. Decision: body for now.
 2. **Should `/auth/refresh` itself be rate-limited?** Yes — keyed on the presented token hash (10/min per token) with a high per-IP ceiling on top; per-IP alone breaks under carrier CGNAT. Implement via existing `express-rate-limit` with a custom `keyGenerator` (rate limit is re-enabled per `tasks_01/SEC-2`).
 3. **Do we invalidate the `getUserFromToken` 3-min cache when a token refreshes?** No — a refresh doesn't change the user document, and the cache is keyed by user id, not by token. Invalidation is required where the *user's state* changes: `logoutAll`, deactivate/remove, scope change (Step 2.3 here and `02-websocket-realtime.md` Step 2.5).
 4. **Do we want sliding expiry (refresh extends absolute lifetime) or absolute expiry (7 days hard cap)?** Recommendation: absolute. Sliding lets a stolen refresh token be used forever. Absolute forces re-login every 7 days even on active devices.
 5. **Keychain in Phase 6 or Phase 7?** Phase 7 (optional) — keeps Phase 6 rollout focused on the auth flow, not native module debugging.
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+Rows owned by this doc; the folder's full table is in [00-overview.md](./00-overview.md).
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| T02-N1 | 🆕 Make the 401 logout latch hold until the logout has finished, pinned by a Tier 2 test (a burst of parallel 401s dispatches one `logoutUser`) | The latch is set, the async thunk dispatched and the latch cleared in the same tick (app:`src/store/middleware/rtkQueryErrorLogger.js:30-34`), so every rejected action of a burst passes the check — several logouts per burst (inferred from the code, not observed). Phase 5's mutex replaces this path; this is the interim fix | app | XS | — |

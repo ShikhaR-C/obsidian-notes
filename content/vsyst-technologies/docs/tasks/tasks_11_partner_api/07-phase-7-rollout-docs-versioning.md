@@ -4,9 +4,14 @@
 
 > **Vertical-SaaS lens:** in a vertical, the partner ecosystem is the moat — every ISV certified against our API makes DZZLO harder to displace as the system of record. That only compounds if onboarding is smooth for small industry ISVs and our versioning promises are conservative enough that integrations built once keep working for years. Docs and deprecation policy are product surface, not afterthoughts.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 8 checklist items — no sandbox tenant, OpenAPI spec, partner docs, `PARTNER_API_ENABLED` flag or partner runbooks in the repo (grep at `6d41ce5`). §7.4's "`/api/v4/partner`" now names the app's screen API (mounted 2026-09-30, `dzzlo_oms.js:121`), so the partner surface needs a version path of its own (T11-N1). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 7.1 Environments & credentials
+
+**Status (2026-10-01):** ⬜ to do — nothing exists.
 
 | | Sandbox | Production |
 | --- | --- | --- |
@@ -19,6 +24,8 @@
 Same codebase, same URL, `env` on the credential (Phase 1) — a test key physically cannot write production data because it is bound to the test tenant. Sandbox tenant gets a periodic reset job so partner test data doesn't rot.
 
 ## 7.2 Partner onboarding flow
+
+**Status (2026-10-01):** ⬜ to do — a business process; only its code parts (issuance, sandbox reset) are in scope, and none exists.
 
 1. **Agreement** — commercial terms incl. tier, plus security expectations (secret storage, no client-side use, breach notification).
 2. **Create sandbox credential** — internal super-admin script (Phase 1); scopes limited to what the partner bought; secret delivered via a secure channel (never email/chat plaintext), shown once.
@@ -34,6 +41,8 @@ Same codebase, same URL, `env` on the credential (Phase 1) — a test key physic
 6. **Go-live watch** — first 48 h on elevated monitoring (7.5); tenant confirms first real order/voucher attribution looks right.
 
 ## 7.3 Partner-facing docs
+
+**Status (2026-10-01):** ⬜ to do — no `docs/partner-api/`, OpenAPI or swagger in the API (grep). v4's route contracts are house-DSL schema files (`api_v4/schemas/*.js`); a spec would be written by hand or generated from them.
 
 Kept in the repo (`docs/partner-api/`), published however VSYST docs ship:
 
@@ -64,6 +73,8 @@ components:
 
 ## 7.4 Versioning & deprecation policy
 
+**Status (2026-10-01):** ⬜ to do — `/api/v4` is now the app's screen API (`dzzlo_oms.js:121`), so "breaking changes → `/api/v4/partner`" no longer works as written; the partner version must not follow the app's (T11-N1).
+
 - The partner surface rides `/api/v3/partner` and is treated as **its own compatibility contract**, stricter than the app's v3:
   - **Additive-only within the version**: new optional fields, new endpoints, new error codes (partners are told to tolerate unknown codes/fields from day one — it's in the certification list).
   - **Breaking changes** (field removal/rename, semantics, auth changes) → new surface (`/api/v4/partner` or `/partner/v2`), never in-place.
@@ -72,9 +83,13 @@ components:
 
 ## 7.5 Observability & alerts (wiring Phase 4/5 outputs)
 
+**Status (2026-10-01):** ⬜ to do — nothing exists.
+
 Dashboard (from `partner_usage`): calls + error-rate + p95 latency per client per endpoint; 429/quota consumption per client; auth-failure trend; new-client first-call events. Alerts: error-rate >5% per client (15 min), auth-failure spike, sustained 429s, reconciliation drift (Phase 6), any call pattern from a prod client with zero prior sandbox traffic.
 
 ## 7.6 Rollout & rollback
+
+**Status (2026-10-01):** ⬜ to do — the env flag as planned needs no new mechanism; the house toggle store (D10, `helpers/appFeatures.js`) accepts only `screen_v2_…` keys (`:38`), so it is not a drop-in alternative.
 
 | Stage | Gate |
 | --- | --- |
@@ -87,11 +102,15 @@ Dashboard (from `partner_usage`): calls + error-rate + p95 latency per client pe
 
 ## 7.7 Security runbooks (owed from Phase 4.4)
 
+**Status (2026-10-01):** ⬜ to do — `docs/runbook.md` covers the app API only; no partner sections.
+
 1. **Partner secret compromised** — suspend client (≤60 s) → investigate usage window via `partner_usage` (`client_id`, IPs, request_ids) → issue new secret via rotation path → tenant notified with affected order/voucher list (attribution fields) → post-mortem in changelog if partner-visible.
 2. **`PARTNER_JWT_SECRET` compromised** — rotate env secret + restart → every outstanding token invalid ≤15 min (TTL) with no DB work → partners re-mint automatically (certified token flow handles 401→re-auth) → audit window in usage log.
 3. **Surface-level incident** — `PARTNER_API_ENABLED=false` (kill), app unaffected → communicate via status/partner contacts → staged re-enable per 7.6.
 
 ## Phase 7 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 8 — verified absent at `6d41ce5`.
 
 - [ ] Sandbox tenant seeded + reset job; `dzl_test_`/`dzl_live_` issuance paths.
 - [ ] Onboarding flow + certification checklist written into the partner docs.

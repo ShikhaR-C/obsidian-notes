@@ -5,9 +5,14 @@
 
 > **TDD lens:** the gate is the whole point of the safety net — it converts "we think nothing broke" into "the regression contract passed on this exact code." It must be boring, fast enough to run without dread, and impossible to half-run.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). 🟡 The gate, the policy, the checklist template and the CI workflows exist, and the gate now checks two fixture sets; what is missing is proof on a release — no gate run is recorded on the 1.5.5 / 1.79 release commits (the latest recorded PASS is in API PR #39's body, 2026-09-04), `master`'s CI is red (`X-REL-1`), lint is not in the gate and e2e stays deferred. Checklist: 4 ✅, 1 🟡, 1 ⏸. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 6.1 The command — local gate first (⏳ Q8 for CI timing)
+
+**Status (2026-10-01):** ✅ `scripts/release_gate.sh:22-26` — fixtures-fresh first, then API `test:full`, web, app; the "second iteration" (`yarn lint` per repo) is not in the script yet ⬜.
 
 Lives in the reference repo (all four checkouts are siblings in the versioned workspace folder, e.g. `v1_79/`):
 
@@ -44,12 +49,16 @@ Run from anywhere: `bash dzzlo_oms_api/scripts/release_gate.sh`. Deliberately du
 
 ## 6.2 The policy — written, absolute
 
+**Status (2026-10-01):** ✅ adopted verbatim in API `docs/testing.md` §9 ("The policy — written, absolute", `:339`).
+
 1. **Green gate or no release.** No "just this once," no partial runs, no local diffs on the release commit after the gate ran. If the gate is red, the release date moves, not the bar.
 2. **Every gate failure becomes a regression test.** If the failure is a real bug: write/point-to the failing test **in the owning repo** first, fix, re-run the **entire** gate from scratch. If the failure is a flaky/bad test: fixing the test is the release work — flakes are bugs in the safety net.
 3. **Bugs found after release** (by a customer or otherwise) enter the same loop: failing regression test → fix → test stays forever. This is the mandatory-TDD rule from Phase 7.
 4. **Contract changes** (API response shapes) require `fixtures:export` → `fixtures:pull` → front-end suites green _within the same release_ (Phase 5 drift detector enforces the API side).
 
 ## 6.3 The release checklist (copy per release into the release notes/PR)
+
+**Status (2026-10-01):** 🟡 template in `docs/testing.md` §9 (`:357`); no filled checklist or gate run is recorded in the repos for the 1.5.5 / 1.79 releases (API PR #39's and app PR #49's bodies record gate PASSes at their 2026-09-04 heads) ❔ — the user can confirm. The Q8 ritual is now visible: each repo cuts a tag plus a GitHub release that names the compatible builds (API `v1.5.5`, 2026-09-30: Android 1.79 (105), iOS 1.79 (4), DIP-Web 1.4.8; app `v1.79`).
 
 ```
 Release vX.YY gate — run on commit <sha> per repo
@@ -66,9 +75,13 @@ Release vX.YY gate — run on commit <sha> per repo
 
 ## 6.4 E2E smoke — decision slot (⏳ Q6)
 
+**Status (2026-10-01):** ⏸ still deferred — no Detox, Maestro or Playwright in either repo (tree and `package.json` searched).
+
 Deliberately _not_ specified until Q6 is answered. The reserved design if adopted: a `scripts/e2e/` runner that (a) starts a standalone local mongod via `mongodb-memory-server`'s persistent mode, (b) boots the API against it (`NODE_ENV=development`, overridden `DATABASE_URI`), (c) seeds via the existing factories, then (d) runs Playwright (web, ~5 scenarios) and/or Maestro (app, ~3 flows) against it. Strictly local, ≤ 10 minutes, release-gate-only — never in the inner loop. Until then, the gate above ships without e2e and is still a massive upgrade over manual verification.
 
 ## 6.5 CI — reconcile with `tasks_02_major/05-cicd-github-actions.md` (⏳ Q8)
+
+**Status (2026-10-01):** 🟡 API `.github/workflows/test.yml` (PRs + pushes to `master`, mongod cache keyed `8.2.1`, 15-min timeout) and app `.github/workflows/test.yml` (PRs + pushes to `main`, Jest only); pushes to `slave` get no run, and the app job has no lint, type-check or build step and ran 157.5 s at `ea7e7222` — see `X-CI-1` and `X-CI-2` in tasks_02. dip-web — not assessed.
 
 That plan already chose GitHub Actions + Jest; dip-web already runs `lint.yml`. The increment here, per repo, once Q8 confirms:
 
@@ -80,18 +93,22 @@ The **local gate script remains the release ritual** even after CI exists (CI pr
 
 ## 6.6 Verification — how we know Phase 6 is done
 
+**Status (2026-10-01):** 🟡 PASS and BLOCKED both proven on 2026-07-10; "one real release has used the checklist end-to-end" is not evidenced for 1.5.5 / 1.79 ❔.
+
 - `release_gate.sh` run on a healthy workspace → PASS, exit 0; with one deliberately broken test in any repo → BLOCKED, exit 1, and the failing repo is obvious from output.
 - The policy text (§6.2) and checklist (§6.3) are copied into `docs/testing.md` (API) and referenced from the other repos' testing docs.
 - One real release has used the checklist end-to-end.
 
 ## Phase 6 checklist
 
-- [x] `dzzlo_oms_api/scripts/release_gate.sh` executable (+ `scripts/check_fixtures_fresh.js`) — _committing is the user's call_
-- [x] Policy §6.2 adopted verbatim in `docs/testing.md` §9 (team ack still ⏳ Q10)
-- [x] Release checklist template in `docs/testing.md` §9 — _physical home per release still pending Q8 release-cut mechanics_
-- [x] E2E decision recorded (Q6) — **explicitly deferred**; checklist keeps a marked `e2e smoke … when adopted` slot; Maestro-preferred design in §6.4
-- [x] CI workflows added per repo (`.github/workflows/test.yml` ×3) with mongod binary cache
-- [x] First gated release completed — the §6.6 gate run below **is** the demonstration
+**Status (2026-10-01):** 4 ✅, 1 🟡, 1 ⏸ — marks at the end of each line.
+
+- [x] `dzzlo_oms_api/scripts/release_gate.sh` executable (+ `scripts/check_fixtures_fresh.js`) — _committing is the user's call_ — **2026-10-01:** ✅ (the freshness check covers v4 since PR #39).
+- [x] Policy §6.2 adopted verbatim in `docs/testing.md` §9 (team ack still ⏳ Q10) — **2026-10-01:** ✅.
+- [x] Release checklist template in `docs/testing.md` §9 — _physical home per release still pending Q8 release-cut mechanics_ — **2026-10-01:** ✅ template; its home per release is still Q8.
+- [x] E2E decision recorded (Q6) — **explicitly deferred**; checklist keeps a marked `e2e smoke … when adopted` slot; Maestro-preferred design in §6.4 — **2026-10-01:** ⏸ still deferred.
+- [x] CI workflows added per repo (`.github/workflows/test.yml` ×3) with mongod binary cache — **2026-10-01:** ✅ API and app (dip-web not assessed); gaps are `X-CI-1` / `X-CI-2` in tasks_02.
+- [x] First gated release completed — the §6.6 gate run below **is** the demonstration — **2026-10-01:** 🟡 the 2026-07-10 demonstration only; no gate run is recorded on the 1.5.5 / 1.79 release commits ❔.
 
 ## Phase 6 — implementation notes (executed 2026-07-10, agent team)
 

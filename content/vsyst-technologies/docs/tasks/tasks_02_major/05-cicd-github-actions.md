@@ -3,6 +3,9 @@
 > Originally deferred in the learning docs (`docs/learning/system-design/08-cicd-deployment.md` covers the strategy; this file is the execution plan).
 > Target: both `dzzlo_oms_api` and `dzzlo_oms_app` have GitHub Actions workflows for test, lint, type-check, build, and deploy — replacing the current "SSH in and `git pull`" process.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). CI exists in both repos (tests only); CD does not. Of 8 phases: 2 🟡 (Phase 1 API CI without lint or branch protection, Phase 4 app CI with Jest only), 5 ⬜ (API CD, Dependabot/CodeQL, Android CD, iOS CD, secrets store) and 1 ⏸ (CodePush, deferred by the plan itself); branch protection waits on a GitHub plan decision; two new tasks, X-CI-1 and X-CI-2 (rows at the end); master's red month-end run is X-REL-1 in tasks_12. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -20,10 +23,12 @@ Net effect: ship with confidence, bus factor > 1, tests gate deployment, artifac
 ### 1.1 Repository layout
 
 - **Separate git repos:** `dzzlo_oms_api/.git` and `dzzlo_oms_app/.git` are siblings. Parent is not a git repo. **Each needs its own set of workflows** (there's no monorepo option).
-- Neither repo has a `.github/workflows/` directory today.
+- ~~Neither repo has a `.github/workflows/` directory today.~~ **2026-10-01:** both have one — API `.github/workflows/test.yml` (added `f31d1f6`, 2026-07-10) and app `.github/workflows/test.yml` (added `1630f5cf`, 2026-07-10, merged with app PR #48 on 2026-09-03).
 - No Dockerfile, no other CI config, no Fastlane.
 
 ### 1.2 API project state
+
+**Status (2026-10-01):** partly stale — CI exists (Node 22, `yarn test:full` against `mongodb-memory-server` 8.2.1, api:`.github/workflows/test.yml:14-39`); still no ESLint, no `engines`, no `.nvmrc`; the health endpoint is `/healthcheck` (api:`dzzlo_oms.js:69`); rollback is the manual tag-based procedure in api:`docs/runbook.md:121-156`.
 
 | Concern         | Details                                                                                                     |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -41,6 +46,8 @@ Net effect: ship with confidence, bus factor > 1, tests gate deployment, artifac
 | Rollback        | None — manual `git reset --hard` under pressure                                                             |
 
 ### 1.3 App project state
+
+**Status (2026-10-01):** partly stale — Android 105 / iOS 4, v1.79 (app:`android/app/build.gradle:89-90`); Firebase analytics, crashlytics and perf are live (app:`package.json:35-38`); `yarn lint` and TypeScript 6.0.2 exist but CI runs neither (X-CI-2); CodePush is still commented out (app:`src/components/Error/ErrorBoundary.js:6`).
 
 | Concern          | Details                                                                                  |
 | ---------------- | ---------------------------------------------------------------------------------------- |
@@ -66,6 +73,8 @@ Net effect: ship with confidence, bus factor > 1, tests gate deployment, artifac
 ---
 
 ## 2. Problem Statement
+
+**Status (2026-10-01):** items 2 and 4 are partly met — tests run on every PR in both repos, and releases are tagged (API `v1.5.5`, app `v1.79`); deploys are still manual, so items 1, 3, 5, 6 and 7 stand.
 
 1. **Bus factor = 1.** Only the project owner knows the SSH keys, the `.env.production` contents, the exact steps to roll out a change. A single person unavailable = nothing can ship.
 2. **No tests before deploy.** `pm2 restart` will happily start a broken build. Errors surface as user-facing 500s, not as a red X in a PR checker.
@@ -354,9 +363,13 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 ### Phase 1 — API: CI-only (test + lint on PR)
 
+**Status (2026-10-01):** 🟡 CI runs on every PR and on `master` pushes; no linter, no branch protection (steps below).
+
 **Goal:** start running tests on every PR. No deploys yet. Lowest-risk entry point.
 
 #### Step 1.1 — Pin Node version
+
+**Status (2026-10-01):** 🟡 CI pins Node 22 (api:`.github/workflows/test.yml:18-20`); api:`package.json` has no `engines`, and there is no `.nvmrc`.
 
 - File: `dzzlo_oms_api/package.json`
 - Add `"engines": {"node": ">= 22.11.0"}` to match the app's constraint.
@@ -364,12 +377,16 @@ Use [GitHub Environments](https://docs.github.com/en/actions/deployment/targetin
 
 #### Step 1.2 — Add ESLint
 
+**Status (2026-10-01):** ⬜ to do — no ESLint config and no `lint` script in the API (api:`package.json:10-20`).
+
 - `yarn add --dev eslint @eslint/js` (ESLint 9 uses flat config)
 - Create `eslint.config.js` with a basic Node config (recommended rules, no style bikeshed for now).
 - Add script: `"lint": "eslint ."`
 - Run locally, fix glaring issues (expect < 20 warnings on a 239-file project with no prior lint; fix or silence).
 
 #### Step 1.3 — Create `.github/workflows/test.yml`
+
+**Status (2026-10-01):** ✅ in a different shape — `test.yml` runs on every PR (any base) and on pushes to `master`, with a 15-minute timeout, a cached mongod binary, `cp .env.ci .env.development` and `yarn test:full` (api:`.github/workflows/test.yml:3-39`); no lint step, and pushes to `slave` get no run (X-CI-1).
 
 ```yaml
 name: API Test
@@ -401,12 +418,16 @@ jobs:
 
 #### Step 1.4 — Branch protection
 
+**Status (2026-10-01):** ⏸ waits on a GitHub plan decision — GitHub reports no protection on `master` or `slave`, and the rulesets API answers 403 "Upgrade to GitHub Pro or make this repository public" for these private repos.
+
 - GitHub repo settings → Branches → Protection rule for `master`:
   - Require status checks to pass before merging
   - Require `test` (the job defined above) to pass
   - Require at least 1 approving review (optional for team-of-one)
 
 #### Step 1.5 — Verify with a test PR
+
+**Status (2026-10-01):** ✅ PR runs are recorded — e.g. PR #39 head `c3b17af` (run 36749549191) and PR #46 head `f5dbde2` (run 36788793446), both green. Master's own push run on `6d41ce5` failed at the month end (run 36779364896) — X-REL-1 in tasks_12.
 
 - Open a trivial PR (add a comment to a README).
 - Watch the workflow run in GitHub Actions tab.
@@ -423,15 +444,21 @@ jobs:
 
 ### Phase 2 — API: CD (deploy to staging + production, SSH + PM2)
 
+**Status (2026-10-01):** ⬜ to do — deploys follow the manual canary in api:`docs/runbook.md:121-156` (server 1 → observe → server 2, tagged releases).
+
 **Goal:** every push to `master` auto-deploys to staging; production requires manual approval.
 
 #### Step 2.1 — Configure GitHub Environments
+
+**Status (2026-10-01):** ⬜ to do — neither repo has a GitHub Environment or an Actions secret (`gh api …/environments` and `gh secret list` → empty).
 
 - Settings → Environments → New environment `staging`, another `production`.
 - For `production`, enable "Required reviewers" with yourself (or a teammate).
 - Add env-scoped secrets (SSH keys, env vars) to each environment.
 
 #### Step 2.2 — Prepare the EC2 instance(s)
+
+**Status (2026-10-01):** ❔ the EC2 deploy user cannot be seen from the repos.
 
 - Create a `deploy` user (or reuse `ubuntu`) with:
   - Own `~/.ssh/authorized_keys` with the GitHub Actions public key
@@ -441,6 +468,8 @@ jobs:
 - Verify: from your laptop, `ssh deploy@<host>` → `pm2 ls` works.
 
 #### Step 2.3 — Create `.github/workflows/deploy.yml`
+
+**Status (2026-10-01):** ⬜ to do — no deploy workflow in either repo.
 
 ```yaml
 name: API Deploy
@@ -522,6 +551,8 @@ jobs:
 
 #### Step 2.4 — Environment variables on the server
 
+**Status (2026-10-01):** ❔ server-side env handling cannot be seen from the repos.
+
 - Stop using `.env.production` on disk. Instead:
   - Create `/etc/dzzlo/dzzlo_oms.env` with the 28 secrets, owned by `root`, mode `0600`.
   - `ecosystem.config.js` sets `env` from `process.env` (the environment the PM2 daemon was started with).
@@ -531,6 +562,8 @@ jobs:
 **Recommendation:** defer env file restructuring to Phase 7 (Parameter Store). For Phase 2, keep the current `.env.production` approach and just focus on code deploy automation.
 
 #### Step 2.5 — Test the pipeline
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Push a no-op change to a file to `master`.
 - Watch workflow.
@@ -548,9 +581,13 @@ jobs:
 
 ### Phase 3 — API: PR checks and dependency hygiene
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** harden the PR path so obvious mistakes can't merge.
 
 #### Step 3.1 — Enable Dependabot
+
+**Status (2026-10-01):** ⬜ to do — no `.github/dependabot.yml`, and Dependabot alerts are off in both repos (`gh api …/vulnerability-alerts` → 404).
 
 - File: `.github/dependabot.yml`
   ```yaml
@@ -566,10 +603,14 @@ jobs:
 
 #### Step 3.2 — Add CodeQL (free for public repos, also free for private on Team)
 
+**Status (2026-10-01):** ⬜ to do — no `codeql.yml`; whether code scanning is available for these private repos depends on the GitHub plan (❔, see Q6).
+
 - `.github/workflows/codeql.yml` — standard template from GitHub.
 - Finds SQL injection, XSS, path traversal style issues.
 
 #### Step 3.3 — Require CodeQL and Dependabot alerts to pass
+
+**Status (2026-10-01):** ⏸ waits on the same plan decision as Step 1.4.
 
 - Branch protection rule: add `CodeQL` as required check.
 
@@ -583,9 +624,13 @@ jobs:
 
 ### Phase 4 — App: CI-only (lint + type-check + test on PR)
 
+**Status (2026-10-01):** 🟡 app CI exists but runs Jest only (steps below).
+
 **Goal:** mirror Phase 1 for the app project. No deploys yet.
 
 #### Step 4.1 — Create `.github/workflows/verify.yml` in the app repo
+
+**Status (2026-10-01):** 🟡 app:`.github/workflows/test.yml` (added `1630f5cf`) runs on PRs (any base) and pushes to `main`: Node 22, `cp .env.ci .env.testing`, `yarn test` — no `yarn lint`, no type-check, no `timeout-minutes` (X-CI-2).
 
 ```yaml
 name: App Verify
@@ -613,11 +658,15 @@ jobs:
 
 #### Step 4.2 — Fix pre-existing issues
 
+**Status (2026-10-01):** ❔ not run here — `yarn lint` exists (app:`package.json:25`), and app PRs #49 and #55 report one pre-existing `react-hooks/exhaustive-deps` error in `AppNavigatorContainer`; there is no `tsc` script.
+
 - Run `yarn lint` and `yarn tsc --noEmit` locally.
 - Resolve errors (may take a few hours on a 238-test codebase that's never had CI).
 - If some lint rules are aspirational, down-level them to warnings temporarily.
 
 #### Step 4.3 — Branch protection on `master`
+
+**Status (2026-10-01):** ⏸ waits on a GitHub plan decision — no protection on `main` or `slave`; same 403 as Step 1.4. (The app's default branch is `main`, not `master`.)
 
 - Require `verify` to pass.
 
@@ -630,9 +679,13 @@ jobs:
 
 ### Phase 5 — App: Android CD (build AAB, upload to Play Console internal track)
 
+**Status (2026-10-01):** ⬜ to do — Android builds are still made locally (`build-release-apk.sh`).
+
 **Goal:** tagging a release (`v1.77.0`) builds an AAB and uploads it to the Play Console internal track. Manual promotion to production is still a human step.
 
 #### Step 5.1 — Encode and store the keystore
+
+**Status (2026-10-01):** ⬜ to do — the app repo has no Actions secrets.
 
 Locally:
 
@@ -644,11 +697,15 @@ Paste into GitHub Secret `KEYSTORE_BASE64`. Also add `KEYSTORE_PASSWORD`, `KEY_A
 
 #### Step 5.2 — Get a Google Play Service Account
 
+**Status (2026-10-01):** ❔ the Play Console service account cannot be seen from the repos.
+
 - [Play Console → API access → Create service account](https://developers.google.com/android-publisher/getting_started).
 - Grant "Release Manager" role (not owner — least privilege).
 - Download JSON, store as `GOOGLE_PLAY_SERVICE_ACCOUNT_JSON` secret.
 
 #### Step 5.3 — Create `.github/workflows/release-android.yml`
+
+**Status (2026-10-01):** ⬜ to do — no release workflow.
 
 ```yaml
 name: App Release Android
@@ -717,12 +774,16 @@ jobs:
 
 #### Step 5.4 — Versioning
 
+**Status (2026-10-01):** ⬜ to do — versions are still bumped by hand (`303eec8e`: Android 105 / iOS 4).
+
 - Tag a release: `git tag v1.77.0 && git push origin v1.77.0`.
 - The tag triggers the workflow.
 - Increment `versionCode` in `android/app/build.gradle` **as part of the tagged commit** (Play Store rejects duplicates).
 - Long-term: auto-derive `versionCode` from the tag or commit count. For now, manual bump.
 
 #### Step 5.5 — First deploy
+
+**Status (2026-10-01):** ⬜ to do.
 
 - Run manually via `workflow_dispatch` first with a canary commit.
 - Inspect Play Console internal track → confirm the new AAB.
@@ -738,14 +799,20 @@ jobs:
 
 ### Phase 6 — App: iOS CD (archive, upload to TestFlight)
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** tagging a release also triggers an iOS TestFlight upload.
 
 #### Step 6.1 — Generate an App Store Connect API key
+
+**Status (2026-10-01):** ❔ cannot be seen from the repos.
 
 - https://appstoreconnect.apple.com/access/integrations/api → Generate.
 - Store the `.p8` contents, Key ID, Issuer ID in GitHub Secrets.
 
 #### Step 6.2 — Set up code signing
+
+**Status (2026-10-01):** ⬜ to do.
 
 Options:
 
@@ -755,6 +822,8 @@ Options:
 Recommendation: start with manual certs (option B) — more reliable in CI experience reports.
 
 #### Step 6.3 — Create `.github/workflows/release-ios.yml`
+
+**Status (2026-10-01):** ⬜ to do — no release workflow.
 
 ```yaml
 name: App Release iOS
@@ -824,10 +893,14 @@ jobs:
 
 #### Step 6.4 — `ExportOptions.plist`
 
+**Status (2026-10-01):** ⬜ to do — no `ios/ExportOptions.plist`.
+
 - Check in a minimal `ios/ExportOptions.plist` with `method=app-store`, team id, etc.
 - Signing style = manual (referenced by the imported profile name).
 
 #### Step 6.5 — CFBundleVersion bump
+
+**Status (2026-10-01):** ⬜ to do — `CURRENT_PROJECT_VERSION` is bumped by hand (now 4, app:`ios/dzzlo_oms_app.xcodeproj/project.pbxproj:447,482`).
 
 - Before tagging: `agvtool next-version -all` to bump `CURRENT_PROJECT_VERSION`.
 - Long-term: auto-bump via script in the workflow; commit back. For now, manual.
@@ -842,15 +915,21 @@ jobs:
 
 ### Phase 7 — API: Secrets to AWS Parameter Store (optional follow-up)
 
+**Status (2026-10-01):** ⬜ to do.
+
 **Goal:** eliminate `.env.production` from disk.
 
 #### Step 7.1 — Create parameters in AWS Systems Manager
+
+**Status (2026-10-01):** ❔ AWS console state.
 
 - Prefix: `/dzzlo/oms/prod/*`
 - One parameter per secret.
 - Use `SecureString` type with a KMS key.
 
 #### Step 7.2 — Modify API startup to load from SSM
+
+**Status (2026-10-01):** ⬜ to do — no SSM client (the only AWS SDK package is `@aws-sdk/client-sesv2`, api:`package.json:31`).
 
 - File: `dzzlo_oms.js` (or a new `helpers/loadConfig.js`)
 - On boot, call `ssm:GetParametersByPath` with the prefix, populate `process.env`.
@@ -859,10 +938,14 @@ jobs:
 
 #### Step 7.3 — Attach IAM role to the EC2 instance
 
+**Status (2026-10-01):** ❔ AWS console state.
+
 - Instance profile allows `ssm:GetParametersByPath` on `/dzzlo/oms/prod/*`.
 - No static AWS keys needed on the instance.
 
 #### Step 7.4 — Delete `.env.production` from the server
+
+**Status (2026-10-01):** ❔ server state.
 
 - Once verified working, `rm /home/ubuntu/dzzlo_oms_api/.env.production`.
 - Update GH Actions workflow to skip any `.env` writing.
@@ -876,6 +959,8 @@ jobs:
 ---
 
 ### Phase 8 — App: CodePush for JS-only hotfixes (optional follow-up)
+
+**Status (2026-10-01):** ⏸ deferred by the plan itself; the CodePush code is still commented out (app:`src/components/Error/ErrorBoundary.js:6,58`, app:`src/components/NoNetwork/Undraw.js:7`).
 
 **Skipped in favor of deeper evaluation.** App Center is deprecated; Expo Updates and self-hosted CodePush are both viable alternatives. Spin this up as a separate mini-initiative after Phase 5 + Phase 6 are stable.
 
@@ -930,6 +1015,8 @@ jobs:
 
 ### 8.2 Deploy smoke tests
 
+**Status (2026-10-01):** ⬜ to do — `/healthcheck` exists (api:`helpers/healthcheck.js:5-23`: `status: "ok"`, 503 when the database is down), but there is no `/api/v3/version` route and no workflow runs the checks.
+
 After every deploy:
 
 - `GET /health` → 200 with `{status: "ok"}`
@@ -939,11 +1026,15 @@ After every deploy:
 
 ### 8.3 Secret rotation drill
 
+**Status (2026-10-01):** ⬜ to do — no deploy secrets exist yet.
+
 Quarterly: rotate the SSH deploy key and one other secret. Verify the workflow still passes. Ensures the process isn't just theoretical.
 
 ---
 
 ## 9. Post-launch Monitoring
+
+**Status (2026-10-01):** ⬜ to do — waits on Phase 2.
 
 - GitHub Actions run history tab: watch for flakes
 - Deploy frequency (target: enable "push to master deploys automatically" without fear)
@@ -957,6 +1048,8 @@ These are the [DORA metrics](https://dora.dev/). Even tracking them roughly is a
 
 ## 10. Open Questions
 
+**Status (2026-10-01):** Q6 partly answered — the repos are private on a plan where rulesets are unavailable (the 403 above), so CodeQL and branch protection need a plan decision; Q7 still open (the API has no linter yet); Q1–Q5 open (E2E, Q3, is tasks_12's open question too).
+
 1. **OIDC federation instead of SSH?** Long-term yes. Phase 9 future work.
 2. **Monorepo consolidation?** The two repos are siblings. A single repo with `/api` and `/app` directories would share CI infrastructure and simplify cross-cutting changes (e.g., token refresh rollout from `01`). Big move; defer to a separate initiative.
 3. **E2E tests in CI?** Detox for RN is heavy; Maestro is lighter. Not in scope here; consider after unit tests are stable.
@@ -968,6 +1061,8 @@ These are the [DORA metrics](https://dora.dev/). Even tracking them roughly is a
 ---
 
 ## Appendix A — Workflow file locations
+
+**Status (2026-10-01):** each repo has only `.github/workflows/test.yml` plus a PR template — the API's with a wider trigger set than sketched, the app's in place of `verify.yml`; no deploy, CodeQL, release or Dependabot file in either (`git ls-tree` of `.github` at both commits).
 
 **API repo (`dzzlo_oms_api/.github/workflows/`):**
 
@@ -984,6 +1079,8 @@ These are the [DORA metrics](https://dora.dev/). Even tracking them roughly is a
 - `.github/dependabot.yml` — dependency updates
 
 ## Appendix B — Secrets setup checklist
+
+**Status (2026-10-01):** ⬜ none of the listed secrets or environments exist (`gh secret list` and `gh api …/environments` → empty in both repos); the EC2, Play Console and App Store items are ❔ from the repos.
 
 Before starting Phase 2:
 
@@ -1007,3 +1104,12 @@ Before starting Phase 6:
 - [ ] Export iOS distribution cert as `.p12`, base64-encode
 - [ ] Add `IOS_P12_BASE64`, `IOS_P12_PASSWORD`, `APPLE_API_KEY_ID`, `APPLE_API_ISSUER_ID`, `APPLE_API_KEY_P8`
 - [ ] Check in `ios/ExportOptions.plist`
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+Rows owned by this doc; the folder's full table is in [00-overview.md](./00-overview.md).
+
+| ID     | Task                                                                                                                                                                        | Why (evidence)                                                                                                                                                                                                                                                                                                   | Project   | Size | Depends on                             |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- | -------------------------------------- |
+| X-CI-1 | 🆕 Run CI on pushes to the integration branch `slave` (today only PRs and `master` pushes run), and either add a deploy workflow or record that deploys stay manual         | api:`.github/workflows/test.yml:3-7`, app:`.github/workflows/test.yml:3-7`; PR #46's merge into `slave` (`86083ca`, 2026-09-30 23:08Z) produced no run (`gh run list --commit`); neither repo has a deploy workflow — the API deploys by the manual canary in api:`docs/runbook.md:121-156`                      | app + API | S    | X-OPS-1 (tasks_01) for the deploy half |
+| X-CI-2 | 🆕 Give app CI a lint job (and a type-check or build job), set a `timeout-minutes`, and bring the Jest run back under the house "app ≤ 2 min" budget — or change the budget | app:`.github/workflows/test.yml` runs `yarn test` only, on PRs and pushes to `main`; Jest took 128.8 s, 157.5 s and 171.3 s in runs 36760183167, 36779552256, 36708907732, against app:`.github/PULL_REQUEST_TEMPLATE.md:13` and app:`AI.md:89`; `yarn lint` exists (app:`package.json:25`) but CI never runs it | app       | S    | —                                      |

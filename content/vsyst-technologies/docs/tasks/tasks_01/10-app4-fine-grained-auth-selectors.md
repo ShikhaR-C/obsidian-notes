@@ -9,6 +9,9 @@
 > This doc is the single source of truth — execute one phase at a time, top to
 > bottom. Each phase is independent; you can stop after any phase and ship.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Phases 0–8 shipped in `a5c4a1d3` (2026-04-14) and still hold (9 ✅): 31 selectors (Phase 0's 30 plus `selectPendingAuthStep`), 104 source files import them, and the Phase 8 greps find no broad `state.auth` subscription and no local shadow; the optional §7.1 / §12 leftovers are unchanged (1 ⬜). Of the v2 screens, Customers uses field selectors plus `selectCurrentUser`, and Daily Summary reads no auth state. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 0 · Background
@@ -69,6 +72,8 @@ mutation re-renders every component using this pattern.
 ---
 
 ## 1 · Phase 0 — Create `src/store/selectors/auth.js`
+
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — `src/store/selectors/auth.js` exports the 30 selectors listed here plus `selectPendingAuthStep` (added with the sign-in-step fix, `4d3ad441`); the legacy exports in `src/store/slices/auth.js:162-165` remain, as planned.
 
 **File to create:** `dzzlo_oms_app/src/store/selectors/auth.js`
 
@@ -201,6 +206,8 @@ For each file:
 
 ## 3 · Phase 1 — Hot list screens (Orders / Invoices / Payments)
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow.
+
 These are the highest-traffic screens. Maximum re-render reduction here.
 
 | #   | File                                                                  | Selectors needed                                                                |
@@ -237,6 +244,8 @@ visual diff. Filter/sort still works.
 
 ## 4 · Phase 2 — Navigation & drawers
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow.
+
 Drawers re-render on EVERY auth slice change. Highest impact-per-file in the
 codebase.
 
@@ -260,6 +269,8 @@ DevTools profiler).
 
 ## 5 · Phase 3 — Profile & company-profile screens
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow.
+
 These genuinely need many fields. Use `selectCurrentUser` /
 `selectCurrentCompany` (object selectors) — still avoids subscribing to
 `notification`/`showVerification`.
@@ -281,6 +292,8 @@ state/district pickers, validate user flow — all unchanged.
 
 ## 6 · Phase 4 — Form / "New" screens
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow.
+
 | #   | File                                                       | Selectors                                                                    |
 | --- | ---------------------------------------------------------- | ---------------------------------------------------------------------------- |
 | 1   | `src/screens/Dealer/NewSalesOrder/index.js`                | inspect & replace                                                            |
@@ -300,6 +313,8 @@ customer order, payment. They submit and appear in their list.
 ---
 
 ## 7 · Phase 5 — Entity management screens (Customers, Dealers, Vehicles, Users, Products, ProductDates)
+
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow. The v2 Customers screen follows the pattern: `selectUserScope`, `selectCompanyId`, and `selectCurrentUser` for the user object (`src/screens/v2/Dealer/Customers/index.js:68-70`).
 
 | #   | File                                                           | Selectors                                                                           |
 | --- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
@@ -336,6 +351,8 @@ filter all work.
 
 ## 8 · Phase 6 — Reports, Accounts, DailySummary, SisterCompanies, RelationList, Vouchers, Notifications, VehicleReports, Help, Invites
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow. The v2 Daily Summary (`src/screens/v2/Common/DailySummary/`) reads no auth state at all (no `useSelector`).
+
 | #   | File                                                       | Selectors                                                                                                |
 | --- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | 1   | `src/screens/Common/Accounts/index.js`                     | `selectUserCoId`, `selectUserRole`, `selectUserScope`, `selectCompanyWorkEmail`                          |
@@ -368,6 +385,8 @@ notifications drawer screens. Email-export bottom sheets prefill `work_email`.
 
 ## 9 · Phase 7 — Components, hooks, demo, error boundary
 
+**Status (2026-10-01):** ✅ done (`a5c4a1d3`) — the Phase 8 greps over `src/` at app `main` find no broad `state.auth` subscription and no local shadow.
+
 Lower-traffic but globally rendered (ErrorBoundary, VersionInfo).
 
 | #   | File                                                | Selectors                                                                                           |
@@ -397,6 +416,8 @@ Lower-traffic but globally rendered (ErrorBoundary, VersionInfo).
 
 ### 7.1 Optional — RTK Query `getState()` reads (low-priority)
 
+**Status (2026-10-01):** ⬜ still skipped, as §12.1 records — `state.auth.user._id` at `src/store/apis/dzzlooms/users.js:26` and `state.auth.user.role` at `src/store/apis/dzzlooms/cust_msts.js:19`.
+
 Two RTK Query callbacks read auth via `getState()`. These are NOT React
 subscriptions (no re-render impact), but for consistency you can switch to
 the new selectors:
@@ -411,6 +432,8 @@ Skip if you want to keep this PR purely about React render perf.
 ---
 
 ## 10 · Phase 8 — Cleanup & DevTools verification
+
+**Status (2026-10-01):** ✅ greps clean at app `main` — 0 matches for the three patterns in step 1 across `src/`, and 104 source files import `store/selectors/auth`; the one inline field read left is `src/screens/Customer/Users/OTPManager.js:149` (§12.3). The DevTools profile in step 3 is manual (❔).
 
 After all phases land:
 
@@ -474,6 +497,8 @@ to the next phase.
 ---
 
 ## 12 · Implementation notes (post-execution, 2026-04-14)
+
+**Status (2026-10-01):** still accurate at app `main` — §12.1's two `getState()` reads and the uncentralised slice exports (`src/store/slices/auth.js:162-165`) remain; §12.2's four local selectors are unchanged; §12.3's four `selectCurrentCompany` single-field reads remain, and the `OTPManager.js` inline read has moved to line 149.
 
 All 8 phases shipped. Final audit clean: 0 broad subscriptions, 0 local
 shadow selectors. Below is a record of what was skipped, deferred, or left

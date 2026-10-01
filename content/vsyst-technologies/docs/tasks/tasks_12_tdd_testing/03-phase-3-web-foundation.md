@@ -5,6 +5,9 @@
 
 > **TDD lens:** the repo already decided its runner — `src/docs/plans/cra-to-vite-migration.plan.md` → "Phase 5: Testing (Deferred)" specifies Vitest + jsdom + `src/setupTests.js` and keeps the installed `@testing-library/*` deps. This phase **executes that plan** (reconciled, not reinvented) and adds the missing piece it didn't mention: MSW, because every page speaks RTK Query to absolute remote URLs and the local-only principle forbids real requests.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not re-assessed: this phase is dip-web only (Vitest + RTL + MSW inside `dip-web`), outside the two projects this review covers, so its text and checklist are left as written; the roll-up in `00-overview.md` lists it as "web — not assessed". dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 3.0 Triage the existing Vitest spike first (added 2026-07-09)

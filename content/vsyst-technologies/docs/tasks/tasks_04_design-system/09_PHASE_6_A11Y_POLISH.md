@@ -1,5 +1,8 @@
 # Phase 6 — Accessibility, Polish, and Enforcement
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Mostly open: of the 12 steps, 4 are partly done (lint at `error` in the v2 scope, the polish checklist, the docs, the design handoff), 4 to do, 2 deferred by F-APP-3 (custom fonts, theme persistence), 1 unverifiable (screen-reader audits) and 1 dropped (the migration retrospective). The v2 screens already carry roles, labels, live regions, 44 pt targets and uncapped text, but no contrast check exists — and the review found a light-mode contrast failure in v2 (🆕 T04-N2 in [00_README](./00_README.md)). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 **Goal**: Take the shipped design system from "works" to "Apple-grade." Lock in quality with enforcement. Ship power-user features.
 
 **Entry criteria**: Phases 1–5 complete. All screens migrated. Font scaling uncapped.
@@ -19,6 +22,8 @@
 ---
 
 ## Step 6.1 — WCAG contrast automation
+
+**Status (2026-10-01):** ⬜ no contrast library and no `contrast.test.js` among the 20 theme test files. The house rule against new dependencies (02-foundations log) points to a small WCAG helper instead; `success` on light surfaces would fail today (T04-N2).
 
 Install `color2k` or `wcag-contrast` (small lib, ~2kb) and write a test:
 
@@ -60,6 +65,8 @@ Run in CI via `yarn test`. Gating: failing = CI red.
 
 ## Step 6.2 — Escalate lint rules
 
+**Status (2026-10-01):** 🟡 the colour rule is already `error`, for the v2 scope only (`eslint.config.js:42-76`); the bare-`Text` rule does not exist; app CI runs no lint, so neither would fail CI (`X-CI-2` in tasks_02).
+
 ```diff
 // .eslintrc
 - 'no-restricted-imports': ['warn', { ... }],
@@ -72,6 +79,8 @@ Run in CI via `yarn test`. Gating: failing = CI red.
 `yarn lint` now fails CI if anyone reintroduces a bare `<Text>` or a hardcoded color outside the exempted paths.
 
 ## Step 6.3 — Custom font decision
+
+**Status (2026-10-01):** ⏸ F-APP-3 kept custom fonts out ("deliberately not"); Q2 is open. In practice Option B already happens outside the theme: Roboto Condensed draws figures in 19 files, the v2 date range bar among them (`src/components/v2/DateRangeSheet/layout.bar.js:76-80`); OpenSans has 0 uses.
 
 Three options for the installed-but-unused `OpenSans_Regular.ttf`, `RCL_Light.ttf`, `RobotoCondensed_Regular.ttf`:
 
@@ -95,9 +104,11 @@ If Option A:
 
 ## Step 6.4 — Local-first theme persistence (via `redux-persist`)
 
+**Status (2026-10-01):** ⏸ F-APP-3 deferred it ("deliberately not: redux-persist for theme"); the theme is still server-only (`auth.user.theme`). The dependency claim below is corrected in place.
+
 Problem: current theme is backend-only via `auth.user.theme`. On cold start / fresh install / logout, the user briefly sees the wrong theme until the user object loads.
 
-Solution: persist the `theme` Redux slice locally via `redux-persist` (already in dependencies).
+Solution: persist the `theme` Redux slice locally via `redux-persist` ~~(already in dependencies)~~ (_2026-10-01:_ not a dependency of the app).
 
 ```js
 // src/store/apis/index.js — add to persistConfig
@@ -112,6 +123,8 @@ The new `theme` slice (Phase 1.15) becomes the source of truth; backend sync sti
 
 ## Step 6.5 — Consolidate theme-toggle entry points
 
+**Status (2026-10-01):** ⬜ both remain: Settings (`src/screens/Common/Settings/index.js:26`) and `VersionInfo`'s theme modal (`src/components/VersionInfo/index.js:87-98,381-385`).
+
 Audit found two places that toggle theme:
 
 - `src/screens/Common/Settings/index.js` (primary)
@@ -120,6 +133,8 @@ Audit found two places that toggle theme:
 Remove the `VersionInfo` toggle. Keep the single source of truth in Settings.
 
 ## Step 6.6 — Accessibility audit
+
+**Status (2026-10-01):** ❔ no TalkBack or VoiceOver pass is recorded. v2 code carries 29 `accessibilityRole`, 25 `accessibilityLabel`, 13 `accessibilityState` and 2 live regions (`src/components/v2/ListStates.js:132`, `RangeSummary.js:310`); no app code reads reduce motion (⬜ item 4).
 
 For each of the 20 highest-traffic screens, run through:
 
@@ -132,6 +147,8 @@ For each of the 20 highest-traffic screens, run through:
 Any a11y bugs found get fixed. Add `accessibilityLabel`, `accessibilityRole`, `accessibilityHint` props to custom components.
 
 ## Step 6.7 — Apple-grade polish checklist
+
+**Status (2026-10-01):** 🟡 v2 has spacing tokens through `Box` (`src/components/v2/Box.js:82-87`), `TARGET` 44 with hit-slop helpers (`src/theme/layout.js:35,45`); missing: icon-size and motion tokens (glyph sizes are per-screen constants), elevation by surface tiers, haptics, focus states. Safe area: the root still pads all four insets and v2 lists add the bottom one again — F-APP-8, deferred by the user on 2026-09-06.
 
 Items borrowed from Apple HIG that we should audit:
 
@@ -146,6 +163,8 @@ Items borrowed from Apple HIG that we should audit:
 - **Focus states** — forms and lists should have visible focus outlines when keyboard-navigated (for tablets + external keyboards).
 
 ## Step 6.8 — Material You dynamic color (Android 12+)
+
+**Status (2026-10-01):** ⬜ not installed; Q4 is open.
 
 **Optional but recommended.** On Android 12+, users can set a system accent color and apps can opt into it. Install `@pchmn/expo-material3-theme` (works in bare RN despite the name) and in `ThemeProvider.js`:
 
@@ -162,6 +181,8 @@ This makes the app feel native on modern Android. Opt-in via a Settings toggle: 
 
 ## Step 6.9 — Tertiary theme as stress test
 
+**Status (2026-10-01):** ⬜ two themes only (`src/theme/themes/index.js:9`).
+
 Add one more theme to `THEMES[]` after migration is complete. Suggested: a "high-contrast light" theme for very-low-vision users. Palette:
 
 - Background: pure white (`#ffffff`)
@@ -174,6 +195,8 @@ Ship it. Contrast tests pass automatically (Phase 6.1).
 Success criterion: adding this theme is a **one-file change** (just create `src/theme/themes/highContrast.js`, add to `THEMES[]`). If it requires touching anything else, the architecture has a leak.
 
 ## Step 6.10 — Developer documentation (final)
+
+**Status (2026-10-01):** 🟡 no `src/theme/README.md`; items 1, 2, 8, 9 and 10 are covered in `docs/testing.md:420-1073` and `AI.md:46-76` (why tokens and uncapped text, the primitives, the type scale and its harness, pitfalls such as a line height scaled twice); the variant, colour-role and spacing sheets and "how to add a theme or a brand colour" are not written.
 
 Finalize `src/theme/README.md`:
 
@@ -192,6 +215,8 @@ Add a link to the new doc from `AI.md` so Claude reads it automatically.
 
 ## Step 6.11 — Figma / design handoff
 
+**Status (2026-10-01):** 🟡 a handoff exists in another form: `.design-sync/web/build.mjs` builds the v2 primitives for the web and derives `tokens.css` from the token modules, synced to claude.ai/design (`d0fbd081`, 2026-09-15); there is no Figma Tokens JSON export.
+
 Generate a design tokens file for the design team:
 
 ```sh
@@ -202,6 +227,8 @@ Generate a design tokens file for the design team:
 Design team imports into Figma so mockups stay in sync with code.
 
 ## Step 6.12 — Migration retrospective
+
+**Status (2026-10-01):** ❌ no app-wide migration happens under D11; the redesign keeps decision logs per screen instead.
 
 Once all phases are complete, hold a team retro. Document in `docs/todos/design-system/RETRO.md`:
 
@@ -214,6 +241,8 @@ Once all phases are complete, hold a team retro. Document in `docs/todos/design-
 ---
 
 ## Phase 6 deliverables
+
+**Status (2026-10-01):** 🟡 delivered in part: lint at `error` (v2 scope), developer docs (in `docs/testing.md` and `AI.md`), a design-token export (to claude.ai/design). Not delivered: contrast tests, font decision, persistence, the single theme toggle, Material You, a high-contrast theme, the retrospective.
 
 | Artifact                       | File path                                        |
 | ------------------------------ | ------------------------------------------------ |
@@ -229,6 +258,8 @@ Once all phases are complete, hold a team retro. Document in `docs/todos/design-
 | Retrospective                  | `docs/todos/design-system/RETRO.md`              |
 
 ## Verification
+
+**Status (2026-10-01):** ❔ not run here; device and screen-reader work.
 
 ```sh
 yarn test                    # contrast tests pass

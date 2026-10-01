@@ -4,6 +4,9 @@
 **Scope:** `dzzlo_oms_api` — Node.js backend connecting to MongoDB Atlas
 **Prepared by:** Agent 2 (API upgrade research)
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Still accurate in substance: mongoose 9.4.1 and mongodb 7.1.1 are what `yarn.lock` resolves (`:4456-4466`), and neither moved after this research (last change `e407a29`, 2026-04-06). §10's action is 🟡 — the versions are as recommended and the tests now pin mongod 8.2.1, but the lockfile refresh was not re-run and the Q3 2026 revisit is due; the Atlas side is ❔. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Executive Summary
@@ -20,6 +23,8 @@ Verdict: **Safe to keep the caret range as-is and run `yarn upgrade mongoose mon
 ---
 
 ## 2. Current State (verified from repo)
+
+**Re-checked (2026-10-01):** holds, with moved lines — the two deps are now `package.json:44-45`; both connections now take `CONNECTION_OPTIONS` (pool 75, 3 s wait — API-3, `helpers/db_conn.js:44-64`); the global `updatePipeline` set is still commented out (`helpers/db_conn.js:4-5`) while `AI.md:100` says it is set; `updatePipeline` stays per call in `api_v2/controllers/dbUpdates/**` (10 hits); CI runs Node 22 (`.github/workflows/test.yml:20`); Atlas 7.0.31 is ❔.
 
 From `dzzlo_oms_api/package.json` (lines 30–32):
 
@@ -140,6 +145,8 @@ For completeness, both currently installed packages are also fully compatible wi
 ---
 
 ## 10. Recommended Target Versions
+
+**Status (2026-10-01):** 🟡 versions as recommended — mongoose 9.4.1, mongodb 7.1.1, mongodb-memory-server 11.0.1 (`package.json:44-45,54`; `yarn.lock:4448-4466`), and the tests now pin mongod 8.2.1 (`package.json:23-27`, see T03-N1 in 00_README); missing: the refresh was not re-run after the research (no change since `e407a29`) and the Q3 2026 revisit is due.
 
 | Package    | Current caret | Target caret | Concrete version at install time |
 |------------|---------------|--------------|----------------------------------|

@@ -3,6 +3,9 @@
 > Originally deferred as **Phase 3A** in the learning docs.
 > Goal: collapse the 3-5 parallel requests fired by heavy screens into a single composite endpoint shaped for the exact screen that consumes it.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). The BFF pattern shipped, but as the screen redesign's v4 read models (redesign D2) at `/api/v4/screens/*` rather than `/api/v3/screens/*`, and for two screens this plan did not list — Dealer Customers and Daily Summary. Of 9 phases: Phase 1 ✅ in v4 form, Phase 9 🟡, Phases 2–7 (the six planned screens) ⬜, Phase 8 ⏸ as the plan itself says; three new tasks — X-V4-1, X-V4-2, T02-N2 (rows at the end). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## TL;DR
@@ -75,6 +78,8 @@ On a 4G connection with 150-300ms RTT, the HTTP overhead isn't just the network 
 
 ### 3.1 Screens mapped with > 2 concurrent requests on mount
 
+**Status (2026-10-01):** all eight mapped screens are still v1 on v3 (files present at app `ea7e7222`; `src/screens/v2/` holds only `Dealer/Customers` and `Common/DailySummary`). Several of their reads are v3 reads issued as mutations — `get_month_acc`, `get_year_month_acc`, `get_year_ob`, `fetch_one_dealer_customer` and `get_rel_bal` are among 16 read-named mutations of the app's 132 v3 endpoints (32 queries, 100 mutations; app:`src/store/apis/dzzlooms/*`, `balance/SectionalAcc.js`).
+
 The full mapping is in the agent research; here's the high-value subset:
 
 | Rank | Screen                      | File                                                 | Current requests                                                                           | Top BFF payoff |
@@ -90,6 +95,8 @@ The full mapping is in the agent research; here's the high-value subset:
 | 9    | `Home / Dashboard`          | **Does not exist** — only `Demo/Dashboard` in the guest flow (`src/navigation/Guest/Main.js:10`) | N/A — see Phase 8                                                                          | N/A            |
 
 ### 3.2 Composite endpoints that already exist (partial wins available)
+
+**Status (2026-10-01):** v3 still has the split screens that redesign D2 names — `POST so_msts/app/section1` + `section2` (api:`api_v3/routes/collections/so_msts.js:31-32`) and `order_msts/a/poso` GET + POST (api:`api_v3/routes/collections/order_msts.js:51-52`); v4 read models replace such pairs one screen at a time.
 
 - `fetch_invs_POST` — batch invoice fetch with filters
 - `fetch_order_so_POST` — batch order fetch with filters
@@ -119,6 +126,8 @@ Several of these are solved _as a side effect_ of the BFF design. E.g., the NewO
 
 ### 4.1 BFF design principles
 
+**Status (2026-10-01):** 🟡 principles 1–4 and 7 hold in the v4 read models — one route per screen (api:`api_v4/routes/screens.js:32-48`), POST bodies, fan-out only through `runParallel` (a conventions test forbids a bare `Promise.all`, api:`test/api_v4/lib/conventions.test.js:50-74`), `.select()` + `.lean()` + `maxTimeMS` on every read, tenancy from the token (api:`api_v4/lib/tenancy.js:64-138`). Principle 5 does not hold (X-V4-2); principle 6's `runSettled` has no caller; principle 8 is not built.
+
 1. **One endpoint per screen, not per resource.** Don't build `GET /composite/vehicles+rates` (that's just a generic union). Build `POST /screens/new-order` — the endpoint name tells you which screen owns it, and if the screen changes, only this endpoint changes.
 2. **POST, not GET.** BFFs take structured bodies (filters, IDs, permissions context). POST is the idiomatic choice for RPC-style calls and avoids URL length limits. The existing API already uses POST for filtered lists.
 3. **Parallel queries on the server.** Each sub-query is a Mongoose call inside `Promise.all` or `Promise.allSettled`. Total latency = max(sub-query latency), not sum.
@@ -139,6 +148,8 @@ For DZZLO's current scale and team size, BFF endpoints are the pragmatic choice:
 - If in 12 months we have 30+ composite endpoints and they're starting to overlap, _that's_ the moment to reconsider GraphQL. Not before.
 
 ### 4.3 RTK Query integration on the client
+
+**Status (2026-10-01):** ✅ in v2 form — one v4 endpoint per screen on the shared `dzzlo-oms-api` instance (app:`src/store/apis/v4/customers.js`, `daily_summary.js`; redesign D9). Tags are coarse: Customers provides `relations/CUSTOMERS_LIST` (invalidated by five v1 writes), Daily Summary `order_msts_POST/LIST`, and no SO or invoice write invalidates Daily Summary (X-APP-3 in tasks_01).
 
 Each BFF endpoint becomes **one** RTK Query endpoint on the client. The screen migrates from:
 
@@ -179,6 +190,8 @@ That way, when a mutation invalidates `{type: 'veh_trns', id: X}`, the BFF re-fe
 
 ### 4.4 Versioning BFF endpoints
 
+**Status (2026-10-01):** ✅ realised differently — a version path (`/api/v4`) instead of `/screens/<name>/v2`, and a per-screen server toggle for rollback: `screen_v2_<role>_<slug>` served by `GET /api/v4/app/features` (api:`helpers/appFeatures.js:34-101`; app:`src/navigation/screenRegistry.js:145-166`), with the v1 screen kept in the tree.
+
 BFFs are tightly coupled to screens. If the screen changes shape, the endpoint changes shape. To prevent old app versions from breaking:
 
 1. **Additive changes are free.** Adding a field to the response never breaks old clients. 95% of BFF evolution is additive.
@@ -186,6 +199,8 @@ BFFs are tightly coupled to screens. If the screen changes shape, the endpoint c
 3. **Feature flags for risky changes.** If we're unsure a new field is right, add it behind a request header: `X-BFF-Features: extended_credit_info`.
 
 ### 4.5 Error handling
+
+**Status (2026-10-01):** 🟡 both helpers exist — `runParallel` (all-or-nothing) and `runSettled` (optional keys come back as `TIMEOUT` / `UNAVAILABLE` enums) in api:`api_v4/lib/compose.js` — but both read models use only `runParallel`; each read has a time limit that answers 503 `QUERY_TIMEOUT` (api:`api_v4/lib/limits.js:23-57`).
 
 A BFF has a subtle failure mode: if one sub-query errors, should the whole response fail?
 
@@ -199,6 +214,8 @@ Every BFF documents which sub-queries are critical and which are optional in the
 ---
 
 ## 5. Target Architecture
+
+**Status (2026-10-01):** realised at `/api/v4/screens/*` (api:`api_v/api4.js`, api:`api_v4/index.js:69-84`) with v3's `protect` plus v4's own `requireRole` (not v3 `authorize`), the house validator and a per-user rate limit; the read models query the models directly and keep their own copies of several v3 rules rather than calling v3 services (X-V4-2).
 
 ```
 ┌────────────────────────────────────────┐
@@ -255,14 +272,20 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 1 — Infrastructure: BFF conventions and helpers
 
+**Status (2026-10-01):** ✅ done in v4 form (`api_v4/`, not `api_v3/`) — `lib/tenancy.js`, `lib/compose.js`, `lib/validate.js` (house DSL, redesign D7), `lib/errors.js`, `lib/respond.js`, `lib/roles.js`, `lib/limits.js`, `lib/rateLimit.js`; merged with PR #39 (api `6d41ce5`, 2026-09-30).
+
 **Goal:** establish the reusable bits before building the first BFF.
 
 #### Step 1.1 — Create `/api_v3/controllers/screens/` directory
+
+**Status (2026-10-01):** ✅ as api:`api_v4/controllers/screens.js` + api:`api_v4/routes/screens.js`, mounted at `/api/v4/screens` (api:`api_v4/index.js:26-31`).
 
 - All BFF controllers live here, one file per screen.
 - Route file: `api_v3/routes/screens.js` registers them all under `/api/v3/screens/*`.
 
 #### Step 1.2 — Create a tenancy helper
+
+**Status (2026-10-01):** ✅ as api:`api_v4/lib/tenancy.js:64-138` — `tenantOf`, `scopeFilter` (`{dealer_id}` / `{cust_id}` ObjectIds from the token, which settles the `co_id` question) and `assertRelation`; `runParallel` / `runSettled` in `lib/compose.js`; no `project()` — each read `.select()`s.
 
 - New file: `api_v3/helpers/screensHelpers.js`
 - Exports:
@@ -273,11 +296,15 @@ Order by impact (highest-payoff screens first).
 
 #### Step 1.3 — Reuse existing service functions
 
+**Status (2026-10-01):** 🟡 dates reuse shared code (api:`api_v3/services/ledger_window.js` helpers), but the Customers read model re-implements v3 rules instead of calling services (api:`api_v4/readmodels/customers.js:108-148,270-347,476-570`) — X-V4-2.
+
 - Each BFF imports from existing services (`api_v3/services/*.js`), never from controllers.
 - Controllers are HTTP adapters; services are the logic. BFFs are just new HTTP adapters that call multiple services.
 - If a required query doesn't exist as a service function, factor it out of the controller into a service first.
 
 #### Step 1.4 — BFF-specific middleware
+
+**Status (2026-10-01):** 🟡 auth ✅ (`protect` + `requireRole` per module and route, api:`api_v4/index.js:72-79`) and validation ✅ (api:`api_v4/lib/validate.js`, unknown keys → 400 `VALIDATION`); the timing header exists as `timingHeader` (`X-V4-Timing`, silent in production) but has no caller (api:`api_v4/lib/compose.js:201-216`; API-7 is deferred — X-PERF-2 in tasks_01).
 
 - `api_v3/middleware/bffTiming.js` — adds `X-BFF-Timing: vehicles=34ms,rates=28ms,dealers=15ms` header. Essential for debugging "which sub-query is slow". **Emit it only outside production** (or gate to admin users) — per-sub-query timings leak internal architecture and create a timing side-channel.
 - Auth: apply `protect` **and** `authorize(...)` on every screens route. Mechanics (code-verified): `protect` (`api_v3/auth.js:61`) does not verify the JWT itself — the global `logging()` middleware does that via `getUserFromToken` (`helpers/middlewares.js:233`) and sets `req.loggedInUser`; `protect` just 401s when it's absent. Existing collection routes import `protect`/`authorize` but mostly leave them commented out — BFF routes must not copy that pattern.
@@ -293,9 +320,13 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 2 — BFF #1: `POST /screens/new-order`
 
+**Status (2026-10-01):** ⬜ to do — Customer/NewOrder is still v1 (app:`src/screens/Customer/NewOrder/index.js`) and api:`api_v4/routes/screens.js` has no new-order route.
+
 **Goal:** highest-impact screen first. 4-5 requests → 1.
 
 #### Step 2.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/controllers/screens/newOrder.js`
 - Body schema: `{orderId?: string, dealerId: string, custId: string}` — validated (ObjectId formats, unknown fields rejected). IDOR guard: for customer-role callers derive `custId` from `req.user` instead of trusting the body, and verify the `{dealerId, custId}` relation belongs to the caller before firing sub-queries (see §11).
@@ -320,9 +351,13 @@ Order by impact (highest-payoff screens first).
 
 #### Step 2.2 — Register route
 
+**Status (2026-10-01):** ⬜ to do — it would be `POST /api/v4/screens/new-order` with `requireRole` + `validate`, as the two v4 routes are (api:`api_v4/routes/screens.js:33-48`).
+
 - `api_v3/routes/screens.js`: `router.post('/new-order', protect, authorize('customer'), validate(newOrderSchema), newOrderCtrl)`.
 
 #### Step 2.3 — RTK Query endpoint
+
+**Status (2026-10-01):** ⬜ to do — the v4 pattern is a module under app:`src/store/apis/v4/` on the shared instance, not `dzzlooms/screens.js`.
 
 - New file: `src/store/apis/dzzlooms/screens.js`
 - Defines a new slice `screensApi` or extends the existing `dzzlo-oms-api` (recommended: extend to share the cache).
@@ -330,12 +365,16 @@ Order by impact (highest-payoff screens first).
 
 #### Step 2.4 — Migrate `Customer/NewOrder/index.js`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - Replace the 4-5 individual `useLazyXxxQuery`/`useXxxMutation` calls with one `useGetScreen_NewOrderQuery`.
 - Keep the form-submit mutation (`useAdd_order_mstsMutation` / `useUpdate_order_mstsMutation`) untouched — BFFs are read-side only.
 - On mutation success, invalidate the `'screen_new_order'` tag to re-fetch the BFF.
 - Leave the existing single-purpose hooks in the codebase — other screens may still use them.
 
 #### Step 2.5 — Tests
+
+**Status (2026-10-01):** ⬜ to do.
 
 - API: integration test that calls the BFF with seed data, asserts all 5 arrays are populated.
 - API: partial-failure test — mock `prodMstsService.ratesBatchForDealer` to throw, assert the response still returns `{vehicles, dealers, balance}` and `productRates: null, productRatesError: '...'`.
@@ -351,9 +390,13 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 3 — BFF #2: `POST /screens/accounts`
 
+**Status (2026-10-01):** ⬜ to do — Common/Accounts is still v1 and still reads through four read-named mutations (`fetch_one_dealer_customer`, `get_year_month_acc`, `get_year_ob`, `get_month_acc`).
+
 **Goal:** second-highest payoff. Accounts ledger currently fires 3-4 requests.
 
 #### Step 3.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/controllers/screens/accounts.js`
 - Body: `{dealerId, custId, year: '2026', month?: '04'}`
@@ -374,10 +417,14 @@ Order by impact (highest-payoff screens first).
 
 #### Step 3.2 — RTK Query endpoint + migrate `Common/Accounts/index.js`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - Replace the 4 mutation hooks with one query hook.
 - Month selection now triggers `refetch({month: selectedMonth})` instead of a separate mutation. The BFF handles the conditional month detail internally.
 
 #### Step 3.3 — Pagination within month detail
+
+**Status (2026-10-01):** ⬜ to do — v4 keyset paging now exists for such a list (api:`api_v4/lib/cursor.js`).
 
 - If `monthDetail.invoices` or `.vouchers` grows large (> 200 rows), do NOT stuff them into the BFF. Instead, return a count and a "click to load more" flag. Link to the existing paginated endpoints (which will be cursor-based after `04-cursor-pagination-infinite-scroll.md`).
 
@@ -390,9 +437,13 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 4 — BFF #3: `POST /screens/company-users`
 
+**Status (2026-10-01):** ⬜ to do — app:`src/screens/Common/CompanyUsers/index.js` is still v1.
+
 **Goal:** merge users + invites + sister companies.
 
 #### Step 4.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 > **Corrected scope (code-verified):** the screen fires only **2** requests today — `company_users` and `invites`; the sister-company hooks in `CompanyUsers/index.js` are commented out (lines 37-38). Sister-company data belongs to the `SisterCompanies` screen (Phase 5). This BFF is a 2 → 1 merge with a correspondingly smaller payoff — consider shipping it in the same PR as Phase 5.
 
@@ -404,6 +455,8 @@ Order by impact (highest-payoff screens first).
 
 #### Step 4.2 — Migrate `Common/CompanyUsers/index.js`
 
+**Status (2026-10-01):** ⬜ to do.
+
 - One query hook replaces 2.
 - When invites are accepted/declined, invalidate the `'screen_company_users'` tag (and also the individual `'invites'` tag so other places that use invites also refresh).
 
@@ -411,9 +464,13 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 5 — BFF #4: `POST /screens/sister-companies`
 
+**Status (2026-10-01):** ⬜ to do — app:`src/screens/Common/SisterCompanies/index.js` is still v1.
+
 **Goal:** merge the Sister Companies screen's two mount requests into one. (Code-verified: sister-company data lives only on this screen — the copies in CompanyUsers are commented out.)
 
 #### Step 5.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/controllers/screens/sisterCompanies.js`
 - Body: `{}`
@@ -425,7 +482,11 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 6 — BFF #5: `POST /screens/new-payment`
 
+**Status (2026-10-01):** ⬜ to do — app:`src/screens/Customer/NewPayment/index.js` is still v1.
+
 #### Step 6.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/controllers/screens/newPayment.js`
 - Body: `{dealerId, custId}`
@@ -439,7 +500,11 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 7 — BFF #6: `POST /screens/invoice-detail`
 
+**Status (2026-10-01):** ⬜ to do — app:`src/screens/Common/_Invoice_/index.js` is still v1.
+
 #### Step 7.1 — API controller
+
+**Status (2026-10-01):** ⬜ to do.
 
 - File: `api_v3/controllers/screens/invoiceDetail.js`
 - Body: `{invoiceId}`
@@ -454,14 +519,20 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 8 — BFF #7: `POST /screens/home` (Dashboard)
 
+**Status (2026-10-01):** ⏸ deferred by the plan itself — there is still no real dashboard, only the guest-flow `src/screens/Demo/Dashboard`.
+
 **Goal (code-verified: currently moot):** no Home/Dashboard screen exists for real users — the only dashboard is `src/screens/Demo/Dashboard`, used exclusively by the guest flow (`src/navigation/Guest/Main.js:10`); Customer/Dealer navigation opens straight into the transaction tabs. **Skip this phase** unless a real dashboard gets built; the steps below are the blueprint for that day, because dashboards are the canonical BFF use case (they combine unrelated data sources).
 
 #### Step 8.1 — Audit the home screen
+
+**Status (2026-10-01):** ⏸ deferred with Phase 8.
 
 - Find the home screen (likely `src/screens/Home/` or wired into the root stack).
 - List everything it displays: recent orders, pending invoices, balance summary, notifications, etc.
 
 #### Step 8.2 — API controller
+
+**Status (2026-10-01):** ⏸ deferred with Phase 8.
 
 - File: `api_v3/controllers/screens/home.js`
 - Body: `{}` (pure tenancy scope)
@@ -473,6 +544,8 @@ Order by impact (highest-payoff screens first).
   5. Recent activity feed
 
 #### Step 8.3 — Caching
+
+**Status (2026-10-01):** ⏸ deferred with Phase 8.
 
 - Dashboard BFF responses can be cached for 30 seconds in-process (reuses `tasks_01/CACHE-*` infra). Cache key = userId.
 - Add `Cache-Control: private, max-age=30` header.
@@ -486,7 +559,11 @@ Order by impact (highest-payoff screens first).
 
 ### Phase 9 — Monitoring & rollout
 
+**Status (2026-10-01):** 🟡 measured for the two v4 screens, not per BFF in production (steps below).
+
 #### Step 9.1 — Log per-BFF metrics
+
+**Status (2026-10-01):** 🟡 client side only — a Firebase Performance trace `rtkq_<endpoint>` per request (app:`src/store/middleware/rtkQueryPerfLogger.js:25`) and an HTTP metric per attempt (app:`src/store/apis/createApi.js:59-94`), where `v4_screen_*` names separate the v4 calls; no server-side per-route metrics (Server-Timing is API-7, deferred).
 
 For each BFF endpoint, log:
 
@@ -498,11 +575,15 @@ For each BFF endpoint, log:
 
 #### Step 9.2 — Compare against pre-BFF baseline
 
+**Status (2026-10-01):** 🟡 before/after measured once, on a local scale seed — Customers 1,525 → 134 ms median server time (api:`docs/v4-performance.md:247-257`) — not on devices over a week.
+
 Screen-level metric: "time from screen mount to first data-backed render". Client-side `performance.now()` around the first `isLoading → false` transition.
 
 Collect this for 1 week before Phase 2 ships, then again after. Target: 30-50% reduction.
 
 #### Step 9.3 — Keep old endpoints alive
+
+**Status (2026-10-01):** ✅ the v3 endpoints stay, and the v1 screens stay as the registry's fallback (app:`src/navigation/screenRegistry.js:145-166`).
 
 Do not retire the generic endpoints (`fetch_veh_trns_paginated`, `fetch_veh_trns_other`, etc.) as part of this initiative. They're still needed by:
 
@@ -558,6 +639,8 @@ Because BFFs are additive and the old endpoints never go away, rollback is alway
 
 ### 9.1 API tests
 
+**Status (2026-10-01):** ✅ for the two v4 screens — tenancy and 403 for an unrelated or unknown company (api:`test/api_v4/screens/daily-summary.test.js`), shape through the v4 fixtures drift detector (api:`test/api_v4/contract/fixtures.test.js`), constant round trips (api:`test/api_v4/screens/customers.test.js:2147-2234`); partial-failure tests exist only for the lib's `runSettled` (api:`test/api_v4/lib/compose.test.js`), and no p95 test (performance is measured by `scripts/perf/*`).
+
 For each BFF:
 
 - Happy-path integration test: seed DB, call endpoint, assert response shape + content.
@@ -569,12 +652,16 @@ For each BFF:
 
 ### 9.2 Client tests
 
+**Status (2026-10-01):** ✅ for the two v2 screens — Tier 3 suites (e.g. app:`src/screens/v2/Dealer/Customers/__tests__/Customers.test.js`, app:`src/screens/v2/Common/DailySummary/__tests__/DailySummary.test.js`) and Tier 2 MSW suites (app:`src/store/apis/v4/__tests__/customers.msw.test.js`, `daily_summary.msw.test.js`).
+
 For each migrated screen:
 
 - Jest test mocking the BFF response, rendering the screen, asserting all displayed fields come from the mock.
 - Test the invalidation flow: fire a form submit, assert the BFF refetches.
 
 ### 9.3 Manual QA checklist per screen
+
+**Status (2026-10-01):** ❔ device runs for the two screens are recorded in app:`docs/screens/customers-v2.md` and `docs/screens/daily-summary-v2.md`; not verifiable from code.
 
 - [ ] Open on fresh launch → screen renders fully
 - [ ] Open while offline → cached data shown, refetch on reconnect
@@ -585,6 +672,8 @@ For each migrated screen:
 
 ## 10. Open Questions
 
+**Status (2026-10-01):** Q1 and Q4 are settled as proposed — v4 is HTTP+JSON on the shared `dzzlo-oms-api` instance (redesign D9; app:`src/store/apis/v4/base.js:43-45`); Q2, Q3 and Q5 are open (the v4 client has no type definitions).
+
 1. **Should BFFs be gRPC or HTTP+JSON?** HTTP+JSON, same as the rest of the API. Consistency > theoretical efficiency.
 2. **GraphQL eventually?** Only if BFF count grows beyond ~15 and overlap becomes painful. Not a near-term concern.
 3. **Should dashboard BFF be cached in Redis?** Not yet — in-process cache is enough at current scale. Revisit when `tasks_02/05-cicd-github-actions.md` Phase 2 gives us easy Redis provisioning.
@@ -594,6 +683,8 @@ For each migrated screen:
 ---
 
 ## 11. Security Requirements
+
+**Status (2026-10-01):** for v4, items 1–5 and 7 hold: bearer and role on every route (api:`api_v4/index.js:72-79`), the one body id membership-checked before any read (api:`api_v4/readmodels/dailySummary.js:319-326`), unknown keys rejected, a per-user limiter on the screen routes (api:`api_v4/lib/rateLimit.js`), `INTERNAL` errors scrubbed, the timing header silent in production. Item 6 (field-level authorization) is T02-N2; item 8 has no cache to govern. For the v3 routes see the security items in tasks_01 (X-SEC-1).
 
 Current posture, code-verified in `dzzlo_oms.js`: helmet (`:85`), global `sanitizeMongo()` / mongo-sanitize (`:82`), `express.json({ limit: "1mb" })` (`:59`), JWT verified in the global `logging()` middleware via `getUserFromToken`, `authLimiter` on auth routes. Gaps this initiative must not inherit: **no input-validation library anywhere**, per-route `protect`/`authorize` mostly commented out, global rate limiter commented out (`dzzlo_oms.js:88-95`), `cors()` fully open (relevant because `dip-web` is a browser client).
 
@@ -612,6 +703,8 @@ Every BFF endpoint must satisfy all of:
 
 ## Appendix A — Screen-to-BFF mapping quick reference
 
+**Status (2026-10-01):** ⬜ all six rows (the screens are still v1, no route exists); built instead: `POST /api/v4/screens/customers` (Dealer Customers) and `POST /api/v4/screens/daily-summary` (Dealer and Customer Daily Summary).
+
 | Screen                            | BFF Endpoint                     | Replaces (# old hooks) |
 | --------------------------------- | -------------------------------- | ---------------------- |
 | `Customer/NewOrder/index.js`      | `POST /screens/new-order`        | 4-5                    |
@@ -624,9 +717,21 @@ Every BFF endpoint must satisfy all of:
 
 ## Appendix B — Naming convention
 
+**Status (2026-10-01):** ❌ superseded by the redesign's conventions — `POST /api/v4/screens/<kebab-slug>`, read model `api_v4/readmodels/<camelCase>.js`, RTK endpoints `v4_screen_<snake>` and `v4_screen_<snake>_next`, v3 tag types shared (redesign D2, D9).
+
 - Route: `POST /api/v3/screens/{kebab-case-screen-name}`
 - Controller file: `api_v3/controllers/screens/{camelCaseScreenName}.js`
 - RTK Query endpoint: `getScreen_{PascalCaseScreenName}`
 - Cache tag: `'screen_{snake_case_screen_name}'`
 
 Consistency makes code review trivial.
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+Rows owned by this doc; the folder's full table is in [00-overview.md](./00-overview.md).
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-V4-1 | 🆕 Close the v4 foundation gaps: a JSON `NOT_FOUND` / 405 answer for unknown paths and methods inside `/api/v4`, a v4-shaped answer (with `error_code`) for a malformed JSON body, and a `maxTimeMS` on the app-features read | `buildV4` mounts only the modules and `errorHandler` (api:`api_v4/index.js:69-84`), so an unknown path falls through to Express's HTML 404; a malformed body fails in the global `express.json` and is answered by the v3 handler, which sends no `error_code` (api:`dzzlo_oms.js:59,136`, api:`helpers/error.js:31-34`; inferred, no test); `NOT_FOUND` / `CONFLICT` are catalogued but never raised (api:`api_v4/lib/errors.js:27-34`); `counters.findOne` has no `maxTimeMS` (api:`helpers/appFeatures.js:70`) | API | S | — |
+| X-V4-2 | 🆕 Decide where business rules live. The v4 Customers read model holds its own copies — credit ratio, FY ledger fold, outstanding PO/SO aggregates, opening balance — plus a new integer-paise money rule, each held to v3 by parity tests. A question for the user, not a decision | api:`api_v4/readmodels/customers.js:108-148,270-347,476-570`, api:`api_v4/lib/money.js:1-22` against api:`.ai/agents/versioning-agent.md:68` ("read models compose `api_v3/services`, they do not re-implement rules"), redesign D1 and this plan's principle 5 (§4.1) | API | M | user decision |
+| T02-N2 | 🆕 Enforce field-level authorization on the server for the permission-gated fields of the v4 read models, or record that gating them in the app is accepted | §11 item 6 asks for server-side field authorization; the v4 Customers read model kept v3's model, in which the membership permission is applied only in the app (app:`src/helpers/Permissions/index.js:1-31` — "These decide what is *rendered*"), so v4 neither widened nor narrowed access | API | S | user decision |

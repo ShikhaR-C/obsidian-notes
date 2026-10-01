@@ -2,9 +2,14 @@
 
 **Outcome:** every JS crash, render-boundary catch, API failure, and notable handled error reaches Crashlytics with full context (user, role, company, screen, breadcrumb trail) **and is localisable to an exact file/line/component fast**. Closes the two biggest gaps: **render crashes are currently dropped**, and **Hermes stack traces are unreadable without source maps**.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — 0 of 10 checklist items; §3.4's base (RNFB's JS-crash handler, `firebase.json`) and §3.6's crash-test buttons (`src/screens/Common/Settings/index.js:22,162-189`) are already there, as the plan says. Render crashes are still dropped (`src/components/Error/ErrorBoundary.js:127-133`) — now including any render crash in the two v2 screens, so the redesign's 7-day Crashlytics watch cannot see them (`X-APP-4` in the overview). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 3.0 Strategy — locate any crash in three clicks
+
+**Status (2026-10-01):** ✅ the "current state to build on" bullets still hold — `firebase.json` flags, `firebase-crashlytics-gradle:3.0.6` (`android/build.gradle:20`) with no `firebaseCrashlytics {}` block, the iOS Crashlytics run-script (`project.pbxproj:349`), `hermesEnabled=true` (`android/gradle.properties:39`).
 
 Goal: open a Crashlytics issue and immediately know **what** broke, **where** (file:line / component), **who** (role/company/user), and **how to reproduce** (the steps before it). Four levers, in priority order:
 
@@ -24,6 +29,8 @@ Current state to build on (already configured — verify, don't redo):
 ---
 
 ## 3.1 Fix `ErrorBoundary` → Crashlytics (critical)
+
+**Status (2026-10-01):** ⬜ unchanged — `componentDidCatch` logs to the console with `logError` commented out (`ErrorBoundary.js:127-133`); the one boundary wraps every navigator (`src/navigation/AppNavigatorContainer.js:181`), so v2 render crashes are caught there and never reach Crashlytics.
 
 `src/components/Error/ErrorBoundary.js:127` — `componentDidCatch` only `console.log`s; the `logError` call is commented out. React render crashes never reach Crashlytics today.
 
@@ -62,6 +69,8 @@ componentDidCatch(error, errorInfo) {
 
 ## 3.2 Breadcrumbs on navigation + key actions
 
+**Status (2026-10-01):** ⬜ `handleStateChange` still only logs the screen view (`src/components/Error/RestartContext.js:38-45`).
+
 A Crashlytics report is far more useful with a trail of "what the user did just before". Two cheap insertions:
 
 **Navigation** — extend the existing screen-view handler in `src/components/Error/RestartContext.js` (it already centralises navigation state):
@@ -86,6 +95,8 @@ const handleStateChange = () => {
 ---
 
 ## 3.3 Enrich the API-failure mirror
+
+**Status (2026-10-01):** ⬜ still `RTKQ <endpoint> rejected: <status>` with a variable message (`rtkQueryErrorLogger.js:63-73`); no `last_failed_endpoint` key and no `api_error` event. v4 failures arrive here by HTTP status, e.g. 503 for `QUERY_TIMEOUT` and 429 for `RATE_LIMITED`.
 
 `src/store/middleware/rtkQueryErrorLogger.js:66` already records `RTKQ <endpoint> rejected: <status>`. Upgrade it from a bare message to a contextual non-fatal so failures are queryable by endpoint/status, and emit an analytics event for client-visible failures:
 
@@ -113,6 +124,8 @@ if (status === 'FETCH_ERROR' || status === 'TIMEOUT_ERROR' || Number(status) >= 
 ---
 
 ## 3.4 Global JS-error capture — already on; only add context (correction)
+
+**Status (2026-10-01):** 🟡 capture is on (`firebase.json`: error generation on JS crash + handler chaining); the Hermes rejection tracker is ⬜ (`enablePromiseRejectionTracker`: 0 matches).
 
 > **Correction to earlier draft.** `firebase.json` sets `crashlytics_is_error_generation_on_js_crash_enabled: true` **and** `crashlytics_javascript_exception_handler_chaining_enabled: true`. RN Firebase therefore **already installs a global `ErrorUtils` handler** that records unhandled JS errors to Crashlytics and chains to the previous handler. So a second manual `ErrorUtils.setGlobalHandler` is **not needed for capture** and risks double-recording — do **not** add one just to record.
 
@@ -153,6 +166,8 @@ if (global?.HermesInternal?.enablePromiseRejectionTracker) {
 ---
 
 ## 3.7 Source maps & symbolication (Hermes) — the #1 localisation lever
+
+**Status (2026-10-01):** ⬜ `build-release-apk.sh` archives no map, iOS sets no `SOURCEMAP_FILE` and still exports `APP_ENV=testing` (`project.pbxproj:291`), `hermesFlags` is still commented (`android/app/build.gradle:55`), no `firebaseCrashlytics {}` block; the dSYM run-script is present (`project.pbxproj:349`).
 
 **Problem:** Hermes is enabled, so a JS crash stack in Crashlytics looks like `Hermes bytecode @ 1:524288` — unusable. To turn that into `src/screens/Customer/NewOrder/index.js:142` you need the **Hermes source map for that exact build**, and a way to symbolicate.
 
@@ -195,6 +210,8 @@ npx metro-symbolicate build-artifacts/sourcemaps/index.android.bundle.<build>.ma
 
 ## 3.8 Custom-key taxonomy & grouping (slice the issue list)
 
+**Status (2026-10-01):** ⬜ the only custom key is `proj_env` (`src/utils/firebase.js:12`).
+
 Crashlytics custom keys are the second-highest lever: they make the issue list **filterable** ("all crashes on `NewInvoice` for `dealer` on build 142"). Standardise the keys set centrally so every crash carries them. Centralise in one `setCrashKeys()` helper, called from `setUserContext` + navigation:
 
 | Key | Value source | Set where | Lets you filter by |
@@ -217,6 +234,8 @@ Crashlytics custom keys are the second-highest lever: they make the issue list *
 
 ## 3.5 Network transitions as events
 
+**Status (2026-10-01):** ⬜ no events, and the listener leak is still there (`src/components/Network/index.js:16-28` never keeps the unsubscribe). Site note: that component is mounted by 8 v1 screens and neither v2 screen, so events there would fire once per mounted screen; `NoNetworkBar` (`useNetInfo`, `src/components/NoNetwork/Undraw.js:14-18`) is mounted once above the role navigators (`AppNavigatorContainer.js:189`).
+
 `src/components/Network/index.js` already holds the `NetInfo.addEventListener` subscription at line 19 (and `NoNetwork/Undraw.js` uses `useNetInfo`). Add the event inside that existing listener so we can correlate `api_error` spikes with connectivity — note a `prevConnectedRef` must be **added** (none exists today; the component only stores current state) so we fire only on an actual connected→disconnected (or reverse) **transition**, not every NetInfo tick. **While here, fix a pre-existing leak:** the listener's unsubscribe function is never captured — cleanup only flips a local `isMounted` flag; capture the return of `addEventListener` and call it in the effect cleanup.
 
 ```js
@@ -234,11 +253,15 @@ if (next !== prevConnectedRef.current) {
 
 ## 3.6 Crash-test buttons — already present & gated (no work)
 
+**Status (2026-10-01):** ✅ as described — `IS_NON_PROD` (`src/screens/Common/Settings/index.js:22`) gates both buttons (`:162-189`).
+
 `src/screens/Common/Settings/index.js` already ships two QA tools — **"Force Crash (Crashlytics Test)"** (`crashlytics().crash()`) and **"Record Non-Fatal Error"** (`crashlytics().recordError(...)`) — wrapped in `{IS_NON_PROD && (…)}` where `IS_NON_PROD = PROJ_ENV === 'development' || PROJ_ENV === 'testing'` (defined at the top of that file). So they're already hidden in production. **No change needed** — just use them in Phase 4 verification. (Earlier draft said "gate behind `__DEV__`"; that's already handled via `IS_NON_PROD`, which is the correct env-based gate here since debug builds can run the `testing` env.)
 
 ---
 
 ## Error-context summary (what a Crashlytics report will carry after Phase 3)
+
+**Status (2026-10-01):** ⬜ today a report carries `user_id` (`setUser`) and `proj_env` (`tagEnv`) only.
 
 | Context | Set by |
 | --- | --- |
@@ -254,6 +277,8 @@ if (next !== prevConnectedRef.current) {
 ---
 
 ## Phase 3 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 10 (the §3.6 item is a device check; the buttons exist).
 
 - [ ] `ErrorBoundary.componentDidCatch` records to Crashlytics **named `ReactRenderError`** + fires `error_boundary_triggered`.
 - [ ] Navigation breadcrumbs + `screen` attribute wired in `RestartContext`.

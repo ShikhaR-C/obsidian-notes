@@ -3,9 +3,14 @@
 > Make the system harder to break and easier to operate.
 > These changes affect how the app starts, stops, recovers, and is deployed.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). RES-1, RES-2 and RES-8 are in the API repo and RES-5 is written into its runbook (4 ✅); RES-3 is skipped on this doc's own advice (⏸); RES-4, RES-6 and RES-7 live on servers and consoles (3 ❔). The API runbook, the v4 limiter and the pool settings all describe two servers while RES-6 below says single instance — `X-OPS-1`. v4 added three safety valves (`QUERY_TIMEOUT`, `UNAVAILABLE`, `RATE_LIMITED`) that the app does not yet word or keep out of its retries — `X-APP-1`. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## RES-1: Deep health check endpoint (API)
+
+**Status (2026-10-01):** ✅ done — `395861f`; `helpers/healthcheck.js:5-23` answers 503 with `status: "degraded"` whenever Mongo's `readyState` is not 1, with uptime and heap MB; the API runbook uses it for triage (`docs/runbook.md:40-47`).
 
 **Size:** XS (15 min)
 **File:** `helpers/healthcheck.js`
@@ -50,6 +55,8 @@ const healthcheck = async (req, res) => {
 ---
 
 ## RES-2: Graceful shutdown handler (API)
+
+**Status (2026-10-01):** ✅ done — `fab1fe1`, `95c42be`; on SIGTERM / SIGINT `gracefulShutdown` awaits `server.close`, disconnects Mongo and force-exits after 10 s (`dzzlo_oms.js:145-165`). Caveat: a second SIGINT handler (`helpers/db_conn.js:83-89`) and PM2's defaults can cut it short — `T01-N2` below.
 
 **Size:** S (15 min)
 **File:** `dzzlo_oms.js`
@@ -104,6 +111,8 @@ Even after you remove a server from the load balancer, there's a window where re
 
 ## RES-3: Enable PM2 cluster mode (API)
 
+**Status (2026-10-01):** ⏸ skipped, as this item advises at ~130 orders/day — `ecosystem.config.js` defines one app in fork mode with no `instances`, `exec_mode`, `kill_timeout` or `max_memory_restart`. Production scales out across two servers instead, per the API runbook — `X-OPS-1`.
+
 **Size:** S (10 min)
 **File:** `ecosystem.config.js`
 
@@ -155,6 +164,8 @@ On a 2-vCPU box, practical choices are: (1) stay at `instances: 1` with lots of 
 
 ## RES-4: PM2 log rotation (API — Ops)
 
+**Status (2026-10-01):** ❔ not verifiable from the repos — nothing in them installs `pm2-logrotate`, the sprint table leaves this unchecked, and the API runbook says "Already rotated by RES-4" (`docs/runbook.md:340`). `pm2 conf pm2-logrotate` on each server settles it — `X-OPS-1`.
+
 **Size:** XS (5 min)
 **Command:**
 
@@ -174,6 +185,8 @@ pm2 set pm2-logrotate:compress true
 ---
 
 ## RES-5: Use `pm2 reload` instead of `pm2 restart` in deploys (Ops)
+
+**Status (2026-10-01):** ✅ documented — the API runbook makes `pm2 reload dzzlo-oms` the daily driver and keeps `restart --update-env` for env changes (`docs/runbook.md:57-60,143-144,594-596`), with a server-by-server canary (`:125-167`); whether each deploy follows it is ❔.
 
 **Size:** XS (update deploy script/habit)
 
@@ -232,7 +245,7 @@ pm2 set pm2-logrotate:compress true
 **Size:** S (1 hour in AWS Console)
 **Where:** AWS Console — CloudWatch
 
-**Status:** 4 of 5 alarms done. **Healthy Hosts Low deferred** — revisit once there is more than one host behind the ALB (currently single-instance, so the alarm would always be in-alarm).
+**Status:** ❔ **2026-10-01:** console state is not verifiable from the repos. The API runbook names the 5xx alarm (`docs/runbook.md:38`) and describes two servers behind the ALB, one in an ASG and one static (`docs/runbook.md:265-279`), so "currently single-instance" below may be stale and the Healthy Hosts alarm may now apply — `X-OPS-1`. — _was:_ 4 of 5 alarms done. **Healthy Hosts Low deferred** — revisit once there is more than one host behind the ALB (currently single-instance, so the alarm would always be in-alarm).
 
 **What:** Set up these 5 alarms with an SNS topic that emails you:
 
@@ -356,6 +369,8 @@ _Unrecoverable without intervention._
 
 ## RES-7: Atlas alerts — 3 database alarms (MongoDB Atlas)
 
+**Status (2026-10-01):** ❔ Atlas console — not verifiable from the repos; the API runbook points to this doc's Atlas procedures (`docs/runbook.md:212`). The v4 pool settings assume an M10 with 1,500 connections (`helpers/db_conn.js:7-22`).
+
 **Size:** XS (15 min in Atlas Console)
 **Where:** MongoDB Atlas Console — Alerts
 
@@ -377,6 +392,8 @@ _Unrecoverable without intervention._
 ---
 
 ## RES-8: Create emergency runbook (Documentation)
+
+**Status (2026-10-01):** ✅ done — API `docs/runbook.md` (627 lines; `60b539f` 2026-04-15, `8c70aa7` 2026-05-03) covers the five failure cases below plus disk-full and the two-server setup; its own follow-up list (`:615-627`) is still open.
 
 **Size:** S (1 hour)
 **File:** New `docs/runbook.md`
@@ -442,3 +459,18 @@ _Unrecoverable without intervention._
 | RES-8: Emergency runbook  | S    | Bus factor reduction                | Zero |
 
 **Recommended order:** RES-1 → RES-4 → RES-2 → RES-3 → RES-5 → RES-6 → RES-7 → RES-8
+
+---
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+**What the v4 work added here** (API-3, now on master). Every v4 read has a server time limit — 5 s a find, 8 s an aggregate — answered as 503 `QUERY_TIMEOUT` (`api_v4/lib/limits.js:23`, `api_v4/lib/errors.js:40-43,110-113`); both Mongo pools cap at 75 sockets and give up after a 3 s wait, answered as 503 `UNAVAILABLE` (`helpers/db_conn.js:44-47`, `api_v4/lib/errors.js:95-117`); `/api/v4/screens/*` allows 300 requests a minute per user, answered as 429 `RATE_LIMITED` with `Retry-After` (`api_v4/lib/rateLimit.js:30-52`); server selection stays at the driver's 30 s to ride out an election (`helpers/db_conn.js:35-40`). The numbers and reasons are in the API's `docs/v4-performance.md`.
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-OPS-1 | 🆕 ❔ Settle the production topology and align what depends on it: the RES-6 status, the `trust proxy` hop count, per-process limits and caches, RES-4 | This plan says single instance (RES-6 status); the API runbook has one ASG and one static server behind the ALB (`docs/runbook.md:265-279`), and the v4 limiter and pool comments say one PM2 fork process on each of two servers (`api_v4/lib/rateLimit.js:23-26`, `helpers/db_conn.js:18-20`, `docs/v4-performance.md:130-133`). So the in-memory v4 limiter allows up to 600 a minute per user; caches and busts are per server; `trust proxy` is 1 hop (`dzzlo_oms.js:57`) behind ALB + nginx (`docs/runbook.md:4,341`), and the hop count decides which address IP-keyed limits see (depends on the nginx config, not in the repo); the runbook says "Already rotated by RES-4" (`docs/runbook.md:340`). The user confirms | API (ops) | S | — |
+| X-APP-1 | 🆕 App copy (en + hi) for `QUERY_TIMEOUT` (503) and `RATE_LIMITED` (429), and keep them out of the global retry | The API sends both (`api_v4/lib/errors.js:40-49`, `api_v4/lib/rateLimit.js:51`); the app catalogue has 8 v4 codes and 3 company codes, not these (`src/utils/errorCodes.js:18-56`), so the server's English text shows; the retry short-circuits only 4xx (`src/store/apis/createApi.js:96-108`), so a 503 `QUERY_TIMEOUT` — the server shedding load — is attempted three times, 2 s and 4 s apart (`src/store/apis/retryBackoff.js:4-7`); the same holds for a pool-wait `UNAVAILABLE` | app | S | — |
+| T01-N2 | 🆕 Make RES-2's graceful shutdown hold under PM2's defaults | PM2 stops and reloads with `SIGINT` and kills after 1.6 s unless `kill_timeout` is set (PM2's documented defaults, not repo code); `ecosystem.config.js` sets neither `kill_timeout` nor `kill_signal`; `helpers/db_conn.js:83-89` adds a second `SIGINT` handler that disconnects Mongo and calls `process.exit(0)` without waiting for `server.close` (`dzzlo_oms.js:145-165`) — in-flight requests can still be dropped (inferred, not observed) | API | XS | — |
+| T01-N4 | 🆕 The SMS-provider client fails safely — request errors caught, replies parsed defensively, calls time out — so a provider outage cannot take the API process down | The 2Factor client predates this (`api_v3/services/order_msts.js`, `api_v3/controllers/auth/SMSOTP/template/index.js`); the runbook lists a hanging external API as a 504 cause (`docs/runbook.md:33`). The tests' live-call flake is tracked in tasks_12 | API | S | Do with `X-SEC-3` ([02](./02-security-hardening.md)) |
+
+The full list is in [00-overview](./00-overview.md).

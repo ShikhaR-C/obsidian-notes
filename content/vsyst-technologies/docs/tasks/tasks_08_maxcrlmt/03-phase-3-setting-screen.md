@@ -8,9 +8,14 @@ Reuses `RadioChip` (already imported at `:35` and used for Credit Bill Period). 
 
 > ⚠️ **Release-version gotcha (must do):** the backend write-gate (Phase 1 §2/§3) treats any client reporting `version <= 1.77` as **legacy** and rewrites its `0` → `null`. So this new control only works end-to-end once the app reports **`1.78`**. Bump `android/app/build.gradle` `versionName` and iOS `MARKETING_VERSION` from `1.77` → `1.78` as part of this phase. For on-device testing before the bump, the API honors the magic test version `"1.510"` as "newest" (see `meta` idiom) — or just test against the `1.78` build.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Built in app 1.78 with one label change — the chips read "Unlimited" / "Fixed Limit" (`src/screens/Dealer/Customers/CustSettings.js:92`), and a remembered previous cap feeds the restore hint (`lastCap`); the version bump is done (1.78, now 1.79 / Android 105). No automated test covers the control (`T08-N1` in 00-overview); the simulator checks are ❔. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Add the currency import
+
+**Status (2026-10-01):** ✅ `CustSettings.js:43`.
 
 `formatCurrency` is not yet imported here. Add near the other `utils` imports (after `:33`):
 
@@ -23,6 +28,8 @@ import { formatCurrency } from "../../../utils/Currency";
 ---
 
 ## 2. Module-scope constants + helpers
+
+**Status (2026-10-01):** ✅ `CR_MODE` (`UNLIMITED: 'Unlimited'`, `LIMIT_CREDIT: 'Fixed Limit'`), `sanitizeAmount`, `toCommitted` at `CustSettings.js:92-106`.
 
 Add near the top of the file (e.g. just below `confirmAndUpdate`, ~`:76`):
 
@@ -47,6 +54,8 @@ const toCommitted = (v) =>
 
 ## 3. State — replace `maxCrLmt`
 
+**Status (2026-10-01):** ✅ `crLmtValue` (`:246`), plus `lastCap` for the restore hint (`:250`).
+
 **Remove** (`:289`):
 
 ```js
@@ -67,6 +76,8 @@ const [crLmtAmt, setCrLmtAmt] = useState("");
 ---
 
 ## 4. Init effect — replace the `maxCrLmt` branch
+
+**Status (2026-10-01):** ✅ `toCommitted(CUSTmax_cr_lmt)` (`:309`); when blocked, the field shows the real `0` and the restore hint comes from `lastCap` (`:316`).
 
 Inside the existing effect (`:293-323`), **replace** (`:300-302`):
 
@@ -92,6 +103,8 @@ Effect deps already include `CUSTmax_cr_lmt` (`:317`) — no change. (After a Bl
 ---
 
 ## 5. Handlers — replace `handleMaxCreditLimit`
+
+**Status (2026-10-01):** ✅ `isUnlimited` / `isBlocked` / `isCapped` (`:444-446`), `onSelectUnlimited` (`:467`), `onSelectBlock` (`:477-490`, remembers the cap), `handleSetAmount` (`:498`), plus a restore from `lastCap` (`:543`).
 
 **Remove** `handleMaxCreditLimit` (`:420-429`). **Add:**
 
@@ -165,6 +178,8 @@ const handleSetAmount = () => {
 ---
 
 ## 6. JSX — replace the credit-limit `Pressable`
+
+**Status (2026-10-01):** ✅ chips (`:881-890`), restore hint "prev …" (`:915-924`), helper note (`:952-953` — it says "Fixed Credit" while the chip says "Fixed Limit", `T08-N2`) and the `CreditProgress` card below it (`:956-963`).
 
 **Replace** the whole `Pressable` containing the old `maxcrlmt` `TextInput` (`:774-799`) with:
 
@@ -249,6 +264,8 @@ Notes:
 ---
 
 ## 7. Phase 3 acceptance (simulator)
+
+**Status (2026-10-01):** ❔ device checks, not re-run; no Tier 3 test pins these decisions (`T08-N1`).
 
 - [ ] New/blocked customer → opens with **Block credit** selected, field shows "Blocked — tap to set a limit". No keyboard on load.
 - [ ] Tap **Unlimited** → confirm → reopen shows Unlimited, amount field hidden.

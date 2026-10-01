@@ -1,8 +1,13 @@
 # Guide: Target database & network architecture
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). The target is not built: the API still runs two mongoose connections (default + DIP) with no namespaces, no `fin_txns` and no wire compression. One piece moved — both pools are now explicit (75 sockets, 3 s wait), at values different from §6. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 The topology this plan builds, and the reasoning for each choice. Diagrams first, mechanics after.
 
 ## 1. Current vs target
+
+**Status (2026-10-01):** the current-state picture still holds in substance — two clients (api:`helpers/db_conn.js:50-64`) — except the pool: both connections now set `maxPoolSize: 75` and `waitQueueTimeoutMS: 3000` (`:44-47`). Database names come from env and cannot be read here (❔).
 
 **Current** (audited): one Atlas M10 cluster `dzzlooms.kyfdo`, two logical DBs that are namespaces on the *same* nodes — so the "dual DB" isolates nothing physically. Two mongoose clients (= two connection pools). Everything from money postings to the per-request log firehose competes for the same RAM/IOPS.
 
@@ -31,6 +36,8 @@ The topology this plan builds, and the reasoning for each choice. Diagrams first
 
 ## 2. Namespace placement — collection by collection, with the *why*
 
+**Status (2026-10-01):** ⬜ not started (`useDb` appears nowhere in the API).
+
 | Namespace | Collections | Why here |
 | --- | --- | --- |
 | `oms_core` | users, cust_msts, dealer_msts, dealer_custs, order_msts, so_msts, prod/rate/psocs, veh_*, dvr_msts, invites, counters, contact_us | The operational graph. `dealer_custs` stays in core *despite* holding credit terms/`adv_dep` because it's the relationship root joined by everything; its money fields become derived-from-ledger in Phase 4. |
@@ -45,6 +52,8 @@ The topology this plan builds, and the reasoning for each choice. Diagrams first
 - ❌ **Not** resource isolation — same nodes, same cache. Physical isolation is exactly what the Phase-5 decision gate evaluates (ops cluster) once Phase-1 numbers exist. Do not claim perf wins from the namespace split itself; the perf wins come from Phase 3 (firehose diet) and Phase 6 (read path).
 
 ## 3. Connection mechanics (Phase 5 implements)
+
+**Status (2026-10-01):** ⬜ not started — and the code's pool choices differ from this sketch: 75 per connection with a 3 s wait queue, and `serverSelectionTimeoutMS` deliberately left at the driver's 30 s (api:`helpers/db_conn.js:7-47`).
 
 One client, many namespace handles — sessions are client-scoped, so this is what keeps `oms_core`+`oms_fin` transactions legal:
 
@@ -67,6 +76,8 @@ const dbOps  = conn.connection.useDb("oms_ops",  { useCache: true });
 
 ## 4. Write-path design (Phase 2/4 implement)
 
+**Status (2026-10-01):** ⬜ no transaction, `post_seq`, `fin_txns` or `$inc`. The shipped design recomputes a month from its source documents and upserts it (api:`api_v3/services/ledger_window.js:439-481`, PR #36) in place of step 4's `$inc`.
+
 ```
 order/SO/invoice/voucher service
   └── runInTransaction(async (session) => {
@@ -85,6 +96,8 @@ order/SO/invoice/voucher service
 
 ## 5. Read-path design (Phase 4/6 implement)
 
+**Status (2026-10-01):** 🟡 only the pagination-count bullet moved, in v4 (keyset paging, no counts — api:`api_v4/lib/cursor.js`); statements, balances, heavy reads and caching are unchanged.
+
 - **Statements** (`getDealerCustomerAccount`): one indexed range scan of `fin_txns` per relation+window; running balance in one pass. Exports (Excel/PDF) and screens read the same stream — they can no longer disagree.
 - **Balances**: FY opening (from ledger `OB` posting or `cust_bal`) + `month_crdrs` view − `adv_dep` view; every term provably rebuildable.
 - **Heavy reads** (year exports, TCS/TDS, email statements): `readPreference: "secondaryPreferred"` — acceptable staleness for exports, keeps the primary's cache for OLTP. Balance-after-posting reads stay on primary (read-your-writes). If exports grow, the escalation is an Atlas **analytics node** + `readPreference` tags — still no second engine.
@@ -92,6 +105,8 @@ order/SO/invoice/voucher service
 - **Caching** (D10): the per-instance LRU stays, but financial GETs (`/app/currbal`, statements) get a short TTL (≤60s) or bypass — cross-instance bust doesn't exist and 10-minute-stale balances are a support-ticket generator. A shared cache (Redis) is *not* planned; revisit only with evidence.
 
 ## 6. Network path (Phase 3 implements)
+
+**Status (2026-10-01):** 🟡 explicit pool only (not this table's 50 / 5 / 60 s); no compressors and no `w:1` on log writes; the peering row is ❔ (Atlas and AWS settings); every v4 read uses projection + `lean()`.
 
 | Change | Effect |
 | --- | --- |
@@ -103,5 +118,7 @@ order/SO/invoice/voucher service
 | Projection + `lean()` on hot lists (Phase 6) | Less BSON on the wire, less hydration CPU |
 
 ## 7. Sizing & escalation ladder (in order; each step needs Phase-1/continuing evidence)
+
+**Status (2026-10-01):** no step taken that the repos show; they state the tier as M10 (api:`helpers/db_conn.js:8`, api:`docs/v4-performance.md:302`).
 
 1. Phase 3 hygiene (free) → 2. Phase 6 read path (free) → 3. M10→M20 (RAM/IOPS) → 4. Analytics node for exports → 5. `oms_ops` to separate cheap cluster → 6. Online Archive / `oms_archive` for closed FYs. **Not on the ladder**: sharding (wrong scale class for B2B khata data by orders of magnitude), microservices, CQRS infrastructure, Redis-by-default.

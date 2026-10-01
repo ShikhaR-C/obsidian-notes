@@ -2,6 +2,22 @@
 
 > **Remote Config: DEFERRED 2026-09-27** — the `@react-native-firebase/remote-config` package is out of the app (`tasks_17_remote_config_removal`); the screen toggles ride `/api/v4/features`. Nothing below is deleted: the Remote Config steps stay for when it comes back.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Steps 1–7 are on `main` for four of the five services (Crashlytics, Analytics, Performance and the app wiring); Remote Config is ⏸ (removed in `ad40ed71`, tasks_17 — the toggles it was meant for ride `GET /api/v4/app/features`, not `/api/v4/features` as the marker says); Steps 8–9 and the Verification list are console / device checks (❔). Across the folder's six notes (roll-up below): 1 ✅ (this plan), 1 🟡 (App Distribution — the Android upload is in `build-release-apk.sh`), 1 ❌ superseded (the Analytics plan, carried by tasks_10), 3 ⬜ (the three notifications notes — the app and API still run OneSignal only). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
+## Status roll-up (2026-10-01)
+
+This plan is the folder's index (the other five notes call themselves its companions).
+
+| Item | Status | What exists now (evidence) | What is left / next step |
+| --- | --- | --- | --- |
+| `FIREBASE_INTEGRATION_PLAN.md` (this) | ✅ (Remote Config ⏸) | four packages at 24.0.0 (`package.json:35-38`); plugins `android/app/build.gradle:5-7`; `FirebaseApp.configure()` (`ios/dzzlo_oms_app/AppDelegate.swift:5,16`); wrappers `src/utils/firebase.js:8-74`; screen views `src/components/Error/RestartContext.js:31-45`; an HTTP metric per attempt `src/store/apis/createApi.js:64-94`; `rtkq_<endpoint>` trace + `api_call` `src/store/middleware/rtkQueryPerfLogger.js:21-43`; a non-fatal per rejected action `rtkQueryErrorLogger.js:63-73` | Remote Config stays out until wanted (tasks_17); console checks are the user's |
+| `FIREBASE_ANALYTICS_PLAN.md` | ❌ | superseded by `tasks_10_analytics_events` (a different naming rule, role as a default param); nothing of its §6–§8 is built — only `api_call` and the automatic screen views exist, both from this plan | tasks_10 (⬜, not started in code); v1 / v2 attribution is `X-APP-4` in tasks_10 |
+| `FIREBASE_APP_DISTRIBUTION_PLAN.md` | 🟡 | Android: `build-release-apk.sh:47-78` uploads the release APK with the `firebase` CLI when `FIREBASE_ANDROID_APP_ID` is set (`22ca7004`, `ca9487d3`); none of the plan's seven files exists (`scripts/distribute*.sh`, `.env.distribution`, `ios/ExportOptions.plist`, the `distribute*` yarn scripts); CI runs Jest only (`.github/workflows/test.yml`) | the iOS path (Steps 5 and 7) and the one-command wrapper, when wanted |
+| `FIREBASE_NOTIFICATIONS_FCM_VS_ONESIGNAL.md` | ⬜ | the keep / drop / hybrid call is not taken — the app is OneSignal-only (`react-native-onesignal ^5.4.1`, `package.json:54`; no `@react-native-firebase/messaging`) | the decision — the user |
+| `FIREBASE_NOTIFICATIONS_MIGRATION_PLAN.md` | ⬜ (`push_backend` flag ⏸) | nothing built: no `firebase-admin`, `bullmq` or `ioredis` in the API's `package.json`, no `fcm_tokens` model, `sendNotifyToExternalIDs` still posts to OneSignal (`api_v3/controllers/App/notification.js:9-45`); the app has no `src/helpers/Messaging/` | the decision above; `T05-N1` meanwhile |
+| `FIREBASE_NOTIFICATIONS_CUSTOM_FEATURES_PLAN.md` | ⬜ | nothing built; none of its Phase 0 prerequisites holds | waits on the migration plan |
+
 ## Context
 
 The app (`in.vsyst.dzzlooms`) previously had Firebase for phone auth (removed). The Firebase project `dzzlo-oms` config files are still present on both platforms, but all Firebase code/plugins are commented out and no `@react-native-firebase/*` packages are installed. The app runs **React Native 0.84.1** / **React 19.2.3**.
@@ -13,6 +29,8 @@ The app (`in.vsyst.dzzlooms`) previously had Firebase for phone auth (removed). 
 ---
 
 ## Current State
+
+**Status (2026-10-01):** ✅ superseded by the build — this records the state before the plan ran. Now the plugins are applied (`android/app/build.gradle:5-7`; classpaths `android/build.gradle:19-21`), `$RNFirebaseAsStaticFramework = true` (`ios/Podfile:23`), `FirebaseApp.configure()` runs (`AppDelegate.swift:5,16`) and four packages are installed (`package.json:35-38`).
 
 - `android/app/google-services.json` — **present**, project `dzzlo-oms`
 - `ios/GoogleService-Info.plist` — **present**, project `dzzlo-oms`
@@ -28,11 +46,15 @@ The app (`in.vsyst.dzzlooms`) previously had Firebase for phone auth (removed). 
 
 ### Step 1 — Install npm packages
 
+**Status (2026-10-01):** ✅ four packages at 24.0.0 (`package.json:35-38`); `remote-config` ⏸ — removed in `ad40ed71` (tasks_17).
+
 ```bash
 yarn add @react-native-firebase/app @react-native-firebase/crashlytics @react-native-firebase/analytics @react-native-firebase/perf @react-native-firebase/remote-config
 ```
 
 ### Step 2 — Android: Enable Google Services & Firebase plugins
+
+**Status (2026-10-01):** ✅ classpaths `android/build.gradle:19-21` (google-services 4.4.4, crashlytics-gradle 3.0.6, perf-plugin 2.0.2 — newer than the snippet); plugins `android/app/build.gradle:5-7`.
 
 - **`android/build.gradle`** (line 19): Uncomment `classpath("com.google.gms:google-services:4.4.3")`
 - **`android/build.gradle`**: Add Crashlytics & Perf classpaths:
@@ -49,12 +71,16 @@ yarn add @react-native-firebase/app @react-native-firebase/crashlytics @react-na
 
 ### Step 3 — iOS: Enable Firebase in Podfile & AppDelegate
 
+**Status (2026-10-01):** ✅ `ios/Podfile:23`; `import FirebaseCore` + `FirebaseApp.configure()` (`ios/dzzlo_oms_app/AppDelegate.swift:5,16`, in the UIScene life cycle since `b933119f`).
+
 - **`ios/Podfile`** (line 21): Uncomment `$RNFirebaseAsStaticFramework = true`
 - **`ios/dzzlo_oms_app/AppDelegate.swift`** (line 5): Uncomment `import Firebase`
 - **`ios/dzzlo_oms_app/AppDelegate.swift`** (line 33): Uncomment `FirebaseApp.configure()`
 - Run `cd ios && pod install`
 
 ### Step 4 — Create Firebase utility module
+
+**Status (2026-10-01):** ✅ `src/utils/firebase.js:8-74` (seven wrappers, with `tagEnv`); the Remote Config section ⏸ (removed in `ad40ed71`). Only `logScreenView`, `setUser` and `tagEnv` have importers — the two middlewares call RNFB directly.
 
 Create `src/utils/firebase.js` with helpers for all 4 services:
 
@@ -114,6 +140,8 @@ export const getRemoteValue = (key) => {
 
 ### Step 5 — Initialize Firebase services in app entry
 
+**Status (2026-10-01):** ✅ done in the mount effect of `src/navigation/AppNavigatorContainer.js:90-96` (`setCrashlyticsCollectionEnabled(true)`, `tagEnv()`), not in `index.js` / `App.js`; the Remote Config init ⏸ (removed).
+
 In `index.js` or `App.js`:
 
 ```js
@@ -136,6 +164,8 @@ initRemoteConfig({
 ```
 
 ### Step 6 — Add screen tracking for Analytics
+
+**Status (2026-10-01):** ✅ one `NavigationContainer` serves the whole app (`src/components/Error/RestartContext.js:49-57`) and logs `logScreenView(route, route)` on ready and on each change (`:31-45`) — the per-navigator premise below did not hold. Route names only, so v1 and v2 renders of `Customers` / `DailySummary` look the same — `X-APP-4` in tasks_10.
 
 This app has **no single `NavigationContainer`** — navigation is split across role-based navigators: `src/navigation/Customer/Drawer.js`, `src/navigation/Dealer/Drawer.js`, and `src/navigation/Auth/`. Each of these contains its own `NavigationContainer`.
 
@@ -169,6 +199,8 @@ const routeNameRef = useRef();
 > Alternative: extract this into a small wrapper component (e.g. `src/navigation/withAnalytics.js`) and use it in Customer/Dealer/Auth navigators to avoid duplication.
 
 ### Step 7 — Instrument RTK Query calls with Performance Monitoring (optional)
+
+**Status (2026-10-01):** ✅ `baseQueryWithPerf` sits inside `retry` (`src/store/apis/createApi.js:64-108`); `rtkQueryPerfLogger.js:21-43` starts `rtkq_<endpoint>` and logs `api_call`; the Crashlytics non-fatal lives in `rtkQueryErrorLogger.js:63-73` (every rejected action), not in the perf logger as sketched.
 
 Since `axios` is gone and **all** HTTP goes through RTK Query, the right place for custom HTTP metrics is `dzzlo_oms_app/src/store/apis/createApi.js` — specifically by wrapping `rawBaseQuery` in a perf-monitoring baseQuery that sits **inside** `retry` (so we measure each attempt, not the whole retry loop).
 
@@ -294,11 +326,15 @@ For everything else — per-endpoint latency, success/failure counts, error logg
 
 ### Step 8 — Verify config files are still valid
 
+**Status (2026-10-01):** ❔ the files are present — `android/app/google-services.json` (project `dzzlo-oms`, package `in.vsyst.dzzlooms`) and `ios/GoogleService-Info.plist`, both unchanged since 1.78; matching them to the console is the user's.
+
 - Confirm `google-services.json` project ID matches your Firebase console
 - Confirm `GoogleService-Info.plist` bundle ID matches `in.vsyst.dzzlooms`
 - If credentials have been rotated since last use, re-download from Firebase console
 
 ### Step 9 — Build & Test
+
+**Status (2026-10-01):** ❔ device and console checks — the user; the repos cannot show what the Firebase console received.
 
 - Clean build both platforms:
   ```bash
@@ -313,6 +349,8 @@ For everything else — per-endpoint latency, success/failure counts, error logg
 ---
 
 ## Files to Modify
+
+**Status (2026-10-01):** ✅ every row landed, Steps 5 and 6 in a different place (see their lines); the `remote-config` part of the `package.json` and `firebase.js` rows ⏸.
 
 | File                                                        | Change                                                                                                                |
 | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
@@ -346,6 +384,8 @@ For everything else — per-endpoint latency, success/failure counts, error logg
 
 ### Recommended for immediate use:
 
+**Status (2026-10-01):** 3 of 4 live (Crashlytics, Analytics, Performance); Remote Config ⏸ (tasks_17). Beyond these: App Distribution 🟡 (Android upload in `build-release-apk.sh`), FCM ⬜ (roll-up).
+
 1. **Crashlytics** — catch and fix crashes before users complain
 2. **Analytics** — understand user behavior and app usage patterns
 3. **Performance Monitoring** — low effort to add, high value for identifying bottlenecks
@@ -355,6 +395,8 @@ For everything else — per-endpoint latency, success/failure counts, error logg
 
 ## Verification
 
+**Status (2026-10-01):** ❔ console checks — the user; item 6 (Remote Config) is ⏸.
+
 1. Build and launch on Android emulator/device → check Firebase console for connected app
 2. Build and launch on iOS simulator/device → check Firebase console for connected app
 3. **Crashlytics:** Trigger a test crash (`crashlytics().crash()`) → verify it appears in Crashlytics dashboard within 5 minutes
@@ -362,3 +404,11 @@ For everything else — per-endpoint latency, success/failure counts, error logg
 5. **Performance:** Navigate through screens and make API calls → verify traces appear in Performance dashboard
 6. **Remote Config:** Set a parameter in Firebase console → call `fetchAndActivate()` → verify the value is received
 7. Check `adb logcat | grep Firebase` / Xcode console for Firebase initialization logs
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| T05-N1 | 🆕 Clear the push identity on sign-out, and keep verbose push-SDK logging out of release builds | Weakness class: a session-scoped identity that outlives the session — the sign-out thunk (`src/store/slices/auth.js:7-20`) does not clear the push identity, so a shared device can keep receiving the previous user's notifications; and the push SDK logs verbosely in every build (`src/helpers/OneSignal/index.js:16-24`). Fix: clear the identity in the sign-out thunk; gate the log level on `__DEV__` | app | XS | — |
+
+Related, owned elsewhere: a home for the non-screen kill-switches and rollout flags the notifications notes pencil in (`push_backend`, `push_send_enabled`, `journey_<id>_enabled`) — the DEFERRED markers route them to the toggles, but the API keeps only `screen_v2_(dealer|customer)_*` booleans there (API `helpers/appFeatures.js:31-38`); see `T09-N1` in tasks_09. The v1 / v2 screen-view gap is `X-APP-4` in tasks_10.

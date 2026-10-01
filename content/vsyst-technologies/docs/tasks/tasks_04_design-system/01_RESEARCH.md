@@ -1,8 +1,13 @@
 # Research: Design System Foundations
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research, April 2026 — there are no tasks here; each section now says what the code did with it. Two verdicts no longer hold: the Restyle choice (§7, §8) was reversed on 2026-09-04, and §1's `letterSpacing` "bug" was never there. The rest still describes the platform. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 All claims are cited. Research was done April 2026. Any stars / versions / issue numbers are snapshots from that date.
 
 ## 1. Material Design 3 — Type Scale (authoritative)
+
+**Status (2026-10-01):** the built roles (`src/theme/tokens/typography.js:8-114`, app `ea7e7222`) copy the legacy `fontObject`, which is Paper's MD3 table: `titleLarge` is 22 / 28 (not 30 as below), `bodyLarge` tracks 0.15 and `displayLarge` 0. The second note's bug claim is corrected in place.
 
 Source: [m3.material.io/styles/typography/type-scale-tokens](https://m3.material.io/styles/typography/type-scale-tokens) (fetched via WebFetch, CSS custom properties extracted directly from the page).
 
@@ -28,9 +33,11 @@ Fifteen type roles. Each role has a font family, size (sp/px), weight, line heig
 
 **Note**: M3 2024+ uses weight 475 for display/headline when Google Sans is available. Since we're using `'System'` and later `'OpenSans'`, we stay at 400 for display/headline (the published M3 fallback weight).
 
-**Note**: React-native-paper 5.x `MD3LightTheme.fonts` ships exactly this scale (naming matches). We do **not** need to re-type the whole table; we can spread `MD3LightTheme.fonts` and only override where needed. The existing `src/utils/Colors/index.js` `fontObject` is already very close but has `letterSpacing: 0` for nearly everything — a bug vs. M3. We fix this in Phase 2.
+**Note**: React-native-paper 5.x `MD3LightTheme.fonts` ships exactly this scale (naming matches). We do **not** need to re-type the whole table; we can spread `MD3LightTheme.fonts` and only override where needed. The existing `src/utils/Colors/index.js` `fontObject` is already very close ~~but has `letterSpacing: 0` for nearly everything — a bug vs. M3. We fix this in Phase 2.~~ — _2026-10-01:_ it has carried Paper's MD3 tracking since at least 2025-09-09 (0.1–0.5 on the title, body and label roles); only `displayLarge` (0 vs −0.25) and `bodyLarge` (0.15 vs 0.5) differ from the table above, as in Paper's own MD3 fonts.
 
 ## 2. Material Design 3 — Color Roles
+
+**Status (2026-10-01):** 🟡 still about ten roles plus the custom keys — the built theme restates the legacy palette key for key (`src/theme/tokens/palette.js:9-56`); the full MD3 set is Phase 3 Step 3.1, ⬜.
 
 Source: [m3.material.io/styles/color/roles](https://m3.material.io/styles/color/roles).
 
@@ -59,6 +66,8 @@ The existing codebase uses only ~10 of these. Phase 3 expands to the full set, m
 
 ## 3. Apple Human Interface Guidelines — Dynamic Type
 
+**Status (2026-10-01):** v2 follows the OS text size through React Native's one `fontScale` (`src/theme/provider/useTypeScale.js:25-38`) and treats iOS's accessibility sizes as a breakpoint (`ACCESSIBILITY_FONT_SCALE` 1.786, `src/theme/scale.js:10`); `dynamicTypeRamp` has 0 uses.
+
 Source: Default iOS Dynamic Type point sizes at the "Large" content size category (compiled from sarunw.com, useyourloaf.com, Apple headers):
 
 | Text style    | Default pt | Weight       |
@@ -84,6 +93,8 @@ Key Apple design-thinking we borrow:
 
 ## 4. React Native `<Text>` Props — The Accessibility Toolkit
 
+**Status (2026-10-01):** ✅ as decided, for v2: no `allowFontScaling` or `maxFontSizeMultiplier` in the app (pinned by `AppText.test.js:91-109`); Paper's menu cap lifted with `titleMaxFontSizeMultiplier` (`SortMenu.js:120`); `adjustsFontSizeToFit` only on the Daily Summary card, an open decision (`SummaryCard.js:107-108`).
+
 Source: [reactnative.dev/docs/text](https://reactnative.dev/docs/text) (fetched directly).
 
 | Prop                    | Platform                   | Default         | What it does                                                                                                                          |
@@ -107,6 +118,8 @@ This directly validates Phase 2's `<AppText>` wrapper approach.
 
 ## 5. Android Text Clipping Bug — Diagnosis
 
+**Status (2026-10-01):** ❔ #45660 is upstream and cannot be checked from the repos; the app has 0 `includeFontPadding` (workaround 2 holds). Two later Android findings came from device runs: Android 15 line breaking by glyph bounds (fixed app-wide, `android/app/src/main/res/values/styles.xml:9,30-32`) and Bold Text tail clipping (open — T04-N1 in [00_README](./00_README.md)).
+
 Source: [github.com/facebook/react-native/issues/45660](https://github.com/facebook/react-native/issues/45660) (fetched April 2026, still open, last activity October 2025).
 
 **Symptom**: On Android (reports span RN 0.73.9–0.78, Android 12/13/14), text rendered by `<Text>` has unwanted top padding. Setting `includeFontPadding: false` removes the **bottom** padding only; the top padding persists. When bold weight + large system font scale are combined, the top of capital letters and descenders on g/p/q get **clipped**, especially in fixed-height containers and buttons.
@@ -124,6 +137,8 @@ All four are Phase 4 tasks.
 
 ## 6. Ignite Cookbook — Production font-scaling pattern
 
+**Status (2026-10-01):** ❌ not adopted as written: v2 reads the scale per render (`useTypeScale`) and tests state it (`renderScreen(ui, { fontScale })`); no navigator-option hooks, no dev display.
+
 Source: [ignitecookbook.com/docs/recipes/AccessibilityFontSizes](https://ignitecookbook.com/docs/recipes/AccessibilityFontSizes/) (the open-source RN cookbook maintained by Infinite Red).
 
 Pattern: a `useFontScaling()` hook that returns `TextProps` (an object with `allowFontScaling`, `maxFontSizeMultiplier`, `minimumFontScale`), plus matching hooks for the different navigators (stack header, drawer, bottom tab, top tab) that return `screenOptions` pre-bound with scaling props.
@@ -131,6 +146,8 @@ Pattern: a `useFontScaling()` hook that returns `TextProps` (an object with `all
 We adapt this pattern but simplify: since we're uncapped globally, our hook only needs to return `{ allowFontScaling: true }` plus a `DevFontScale` display-only helper for engineers to verify layout at various `PixelRatio.getFontScale()` values during development.
 
 ## 7. `@shopify/restyle` — Our Chosen Engine
+
+**Status (2026-10-01):** ❌ reversed on 2026-09-04 (02-foundations decision log): latest release 2.4.5 of 2025-03-19, wildcard peer dependencies, RN 0.84 / React 19 unverified — so plain tokens + Paper's MD3 theme + `AppText` / `Box` / `Screen` on `StyleSheet` were built instead; not in `package.json`.
 
 Source: Restyle's design overview (the "enterprise design system" choice per LogRocket / State of React Native 2025 survey).
 
@@ -159,6 +176,8 @@ No native code. No `pod install`. No Android rebuild. Pure JS.
 
 ## 8. Library Landscape Decision Log
 
+**Status (2026-10-01):** what was built is closest to the "Vanilla extending Paper" row, with the variant discipline supplied by a scoped ESLint block (`eslint.config.js:42-76`) instead of Restyle's types.
+
 Options considered before picking Restyle:
 
 | Library                              | Verdict                                                                                                                                                                                                        |
@@ -172,6 +191,8 @@ Options considered before picking Restyle:
 | `@material/material-color-utilities` | **Optional.** Google's official MD3 palette generator. Lets us generate a full tonal palette from a single source color. Useful when adding new themes (Phase 6) — we can ship with hand-tuned palettes first. |
 
 ## 9. Outside-component theme access (the `StyleSheet.create` problem)
+
+**Status (2026-10-01):** v2 keeps layout in static `StyleSheet.create` and applies token colours inline at render from `useAppTheme()` (e.g. `CustomerRow.js:101-106`) — Pattern A without `makeStyles`; `Box` / `AppText` play Pattern B's part; Pattern C (`runtime.js`) is not built.
 
 `StyleSheet.create` runs **once at module load**, before any React context exists. You can't call `useTheme()` inside a `StyleSheet.create` call. This is a known React Native gotcha. Two patterns address it:
 

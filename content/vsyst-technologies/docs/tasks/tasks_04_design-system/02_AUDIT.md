@@ -1,15 +1,26 @@
 # Current State Audit
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). An April 2026 snapshot of v1, kept as history; every section now carries a 2026-10-01 re-count. D11 leaves v1 as it is, so its numbers barely moved, and the new system (`src/theme/`, `src/components/v2/`) sits beside it with none of these literals. Three claims are corrected in place: custom fonts are used, the `letterSpacing` bug was not there, and `white` is opaque since 2026-05-01. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+>
+> Re-count method (2026-10-01): regex counts over non-test `.js` files in `src/screens`, `src/components` and `src/navigation` at app `ea7e7222`, with the v2 folders and `src/components/SVG/` counted apart. The method differs from April's, so compare orders of magnitude, not single numbers.
+
 All numbers are from exhaustive `grep` / `glob` passes over the codebase at the chores/update-packages branch, April 2026.
 
 ## 1. Theming infrastructure
 
+**Status (2026-10-01):** the legacy setup is unchanged and still drives v1. Beside it, `src/theme/` (tokens, two themes, the Paper and navigation adapters, `ThemeProvider` / `useAppTheme`) hands Paper a byte-identical theme (`src/theme/__tests__/parity.test.js`) and v2 its tokens.
+
 ### Files
 
-- `src/utils/Colors/index.js` (297 lines) — exports `Light`, `Dark`, `hex2rgba()`, `hex_alpha()`. Contains a `fontObject` with all 15 MD3 type variants, but with **bug**: `letterSpacing: 0` on variants that should have tracking (per MD3 spec: titleMedium=0.15, bodyMedium=0.25, labelSmall=0.5, etc.).
+**Status (2026-10-01):** both files still exist; `src/utils/Colors/index.js` is now 299 lines and gained `withAlpha` (`0c28903a`, 2026-05-01); `defaultCombined.js` still has 0 importers. The `letterSpacing` claim is corrected below.
+
+- `src/utils/Colors/index.js` (297 lines) — exports `Light`, `Dark`, `hex2rgba()`, `hex_alpha()`. Contains a `fontObject` with all 15 MD3 type variants~~, but with **bug**: `letterSpacing: 0` on variants that should have tracking (per MD3 spec: titleMedium=0.15, bodyMedium=0.25, labelSmall=0.5, etc.)~~ — _2026-10-01:_ those roles carry exactly that tracking (`src/utils/Colors/index.js:55,69,97`), unchanged since at least 2025-09-09.
 - `src/utils/Colors/defaultCombined.js` (87 lines) — exports `lightDefaultCombined`, `darkDefaultCombined`. **Dead code**: zero importers. Legacy backup.
 
 ### Provider wiring
+
+**Status (2026-10-01):** line numbers moved — theme selection `AppNavigatorContainer.js:73-78`, `PaperProvider` `:178`, StatusBar `:182-184`; `ThemeProvider` now wraps `PaperProvider` (`:177`). `RestartContext` still hands the Paper theme to `NavigationContainer` (`RestartContext.js:52`), so Phase 1 Step 1.19 is open.
 
 - `App.js` is 31 lines, no Paper provider. Composition: `GestureHandlerRootView > SafeAreaProvider > Provider (redux) > AppNavigatorContainer`.
 - `src/navigation/AppNavigatorContainer.js:83` — `<PaperProvider theme={theme}>` is here, not at app root.
@@ -25,11 +36,15 @@ All numbers are from exhaustive `grep` / `glob` passes over the codebase at the 
 
 ### Theme switching UX
 
+**Status (2026-10-01):** unchanged — Settings offers SYSTEM / DARK / LIGHT (`src/screens/Common/Settings/index.js:26`), `VersionInfo` keeps its theme modal (`src/components/VersionInfo/index.js:87-98,381-385`), and the theme is still server-only.
+
 - `src/screens/Common/Settings/index.js` — settings screen with 3 options: `SYSTEM / DARK / LIGHT`. Calls `useSet_themeMutation` to persist to backend `user.theme`.
 - `src/components/VersionInfo/index.js` — exposes a second toggle via a switch (duplicate entry point).
 - **Persistence gap**: theme is backend-only. On logout / fresh install, user flashes the wrong theme until the user object loads. No AsyncStorage fallback.
 
 ### Dependency baseline (from `package.json`)
+
+**Status (2026-10-01):** the listed versions are unchanged. Still not installed: all seven libraries below, `@shopify/restyle` now by decision (2026-09-04); `redux-persist` is not a dependency either; `@react-native-firebase/remote-config` was removed in 1.79.
 
 ```
 react-native                                 0.84.1
@@ -51,13 +66,19 @@ react-redux                                  9.2.0
 
 ### Fonts in native bundles
 
+**Status (2026-10-01):** the three files are still bundled (`react-native.config.js`, `ios/dzzlo_oms_app/Info.plist:59-61`); the "none are used" line is corrected below.
+
 - `react-native.config.js` declares `assets: ['./src/assets/fonts/']`.
 - Font files present: `OpenSans_Regular.ttf`, `RCL_Light.ttf`, `RobotoCondensed_Regular.ttf` (located in `src/assets/fonts/`, `android/app/src/main/assets/fonts/`, and iOS bundle).
-- **None are used** — `src/utils/Colors/index.js` `fontObject` has `fontFamily: 'System'` everywhere.
+- ~~**None are used**~~ — `src/utils/Colors/index.js` `fontObject` has `fontFamily: 'System'` everywhere. _2026-10-01:_ two are used outside the theme through `src/constants/fonts.js:7-13` (added 2026-03-21): Roboto Condensed in 19 files and RCL Light in 9, the v2 date range bar among them (`src/components/v2/DateRangeSheet/layout.bar.js:76-80`); OpenSans has 0 uses.
 
 ## 2. Text rendering audit
 
+**Status (2026-10-01):** re-counted — v1 has about 2,370 `<Text` elements in about 250 files, 1,092 numeric `fontSize:` in 187 files and 289 bold or numeric `fontWeight` in 131; only 4 files import `Text` from `react-native` (the rest use Paper's). v2 has 0 numeric `fontSize`, 3 `fontWeight: '700'`, and all its text goes through `AppText` (Paper's `Menu` in `SortMenu.js` draws its own item titles).
+
 ### Topline numbers
+
+**Status (2026-10-01):** `allowFontScaling` and `maxFontSizeMultiplier` still have 0 uses app-wide, now by rule for v2 (`AI.md:65-71`); the one multiplier prop is Paper's `titleMaxFontSizeMultiplier`, set to lift a cap (`SortMenu.js:120`); `AppText` exists (`src/components/v2/AppText.js`); `FONT_SIZES` is used by one v1 file.
 
 - `<Text>` instances: **2,435+** across **181 files**
 - Hardcoded `fontSize` values: **547**
@@ -69,6 +90,8 @@ react-redux                                  9.2.0
 - Custom text wrappers (`AppText` / `ThemedText` / etc.): **0** (`src/constants/designTokens.js` has unused `FONT_SIZES`)
 
 ### Text-density hotspots (top 15, these are Phase 5 priorities)
+
+**Status (2026-10-01):** not re-counted — v1 files, untouched by D11; Phase 5 is superseded.
 
 | Priority | File                                                       | Text count |
 | -------- | ---------------------------------------------------------- | ---------- |
@@ -90,6 +113,8 @@ react-redux                                  9.2.0
 
 ### Fixed-height containers (Phase 4 fix list — 48+ instances, partial)
 
+**Status (2026-10-01):** all eleven still carry their fixed height (lines moved, e.g. `Login.js:833`, `OneOrder.js:376`); v1 has 187 `height: N` literals in 114 files, not all on text. v2 has none on a text container.
+
 These will **clip text** on Android when system font scale is raised:
 
 | File                                                 | Line | Height | Context                            |
@@ -110,7 +135,11 @@ Phase 4 runs a grep for `height: [0-9]` across `src/screens/` and `src/component
 
 ## 3. Color usage audit
 
+**Status (2026-10-01):** v1 unchanged in kind (re-counts below); v2 has 0 hex and 0 `rgb(` literals, enforced by `eslint.config.js:42-76`.
+
 ### How colors are consumed
+
+**Status (2026-10-01):** 225 files call Paper's `useTheme()` (233 call a `useTheme()` of either library; 0 in v2); 87 v1 files import `src/utils/Colors`, plus `src/theme/tint.js`, which borrows its colour helpers; v1 has 453 quoted hex literals in 99 files and 204 `rgb(a)(` in 96; `src/components/SVG/` holds 1,133 hex.
 
 | Pattern                                                   | Files                          | Status                            |
 | --------------------------------------------------------- | ------------------------------ | --------------------------------- |
@@ -122,6 +151,8 @@ Phase 4 runs a grep for `height: [0-9]` across `src/screens/` and `src/component
 | Color name literals (`'white'`, `'red'`)                  | **16 instances**               |                                   |
 
 ### Hardcoded-color hotspots (top 20, Phase 3 priority)
+
+**Status (2026-10-01):** not re-counted — v1 files, untouched by D11.
 
 | File                                                           | Approx count |
 | -------------------------------------------------------------- | ------------ |
@@ -148,11 +179,13 @@ Phase 4 runs a grep for `height: [0-9]` across `src/screens/` and `src/component
 
 ### Non-standard semantic colors in current theme
 
+**Status (2026-10-01):** all seven keys were carried into `src/theme/tokens/palette.js:10-55` as they are (parity), so none was remapped; `white` changed on 2026-05-01 (`0c28903a`), corrected in the table.
+
 Beyond MD3 basics, the existing `Light`/`Dark` objects add these custom keys:
 
 | Key                  | Light value             | Dark value              | Notes                                                                  |
 | -------------------- | ----------------------- | ----------------------- | ---------------------------------------------------------------------- |
-| `white`              | `rgba(255,255,255,0.7)` | `rgba(255,255,255,0.7)` | **Same in both** — semantically an overlay, poorly named               |
+| `white`              | ~~`rgba(255,255,255,0.7)`~~ `rgba(255, 255, 255)` (2026-05-01) | ~~`rgba(255,255,255,0.7)`~~ `rgba(255, 255, 255)` (2026-05-01) | **Same in both** — semantically an overlay, poorly named               |
 | `black`              | `rgba(0,0,0,0.7)`       | `rgba(0,0,0,0.7)`       | Same issue                                                             |
 | `gray`               | `#BDBDBD`               | `#424242`               |                                                                        |
 | `antiText`           | `rgb(229,229,231)`      | `rgb(28,28,30)`         | Inverse text color (dark text in light, light text in dark) — misnamed |
@@ -170,9 +203,13 @@ Phase 3 remaps all of these to semantic MD3 roles:
 
 ### Brand / fixed colors
 
+**Status (2026-10-01):** unchanged — the brand SVGs keep their hex values; extraction was skipped in F-APP-3 (no clean list).
+
 SVG brand logos in `src/components/SVG/psoc/` (IOCL, NAYARA, HPCL, BPCL, SHELL, JIO_BP) have 30–50 hardcoded hex values each. These are **intentionally theme-invariant** — moving them to `src/theme/tokens/fixed.js` as explicit brand tokens makes this intent clear.
 
 ## 4. Known accessibility gaps
+
+**Status (2026-10-01):** the lines moved (`colors.placeholder` now at `CustSettings.js:674,699,…` and `SetDiscBS.js:273,294,315,342`), and the first row's premise does not hold: dark `placeholder` over `#121212` computes to ≈ 6.0:1, which passes AA. The review found a real gap in v2 instead — `success` text in light mode at ≈ 2.1–2.3:1 (T04-N2 in [00_README](./00_README.md)).
 
 Spotted during the audit (not exhaustive — Phase 6 will do the full WCAG pass):
 
@@ -185,18 +222,20 @@ Spotted during the audit (not exhaustive — Phase 6 will do the full WCAG pass)
 
 ## 5. Gaps summary
 
-| Gap                                                      | Severity     | Phase                                 |
-| -------------------------------------------------------- | ------------ | ------------------------------------- |
-| No `<AppText>` wrapper → variants can't be enforced      | **Critical** | Phase 2                               |
-| 48+ fixed-height containers                              | **Critical** | Phase 4                               |
-| `allowFontScaling` never set → uncapped scaling untested | **Critical** | Phase 2                               |
-| 547 hardcoded `fontSize` + 291 `fontWeight`              | High         | Phase 5 (alongside Phase 2 migration) |
-| 1,500+ hardcoded colors                                  | High         | Phase 3                               |
-| Theme not extensible beyond 2 (hardcoded Light/Dark)     | High         | Phase 1                               |
-| `defaultCombined.js` dead code                           | Low          | Phase 1 (delete)                      |
-| Navigation theme relies on shape overlap                 | Medium       | Phase 1 (use `adaptNavigationTheme`)  |
-| No local theme persistence (flash on fresh install)      | Medium       | Phase 6                               |
-| Custom fonts declared but unused                         | Low          | Phase 6                               |
-| `letterSpacing: 0` bug in current `fontObject`           | Medium       | Phase 2                               |
-| No contrast automation                                   | Medium       | Phase 6                               |
-| Two theme-toggle entry points (Settings + VersionInfo)   | Low          | Phase 6 consolidation                 |
+**Status (2026-10-01):** per-gap column added; the new system closes the gaps for v2 only, as D11 intends.
+
+| Gap                                                      | Severity     | Phase                                 | 2026-10-01 |
+| -------------------------------------------------------- | ------------ | ------------------------------------- | --- |
+| No `<AppText>` wrapper → variants can't be enforced      | **Critical** | Phase 2                               | ✅ for v2 (`src/components/v2/AppText.js`); v1 untouched (D11) |
+| 48+ fixed-height containers                              | **Critical** | Phase 4                               | ✅ none on v2 text; v1 keeps them (D11) |
+| `allowFontScaling` never set → uncapped scaling untested | **Critical** | Phase 2                               | ✅ v2 tests state the scale — 31 test files run at 2.143× |
+| 547 hardcoded `fontSize` + 291 `fontWeight`              | High         | Phase 5 (alongside Phase 2 migration) | ✅ v2 has no literal `fontSize`; v1 untouched (D11) |
+| 1,500+ hardcoded colors                                  | High         | Phase 3                               | ✅ v2 has none; v1 untouched (D11) |
+| Theme not extensible beyond 2 (hardcoded Light/Dark)     | High         | Phase 1                               | 🟡 themes keyed by name; still two |
+| `defaultCombined.js` dead code                           | Low          | Phase 1 (delete)                      | ⬜ still present, 0 importers |
+| Navigation theme relies on shape overlap                 | Medium       | Phase 1 (use `adaptNavigationTheme`)  | ⬜ still the Paper theme (`RestartContext.js:52`) |
+| No local theme persistence (flash on fresh install)      | Medium       | Phase 6                               | ⏸ deferred by F-APP-3 |
+| Custom fonts declared but unused                         | Low          | Phase 6                               | ⏸ premise corrected — two are used; OpenSans unused (6.3) |
+| `letterSpacing: 0` bug in current `fontObject`           | Medium       | Phase 2                               | ❌ not a bug (see §1) |
+| No contrast automation                                   | Medium       | Phase 6                               | ⬜ Phase 6 Step 6.1 |
+| Two theme-toggle entry points (Settings + VersionInfo)   | Low          | Phase 6 consolidation                 | ⬜ still two |

@@ -4,9 +4,14 @@
 > These are the highest-latency-impact changes. Each targets a specific endpoint.
 > Do them one at a time. Test the specific endpoint + corresponding app screen after each.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). All six items are in `api_v3/services/order_msts.js` (5 ✅); AQP-1 is 🟡 because the second copy of `currentInvoiceBalance`, in `api_v3/services/dealer_custs.js`, still runs its two finds in series. Separately, the v4 performance work (API-0…3, API PR #43) took the Customers screen from 1,525 to 134 ms median on a 2,000-relation / 300,000-order seed (`docs/v4-performance.md:253`); what it left is deferred — `X-PERF-2` below. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## AQP-1: Parallelize `currentInvoiceBalance` — 2 independent queries (API)
+
+**Status (2026-10-01):** 🟡 partly — `f9f1d26`; `currentInvoiceBalance` in `api_v3/services/order_msts.js:326` runs both finds in one `Promise.all` (`:331`); the copy in `api_v3/services/dealer_custs.js:379-415` (reached through `:1553`) still awaits them in series (`:384`, `:396`).
 
 **Size:** XS (5 min)
 **File:** `api_v3/services/order_msts.js`, lines 310-346
@@ -37,6 +42,8 @@ const [Invoice, Vouchers] = await Promise.all([
 ---
 
 ## AQP-2: Parallelize `getOnePO` — single order detail (API)
+
+**Status (2026-10-01):** ✅ done — `67de6e0`; `getOnePO` at `api_v3/services/order_msts.js:1104`, its lookups in one parallel wave (`:1112`).
 
 **Size:** S (15 min)
 **File:** `api_v3/services/order_msts.js`, lines 1017-1066
@@ -87,6 +94,8 @@ const [vehicle, driver, user, customer, dealer, dealerCust] = await Promise.all(
 
 ## AQP-3: Parallelize `processOrder` — OTP flow (API)
 
+**Status (2026-10-01):** ✅ done — `54c551f`; `processOrder` at `api_v3/services/order_msts.js:545`, the dependent lookups in one wave (`:601`).
+
 **Size:** S (20 min)
 **File:** `api_v3/services/order_msts.js`, lines 498-652
 
@@ -108,6 +117,8 @@ const [vehicle, driver, user, customer, dealer, dealerCust] = await Promise.all(
 
 ## AQP-4: Parallelize `multipleOrderRes` — order list enrichment (API)
 
+**Status (2026-10-01):** ✅ done — `49d0174`; `multipleOrderRes` at `api_v3/services/order_msts.js:421`, wave 1 at `:443`, wave 2 at `:480`.
+
 **Size:** M (30 min)
 **File:** `api_v3/services/order_msts.js`, lines 393-495
 
@@ -128,6 +139,8 @@ const [vehicle, driver, user, customer, dealer, dealerCust] = await Promise.all(
 ---
 
 ## AQP-5: Replace `Array.find()` with `Map()` in enrichment loop (API)
+
+**Status (2026-10-01):** ✅ done — `0c0cb06`; the Maps are built once at `api_v3/services/order_msts.js:490-499`.
 
 **Size:** S (20 min)
 **File:** `api_v3/services/order_msts.js`, lines 449-493
@@ -163,6 +176,8 @@ order_mst.forEach((order) => {
 
 ## AQP-6: Parallelize `createMstTrn` — order creation (API)
 
+**Status (2026-10-01):** ✅ done — `5e8475c`; `createMstTrn` at `api_v3/services/order_msts.js:755`, parallel waves at `:759`, `:828` and `:846`, the write kept in sequence between them.
+
 **Size:** M (30 min)
 **File:** `api_v3/services/order_msts.js`, lines 674-807
 
@@ -197,3 +212,15 @@ order_mst.forEach((order) => {
 
 **Recommended order:** AQP-1 → AQP-2 → AQP-5 → AQP-3 → AQP-4 → AQP-6
 (Start with safest, build confidence, then tackle the complex ones.)
+
+---
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+**What the v4 work added here** (API-0…3 of the redesign's optimisation plan, API PR #43, now on master through PR #39): a scale seed and probe (`scripts/perf/*`, `yarn perf:baseline`) with before / after numbers in `docs/v4-performance.md`; four indexes (see [03](./03-database-optimization.md)); the Customers read model moved off v3's `pendingPOlist` / `uninvoicedSOlist`, whose O(N²) grouping blocked the event loop for 1,285 ms a request (`api_v4/readmodels/customers.js:456-587`, `docs/v4-performance.md:124-133`); `maxTimeMS`, a pool wait limit and a per-user limiter (see [07](./07-resilience-ops.md)). v4 read models fan out only through `runParallel` / `runSettled` (`api_v4/lib/compose.js`); `test/api_v4/lib/conventions.test.js` forbids a bare `Promise.all` in them.
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-PERF-2 | ⏸ Deferred v4 performance items: API-5 (slim `logs` + TTL), API-6 (one "today" aggregate), API-7 (`Server-Timing`), API-8 (chip debounce / summary cache / Customers memo), and the fifth index `so_msts {dealer_id, inv_id, gst_inv_id}` | Deferred by the user on 2026-09-21 (redesign plan 08 §8c). API-5: `logs` stores the whole user doc per production request and has no index or TTL (`helpers/middlewares.js:250,261`, `models/logs.js`); API-6: `csToday` + `ptToday` are still two aggregates (`api_v4/readmodels/customers.js:697-699`); API-7: `timingHeader` exists but has no caller (`api_v4/lib/compose.js:201-214`); API-8: no cache in `api_v4/`; the fifth index measured 134 → 103 ms, not declared (`docs/v4-performance.md:278-293`) | API (API-8 debounce = app) | M | The user's go-ahead; API-5 also closes DB-5 |
+
+Related: API-4 is re-scoped as `X-PERF-1` in [06](./06-caching.md) (the per-request user lookup in `logging()`); API-9 (stored rollups) is `X-PERF-3` in tasks_13. The full list is in [00-overview](./00-overview.md).

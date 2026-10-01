@@ -3,9 +3,14 @@
 > P0 security fixes. These address real vulnerabilities found in the codebase.
 > Ordered by effort (smallest first). Each includes why and what to verify.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Of the seven items, 3 are done (SEC-1, SEC-6, SEC-7), 2 only partly (SEC-2 — the global limiter was removed the day it landed; SEC-4 — validation exists only in v4), 1 is deferred (SEC-3) and 1 is still to do (SEC-5). v4 already works the way these items aim for (bearer on every route, tenant from the token, a house validator, a per-user limiter, scrubbed errors); v3 predates that pattern, and the review adds six v3 tasks — `X-SEC-1`…`X-SEC-4`, `T01-N5` and `T01-N6`, with `X-SEC-2` the most urgent. Security findings are written here at class level only; the specifics are in the review team's private report. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## SEC-1: Fix API key `==` to timing-safe comparison (API)
+
+**Status (2026-10-01):** ✅ done — `3fec109`; one timing-safe comparison in `helpers/middlewares.js`, used by all three key checks. Where the key check applies is `X-SEC-4` below.
 
 **Size:** XS (15 min)
 **File:** `helpers/middlewares.js`
@@ -42,6 +47,8 @@ Apply to: `api_key_v1()`, `api_key()`, `api_key_v3()`.
 
 ## SEC-2: Enable rate limiting (API)
 
+**Status (2026-10-01):** 🟡 partly — only route-level limiters are active (auth, contact form, v4 screens — the last 300 a minute per user, `api_v4/lib/rateLimit.js`); there is no global limiter: the one added in `34dc1ac` was removed the same day by `892c33a`. See `T01-N5`, `X-OPS-1`.
+
 **Size:** XS (15 min — uncomment + configure)
 **File:** `dzzlo_oms.js`, auth route files
 
@@ -74,6 +81,8 @@ const authLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10 });
 ---
 
 ## SEC-3: Hash OTPs before storing in DB (API)
+
+**Status (2026-10-01):** ⏸ deferred (the note at the end of this item) and still not done (`models/users.js`, `models/order_msts.js`). It matters more now — see `X-SEC-2`. Guessing is `T01-N5`.
 
 **Size:** S (30 min)
 **Files:** `models/users.js`, `api_v3/services/order_msts.js` (order OTP)
@@ -112,6 +121,8 @@ return hashedEntry === this.OTP_Value;
 
 ## SEC-4: Add input validation to critical endpoints (API)
 
+**Status (2026-10-01):** 🟡 partly — v4 has the house validator on every route that takes input (`api_v4/lib/validate.js:424-446`; unknown keys → 400 `VALIDATION`); v3 routes have no schema validation yet, only `sanitizeMongo` (`helpers/sanitizeMongo.js`) and ad-hoc 400s (`b6e8e0a`); `express-validator` is no longer a dependency.
+
 **Size:** S-M (2-4 hours total, but can be done one endpoint at a time)
 **Files:** New `helpers/validators.js` or `api_v3/validators/`, route files
 
@@ -133,6 +144,8 @@ return hashedEntry === this.OTP_Value;
 ---
 
 ## SEC-5: Restrict CORS origins (API)
+
+**Status (2026-10-01):** ⬜ to do — CORS is still unrestricted (`dzzlo_oms.js`), for every API version including v4.
 
 **Size:** S (30 min)
 **File:** `dzzlo_oms.js`
@@ -177,6 +190,8 @@ app.use(cors(corsOptions));
 
 ## SEC-6: Wait for DB before accepting requests (API)
 
+**Status (2026-10-01):** ✅ done — `bb1fe9c`; `defaultConnectionPromise` (`helpers/db_conn.js:50-59`) resolves before `app.listen` (`dzzlo_oms.js:167-178`), and a failed connect exits the process.
+
 **Size:** S (15 min)
 **Files:** `helpers/db_conn.js`, `dzzlo_oms.js`
 
@@ -194,6 +209,8 @@ app.use(cors(corsOptions));
 ---
 
 ## SEC-7: Improve logging middleware — stop capturing response bodies (API)
+
+**Status (2026-10-01):** ✅ done — `d5cc10c` dropped the `res.send` capture (size from `content-length`, `exports.getVersionStringFromURL`, `helpers/middlewares.js:233-237`); `ecdd3ae` writes the row only in production (`:220`). Each row still carries the whole user document (`:250`) — API-5 in `X-PERF-2` ([04](./04-api-query-performance.md)).
 
 **Size:** S (30 min)
 **File:** `helpers/middlewares.js`
@@ -250,3 +267,20 @@ The `Content-Length` response header already carries the size Express computed d
 | SEC-5: Restrict CORS          | S    | P1      | Zero — mobile unaffected             |
 | SEC-6: DB before listen       | S    | P0      | Zero — correct startup order         |
 | SEC-7: Fix logging middleware | S    | P1      | Low — logs are thinner               |
+
+---
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+**What v4 already does** — the bar for the v3 rows below. Every `/api/v4` route needs a bearer: `api_key_v3` → `protect` → company status → a role gate per module (`api_v4/index.js:72-81`, `api_v4/lib/roles.js`). The tenant comes only from the token (`tenantOf` / `scopeFilter`, `api_v4/lib/tenancy.js:64-102`); request bodies accept no `dealer_id` / `cust_id` (unknown keys → 400); the one body id, Daily Summary's `companyId`, is checked by `assertRelation` before any read, and "not related" and "does not exist" get the same 403 (`api_v4/lib/tenancy.js:121-138`); `/screens/*` has a per-user limiter; an `INTERNAL` error carries no message or stack (`api_v4/lib/errors.js:105-134`). v3 predates this pattern — `X-SEC-1`.
+
+| ID | Task | Why (evidence) | Project | Size | Depends on |
+| --- | --- | --- | --- | --- | --- |
+| X-SEC-2 | 🆕 **Highest priority.** Superadmin endpoints require a superadmin bearer; every response carries only the fields its caller needs — default projections, secret fields hidden at the model level | Found in this review; the specifics are kept out of this public note. Pairs with SEC-3 (hash OTPs) | API (dip-web's superadmin pages must then send the bearer — web not assessed) | M | — |
+| X-SEC-1 | 🆕 Extend the v4 auth + tenant-scoping pattern to the v3 routes — a bearer on every route, the tenant derived from the token, membership checks on any id a request names; v3 predates it | v4 has the pattern (`api_v4/index.js:72-81`, `api_v4/lib/tenancy.js`); the v3 routes and services were written before it (`api_v3/routes/`, `api_v3/services/`); the specifics are in the review team's private report, not in this public note | API | XL | A route-by-route plan and a staged rollout; the app already sends the bearer and `x-co-id` (`src/store/apis/createApi.js:24-47`) |
+| X-SEC-3 | 🆕 Outbound SMS-provider calls over TLS, with credentials out of URLs | The 2Factor client predates this (`api_v3/services/order_msts.js`, `api_v3/controllers/auth/SMSOTP/template/index.js`, and the `api_v2` copies) | API | S | Do with `T01-N4` ([07](./07-resilience-ops.md)) |
+| X-SEC-4 | 🆕 One API-key middleware, applied the same way on every mount | The key checks predate v4 (`helpers/middlewares.js`, `api_v/`); the specifics are kept out of this public note | API (dip-web callers not assessed) | S | — |
+| T01-N5 | 🆕 Brute-force protection for OTP checks — an attempt counter per OTP, a limiter on every route that verifies one, OTPs drawn from a CSPRNG (`crypto.randomInt`) | OTP handling predates these controls (`models/users.js`, `models/order_msts.js`, `api_v3/services/auth.js`, `api_v3/routes/auth/index.js`); unlike SEC-3 this keeps the support workflow of reading an OTP | API | S | `X-OPS-1` ([07](./07-resilience-ops.md)) — IP-keyed limits need the right `trust proxy` hops |
+| T01-N6 | 🆕 Pin JWT handling — verify with a fixed algorithm, audience and issuer, and sign tokens with the same claims | Token signing and verification set no audience or issuer and do not pin the algorithm (`models/users.js`, `helpers/auth.js`, `api_v3/auth.js`); the specifics are in the review team's private report | API | S | Accept unpinned tokens until they expire (30-day tokens) or reissue them; fits with tasks_02 `01-token-refresh` |
+
+Related rows elsewhere in this folder: `X-OPS-1` and `T01-N4` in [07](./07-resilience-ops.md); the full list is in [00-overview](./00-overview.md).

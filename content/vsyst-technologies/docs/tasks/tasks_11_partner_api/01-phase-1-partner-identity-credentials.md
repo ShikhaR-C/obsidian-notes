@@ -4,6 +4,9 @@
 
 > **Vertical-SaaS lens:** in a multi-tenant system of record, the credential *is* the tenant boundary. Everything downstream (isolation, metering, billing, audit) hangs off this one document, so it carries the tenant binding, the scopes, the pricing tier, and the abuse counters — one place to suspend a partner and everything stops.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 5 checklist items — no `api_clients` schema, issuance script, `PARTNER_JWT_SECRET` or tests (grep at `6d41ce5`). The planned home `api_v3/models/` does not exist; every schema lives in `models/`, which `AI.md:87` keeps unchanged without approval (T11-N1, T11-N7 in the overview). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1.1 Why a separate `api_clients` model (not `users`)
@@ -19,6 +22,8 @@
 Overloading `users` with machine identities would leak app assumptions (OTP, `check_user_version()`, `userCache` shape) into the partner path and widen the app's attack surface. A dedicated collection keeps the trust domains physically separate — non-negotiable #4 in the overview.
 
 ## 1.2 `api_clients` model
+
+**Status (2026-10-01):** ⬜ to do — no `api_clients` schema anywhere (`git grep api_clients` → 0). `api_v3/` has no `models/` folder, so the file would be `models/api_clients.js`, behind the `models/` approval (T11-N7).
 
 `api_v3/models/api_clients.js` (Mongoose 9, matching repo model style):
 
@@ -85,6 +90,8 @@ Design notes:
 
 ## 1.3 Credential issuance & storage rules
 
+**Status (2026-10-01):** ⬜ to do — no `scripts/create_api_client.js`. `timingSafeCompare` is module-private (`helpers/middlewares.js:6-13`): export it (a `helpers/` edit, approval) or keep a partner-local copy.
+
 1. **Generate:** `client_id = dzl_<env>_<24 hex>` (from `crypto.randomBytes`), `client_secret = dzs_<48 hex>` (256-bit entropy).
 2. **Show once:** the plaintext secret appears only in the issuance response/script output. We store `sha256(secret)` + `last4`. This mirrors the repo's existing `api_key_v3()` hex-key pattern.
    - SHA-256 (not bcrypt) is deliberate: the secret is machine-generated with 256-bit entropy, so brute-force via fast hashing is not a threat the way low-entropy human passwords are; comparison stays `timingSafeCompare(sha256(presented), stored_hash)` — constant-time, same helper the repo already uses.
@@ -92,6 +99,8 @@ Design notes:
 4. **Issuance path (v1):** an internal super-admin script (`scripts/create_api_client.js`) or a super-admin-only endpoint. No self-serve. Phase 7 defines the human workflow around it.
 
 ## 1.4 Auth scheme decision
+
+**Status (2026-10-01):** ⬜ decision open. Keep the dedicated `PARTNER_JWT_SECRET` and pin `aud`/`iss` on the partner side — do not rely on the app's token check to tell the two token kinds apart. Key-check placement is under the overview's question 2.
 
 | Scheme | How | Pros | Cons |
 | --- | --- | --- | --- |
@@ -120,11 +129,15 @@ Token shape (signed with a **dedicated** `PARTNER_JWT_SECRET`, never the app's J
 
 ## 1.5 Testing
 
+**Status (2026-10-01):** ⬜ to do — none exist. If the surface mounts on v4, the house idiom is `test/api_v4/` (identities resolved by email, `test/api_v4/harness/fixtures/identities.js`).
+
 - Model unit tests: enum/required validation, unique `client_id`, max-2 secrets guard, defaults.
 - Issuance script test: response contains plaintext secret exactly once; DB holds only `hash`+`last4`; hash verifies via `timingSafeCompare`.
 - Static check: grep CI guard that no `console.log`/logger call in partner code references `client_secret`.
 
 ## Phase 1 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 5 — each item grepped absent at `6d41ce5` (`api_clients`, `create_api_client`, `PARTNER_JWT_SECRET`); no decision recorded.
 
 - [ ] `api_v3/models/api_clients.js` created (schema above, indexes included).
 - [ ] `scripts/create_api_client.js` issuance script (show-once secret, sha256 storage).

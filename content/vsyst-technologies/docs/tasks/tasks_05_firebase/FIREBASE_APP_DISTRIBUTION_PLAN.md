@@ -1,5 +1,8 @@
 # Plan: Firebase App Distribution — One-Command Beta Releases (Android + iOS)
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). 🟡 The Android half is built in a different shape: `build-release-apk.sh:47-78` (`22ca7004`, `ca9487d3`, 2026-04-30) uploads the release APK with the `firebase` CLI whenever `FIREBASE_ANDROID_APP_ID` is set in `.env.<APP_ENV>` or the shell (groups default `dzzlo-oms-app`, notes from the last commit); iOS, the combined script, the `distribute*` yarn scripts, `.env.distribution`, `ExportOptions.plist` and CI are ⬜ — 0 of the 7 files listed below exist. The premises still hold (package and bundle id `in.vsyst.dzzlooms`, project `dzzlo-oms`), the app builds as 1.79 (Android 105 / iOS 4), and its only CI workflow runs Jest, so there is no build job for a distribute step to extend (`X-CI-2` in tasks_02). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ## Goal
 
 Run **one command** to build and ship a release build of the DZZLO OMS app (`in.vsyst.dzzlooms`) to testers via Firebase App Distribution — both Android (APK/AAB) and iOS (IPA) — without going through Play Console / TestFlight.
@@ -29,6 +32,8 @@ yarn distribute:prod            # both, production env
 
 ## Current State (relevant bits)
 
+**Status (2026-10-01):** ✅ still accurate — `applicationId "in.vsyst.dzzlooms"` (`android/app/build.gradle:86`), `PRODUCT_BUNDLE_IDENTIFIER = in.vsyst.dzzlooms` (`project.pbxproj:464,498`), project `dzzlo-oms` in `google-services.json`, both scripts at the repo root, and `build-release-apk.sh` now ends with an App Distribution upload (Step 6 line); release signing is ❔ (machine config).
+
 - Android package id: `in.vsyst.dzzlooms` (present in `android/app/google-services.json`)
 - iOS bundle id: `in.vsyst.dzzlooms` (present in `ios/GoogleService-Info.plist`)
 - Firebase project: `dzzlo-oms`
@@ -41,6 +46,8 @@ yarn distribute:prod            # both, production env
 
 ### Step 1 — Register apps in Firebase App Distribution
 
+**Status (2026-10-01):** ❔ console — the user; the release script reads the Android App ID from `.env.<APP_ENV>` (`build-release-apk.sh:15-20`), which suggests the Android app is registered.
+
 Both Android and iOS apps are already registered in the Firebase project `dzzlo-oms`. Grab the **Firebase App IDs** (not package/bundle ids) from the Firebase console:
 
 - Firebase Console → Project Settings → **Your apps**
@@ -51,6 +58,8 @@ Save these — they're used by the distribute CLI. Store them in `.env.distribut
 
 ### Step 2 — Create tester groups
 
+**Status (2026-10-01):** ❔ console — the user; the script's default group is `dzzlo-oms-app` (`build-release-apk.sh:50`), not `qa` / `beta`.
+
 Firebase Console → **App Distribution** → **Testers & Groups** → create groups:
 
 - `qa` — internal QA testers (default for `testing` env)
@@ -59,6 +68,8 @@ Firebase Console → **App Distribution** → **Testers & Groups** → create gr
 Add tester emails to each group. Testers get an invite email the first time a build targets their group.
 
 ### Step 3 — Install Firebase CLI
+
+**Status (2026-10-01):** ❔ developer-machine setup; nothing is pinned in the repo (no `firebase-tools` in `package.json`) — the release script calls a global `firebase` after a one-time `firebase login` (`build-release-apk.sh:49,71`).
 
 ```bash
 # global
@@ -81,6 +92,8 @@ For CI/headless, prefer a **service account** over `firebase login:ci` (deprecat
 - Export for CLI: `export GOOGLE_APPLICATION_CREDENTIALS=~/.secrets/firebase-dzzlo-oms.json`
 
 ### Step 4 — Create `.env.distribution` (gitignored)
+
+**Status (2026-10-01):** 🟡 no `.env.distribution` (and no `.gitignore` line for it, `:80-85`); the Android App ID lives in the gitignored `.env.<APP_ENV>` files instead (`build-release-apk.sh:15-20`).
 
 In `dzzlo_oms_app/.env.distribution`:
 
@@ -105,6 +118,8 @@ IOS_PROVISIONING_PROFILE=         # leave empty for automatic signing
 Add to `.gitignore`: `.env.distribution`.
 
 ### Step 5 — iOS export options plist
+
+**Status (2026-10-01):** ⬜ `ios/ExportOptions.plist` absent.
 
 Create `dzzlo_oms_app/ios/ExportOptions.plist` (ad-hoc template — xcodebuild needs this for `-exportArchive`):
 
@@ -134,6 +149,8 @@ Create `dzzlo_oms_app/ios/ExportOptions.plist` (ad-hoc template — xcodebuild n
 > **Why ad-hoc:** App Distribution accepts `ad-hoc`, `development`, or `enterprise` signed IPAs. `app-store` signing is for App Store Connect only and will be rejected.
 
 ### Step 6 — Android distribute script
+
+**Status (2026-10-01):** 🟡 no `scripts/distribute-android.sh`, but its job is done inside `build-release-apk.sh:47-78`: after `assembleRelease` it runs `firebase appdistribution:distribute` with groups `${FIREBASE_GROUPS:-dzzlo-oms-app}` and release notes from the last commit (not the last 10), skipping the upload when no App ID is set.
 
 Create `dzzlo_oms_app/scripts/distribute-android.sh`:
 
@@ -183,6 +200,8 @@ echo "✅ [android] Uploaded $APK_PATH"
 > Prefer AAB for Play Console, but App Distribution only accepts **APK** for Android. Keep APK output.
 
 ### Step 7 — iOS distribute script
+
+**Status (2026-10-01):** ⬜ absent.
 
 Create `dzzlo_oms_app/scripts/distribute-ios.sh`:
 
@@ -268,6 +287,8 @@ echo "✅ [ios] Uploaded $IPA_PATH"
 
 ### Step 8 — Combined script
 
+**Status (2026-10-01):** ⬜ absent.
+
 Create `dzzlo_oms_app/scripts/distribute.sh`:
 
 ```bash
@@ -303,6 +324,8 @@ chmod +x dzzlo_oms_app/scripts/distribute.sh \
 
 ### Step 9 — Wire up yarn scripts
 
+**Status (2026-10-01):** ⬜ no `distribute*` script in `package.json`.
+
 Add to `dzzlo_oms_app/package.json`:
 
 ```json
@@ -318,6 +341,8 @@ Add to `dzzlo_oms_app/package.json`:
 ```
 
 ### Step 10 — Smoke test
+
+**Status (2026-10-01):** ❔ whether Android uploads have reached testers is console-side (the user); the iOS and combined paths do not exist yet (⬜).
 
 ```bash
 # one-time setup
@@ -342,6 +367,8 @@ Verify:
 
 ## Files to Create / Modify
 
+**Status (2026-10-01):** ⬜ 0 of 7 as listed; the Android upload lives in `build-release-apk.sh:47-78` instead (🟡 overall).
+
 | File                                                    | Change                                                       |
 | ------------------------------------------------------- | ------------------------------------------------------------ |
 | `dzzlo_oms_app/.env.distribution`                       | **New** — Firebase app IDs, tester groups, signing config (gitignored) |
@@ -357,6 +384,8 @@ No app-side code changes required. App Distribution is a **delivery** concern, o
 ---
 
 ## Optional: In-App Updates SDK
+
+**Status (2026-10-01):** ⬜ `@react-native-firebase/app-distribution` is not installed.
 
 Firebase provides `@react-native-firebase/app-distribution` so testers get an **in-app prompt** when a newer release is available. Add later if needed:
 
@@ -379,6 +408,8 @@ if (__DEV__ || APP_ENV !== "production") {
 ---
 
 ## Optional: CI/CD (GitHub Actions)
+
+**Status (2026-10-01):** ⬜ the only workflow is `.github/workflows/test.yml` (Jest on pull requests and `main` pushes); no `distribute.yml`.
 
 Once the local scripts work, the same scripts run on CI with two env vars instead of `.env.distribution`:
 
@@ -428,6 +459,8 @@ iOS CI requires importing a distribution cert + provisioning profile into the ke
 
 ## Verification
 
+**Status (2026-10-01):** ⬜ as written — the `yarn distribute*` commands do not exist; the Android equivalents (a new release per `build-release-apk.sh` run, a tester installing it) are console checks (❔, the user), and its release notes carry the last commit, not the last 10.
+
 1. `yarn distribute:android` completes, APK appears in Firebase Console → App Distribution → Android app → Releases
 2. `yarn distribute:ios` completes, IPA appears under iOS app → Releases
 3. A tester in the `qa` group installs the release via the App Distribution email link and launches it
@@ -437,6 +470,8 @@ iOS CI requires importing a distribution cert + provisioning profile into the ke
 ---
 
 ## Addendum — Android-only test release (no Play Store)
+
+**Status (2026-10-01):** 🟡 `scripts/distribute-android-test.sh` is absent, but `./build-release-apk.sh testing` already builds the testing APK and uploads it (`build-release-apk.sh:6,47-78`); a manual console upload is ❔ (the user).
 
 Quick path to push an Android **testing** build to App Distribution only — no iOS, no Play Store, no production.
 

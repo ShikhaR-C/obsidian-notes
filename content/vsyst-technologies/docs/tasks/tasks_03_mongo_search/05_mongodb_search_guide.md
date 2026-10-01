@@ -3,6 +3,9 @@
 > A deep dive for developers new to searching in MongoDB, written for the DZZLO OMS project.
 > We need to search **vehicles** (`veh_msts`), **orders** (`order_msts`), and **dealers** (`dealer_msts`) by free text, by field, and by date range.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Research — no tasks to mark. Facts about our code re-checked: no `$text` index, Atlas Search index or `$search` stage exists; what we run is Method 1 — escaped, case-insensitive, unanchored `$regex` on four v3 list endpoints (`api_v3/services/veh_trns.js:349-355,463-468`, `dvr_msts.js:419-426`, `users.js:188-195`) and the same rule as an in-memory `RegExp` in the v4 Customers read model (`api_v4/readmodels/customers.js:72,84-88`), and the v4 side follows the ship checklist's keyset paging (`api_v4/lib/cursor.js`) and indexes matched to each query (`scripts/perf/atlas-indexes.js`); "DZZLO OMS runs on Atlas 7.0" (Method 3) is ❔ — 7.0's end of life has passed (02 §3). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## Table of contents

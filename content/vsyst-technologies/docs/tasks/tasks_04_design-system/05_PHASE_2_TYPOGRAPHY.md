@@ -1,5 +1,8 @@
 # Phase 2 — Typography
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Built for the v2 scope in F-APP-3 (2026-09-04) and the type scale F-APP-7 (2026-09-06/07): of the 13 steps, 6 are done, 1 partly, 2 to do and 4 dropped. `AppText` is the only text in v2 and never caps the OS text size; "text sets the box" replaced the plan's `minHeight` helper. The canary migrations were dropped — D11 never restyles a v1 screen — so the exit criteria about canaries and a codemod no longer apply. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 **Goal**: Ship `<AppText>` as the only way to render text. Enable uncapped font scaling. Fix the `letterSpacing` bug.
 
 **Entry criteria**: Phase 1 complete. `src/theme/tokens/typography.js` exists with all 15 MD3 variants.
@@ -16,6 +19,8 @@
 ---
 
 ## Step 2.1 — Build `<AppText>` via `createText`
+
+**Status (2026-10-01):** ✅ without Restyle — `src/components/v2/AppText.js:24-53` renders Paper's `Text` with the role, a colour token and Hindi's line height (`:42`); it never sets `allowFontScaling` or `maxFontSizeMultiplier` (pinned by `AppText.test.js:91-109`).
 
 ```jsx
 // src/theme/components/AppText.js
@@ -58,6 +63,8 @@ Restyle's `createText` returns a themed `<Text>` that reads `variant` from `them
 
 ## Step 2.2 — Build `<AppBox>`
 
+**Status (2026-10-01):** ✅ as `Box` — `src/components/v2/Box.js:49`, token props (`p`, `m`, `gap`, `bg`, `radius`, `row`, `center`) on `StyleSheet`.
+
 ```jsx
 // src/theme/components/AppBox.js
 import { createBox } from "@shopify/restyle";
@@ -67,6 +74,8 @@ export default createBox();
 Provides `<AppBox bg="surface" p="m" borderRadius="md" flexDirection="row" ...>` primitive for layout. Replaces most `<View style={...}>` usages over time.
 
 ## Step 2.3 — Build `useFontScale()` hook
+
+**Status (2026-10-01):** ✅ as `useTypeScale` — `src/theme/provider/useTypeScale.js:25-38`, from `useWindowDimensions().fontScale` rather than `PixelRatio` plus a listener; a size change also remounts the screen (`src/components/v2/Screen.js:63`).
 
 ```js
 // src/theme/hooks/useFontScale.js
@@ -91,6 +100,8 @@ Used by any component that needs to branch on current font scale (e.g., layout c
 
 ## Step 2.4 — Build `useContainerMinHeight()` helper
 
+**Status (2026-10-01):** ✅ in another form — `lineHeightAt` / `boxHeight` (`src/theme/scale.js:68,86`: `ceil(lineHeight × fontScale)` + padding) through `useTypeScale().boxHeight`, instead of scaling a fixed base height.
+
 ```js
 // src/theme/hooks/useContainerMinHeight.js
 import { useFontScale } from "./useFontScale";
@@ -106,6 +117,8 @@ export const useContainerMinHeight = (baseHeight = 48) => {
 Phase 4 uses this extensively to migrate fixed-height containers.
 
 ## Step 2.5 — Build `<DevFontScaleBadge>`
+
+**Status (2026-10-01):** ⬜ not built; the tests state the scale instead (`renderScreen(ui, { fontScale })`; 31 test files run at 2.143×).
 
 A dev-only floating badge showing the current font scale and the calculated effective font sizes for debugging. Rendered only when `__DEV__` is true. Hooked into `<AppThemeProvider>` behind a dev flag.
 
@@ -138,6 +151,8 @@ export const DevFontScaleBadge = () => {
 
 ## Step 2.6 — Export barrel
 
+**Status (2026-10-01):** ✅ `src/theme/index.js` and `src/components/v2/index.js`; there is no `~/theme` import path (Step 2.7).
+
 ```js
 // src/theme/components/index.js
 export { default as AppText } from "./AppText";
@@ -157,6 +172,8 @@ Single import path: `import { AppText, AppBox, useAppTheme } from '~/theme';`
 
 ## Step 2.7 — Add path alias (optional but recommended)
 
+**Status (2026-10-01):** ❌ skipped, as the step allows: `babel-plugin-module-resolver` is not installed (`babel.config.js:5-23`); v2 uses relative imports.
+
 Babel config + jsconfig: `~/theme` → `src/theme`. Keeps imports clean across deep screen paths. `babel.config.js`:
 
 ```js
@@ -167,11 +184,15 @@ Requires `babel-plugin-module-resolver` (check if already installed — some RN 
 
 ## Step 2.8 — Update react-native-paper theme to use new typography
 
+**Status (2026-10-01):** ✅ Paper's `fonts` come from the tokens (`src/theme/adapters/toPaperTheme.js:35-38`) and equal the legacy `fontObject` (`parity.test.js:57-69`), so nothing changed on screen; there was no `letterSpacing` bug to fix (02_AUDIT §1).
+
 `src/theme/adapters/toPaperTheme.js` already spreads `base.textVariants` into `fonts`, so Paper's `<Button>`, `<Chip>`, `<Appbar.Content>`, `<Snackbar>`, etc. automatically pick up the new MD3 variants with correct `letterSpacing`. **This fixes the letterSpacing bug across every Paper component in the app for free.**
 
 Verify by checking a Paper button renders with the new tracking values.
 
 ## Step 2.9 — Canary migrations (5-10 screens)
+
+**Status (2026-10-01):** ❌ D11 — v1 screens are never restyled; the two v2 screens proved the approach. The v1 Daily Summary canary was replaced whole by the v2 `Common/DailySummary` screen.
 
 Pick screens that collectively exercise all 15 variants. Migrate them manually from `<Text style={{ fontSize: 16, fontWeight: 'bold' }}>` to `<AppText variant="titleMedium">`. Candidates (pick at least one from each group):
 
@@ -214,9 +235,13 @@ Publish this table as `src/theme/README.md` for engineers.
 
 ## Step 2.10 — Audit fixed-height containers in canaries
 
+**Status (2026-10-01):** ❌ with Step 2.9; v2 text containers carry no fixed height ("text sets the box", `AI.md:72-76`).
+
 While migrating each canary screen, any `height: N` wrapping text gets converted to `minHeight: N` + `justifyContent: 'center'`. This is Phase 4 work "pulled forward" for the canary set to validate the approach before running it across the entire app.
 
 ## Step 2.11 — Test at elevated font scale
+
+**Status (2026-10-01):** ❌ with Step 2.9 for the canaries; the v2 screens are checked at 1× and 2.143× in Jest (F-APP-7) and were looked at on simulators (02-foundations); a low-end Android device run is not recorded (❔).
 
 For each canary screen, test:
 
@@ -237,6 +262,8 @@ Log any issues per screen. These become Phase 4 fix tickets.
 
 ## Step 2.12 — Write dev docs
 
+**Status (2026-10-01):** 🟡 no `src/theme/README.md`; the rules are in `docs/testing.md:420-1073` ("Theme and primitives", "Type scale", "Window classes", "Language") and `AI.md:46-76`; no variant cheat sheet was needed, as v2 names a role directly.
+
 Create `src/theme/README.md` (developer-facing) with:
 
 - How to import `AppText`, `AppBox`, `useAppTheme`
@@ -248,6 +275,8 @@ Create `src/theme/README.md` (developer-facing) with:
 Add to `AI.md` (the project's AI conventions file) a new section: "Typography and theming — use `~/theme`."
 
 ## Step 2.13 — Dev lint rule (preview)
+
+**Status (2026-10-01):** ⬜ no rule bans a bare `Text` import; today no v2 file imports one (`AppText` wraps Paper's `Text`).
 
 Add to `.eslintrc` a warning rule:
 
@@ -269,6 +298,8 @@ Starts as `warn` — escalates to `error` in Phase 6 once the migration is compl
 
 ## Phase 2 deliverables
 
+**Status (2026-10-01):** 🟡 delivered: `AppText`, `Box` (for `AppBox`), `useTypeScale` / `boxHeight` (for `useFontScale` / `useContainerMinHeight`), both barrels, the docs in `docs/testing.md` and `AI.md`. Not delivered: the badge, `src/theme/README.md`, the lint warning; the canaries were dropped.
+
 | Artifact                | File path                                                                         |
 | ----------------------- | --------------------------------------------------------------------------------- |
 | `<AppText>`             | `src/theme/components/AppText.js`                                                 |
@@ -282,6 +313,8 @@ Starts as `warn` — escalates to `error` in Phase 6 once the migration is compl
 | Lint warning            | `.eslintrc` updated (warn only)                                                   |
 
 ## Verification
+
+**Status (2026-10-01):** ❔ commands not run here; app CI runs `yarn test` only (no lint job).
 
 ```sh
 yarn lint                    # new warnings on old <Text> usage

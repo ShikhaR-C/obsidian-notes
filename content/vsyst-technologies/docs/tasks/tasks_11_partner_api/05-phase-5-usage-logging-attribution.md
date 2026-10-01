@@ -4,9 +4,14 @@
 
 > **Vertical-SaaS lens:** usage data is triple-duty in a vertical SaaS: (1) it is the **billing meter** — expansion revenue is computed from it, so it must be complete and tamper-evident; (2) it is the **audit trail** industry customers ask for ("which system placed this order?"); (3) it is **product analytics** for the platform motion — which partners are ramping, which endpoint to build next.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). Not started: 0 of 6 checklist items — no `partner_usage` collection, meter hook or aggregation (grep at `6d41ce5`). The existing `logging()` writes a `logs` document only in production, carrying the full user document and a wall-clock-shifted `timeIST`, and `models/logs.js` has no index or TTL (`helpers/middlewares.js:208-265`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 5.1 Decision: new collection vs extending `logs`
+
+**Status (2026-10-01):** ⬜ decision stands, unbuilt — `logs` is heavier than the table suggests: every production request stores the whole user document (`helpers/middlewares.js:250`), with no index or TTL; slimming it is API-5 in X-PERF-2 (deferred, tasks_01).
 
 **Decision: a dedicated `partner_usage` collection**, while the existing global `logging()` → `logs` keeps running for ops parity.
 
@@ -20,6 +25,8 @@
 One write path, one hook (5.3) — not scattered `.create()` calls in controllers.
 
 ## 5.2 `partner_usage` model
+
+**Status (2026-10-01):** ⬜ to do — would be the first TTL index in `models/` (none today) and a `models/` file, behind that approval (T11-N7).
 
 `api_v3/models/partner_usage.js`:
 
@@ -62,6 +69,8 @@ Security note (T10): this schema stores the idempotency **key name** a partner c
 
 ## 5.3 The meter hook — `partner_meter`
 
+**Status (2026-10-01):** ⬜ to do — nothing exists.
+
 Mounted **router-level** in Phase 2's chain (after `partner_auth`, before routes) so no partner route can exist without it — this same middleware is Phase 6's un-bypassable metering point:
 
 ```js
@@ -94,6 +103,8 @@ Properties: fire-and-forget (a metering hiccup must never fail a partner's order
 
 ## 5.4 The headline query — *which API, how many times, by which partner*
 
+**Status (2026-10-01):** ⬜ to do — for IST month bounds reuse the ledger's helpers (`api_v3/services/ledger_window.js:67,77`, PR #41), not `logging()`'s shifted `timeIST` (`helpers/middlewares.js:255-257`) — overview question 7.
+
 Per-partner, per-endpoint counts over a date range (all boundaries computed in **IST**, stored UTC):
 
 ```js
@@ -116,12 +127,16 @@ Variants (same index, different `$group`): daily series per client (`$dateTrunc`
 
 ## 5.5 Testing
 
+**Status (2026-10-01):** ⬜ to do — none exist.
+
 - Hook writes exactly one doc per request: 201, 400, 403, 429, and replay cases — assert field correctness for each (esp. `billable` truth table: only 2xx + production + non-replay + priced endpoint).
 - Fire-and-forget: metering write forced to throw → response still 201; error logged with `request_id`.
 - Aggregation: fixture set spanning an IST month boundary → counts land in the correct month.
 - Redaction: no doc contains an `authorization` value or secret material.
 
 ## Phase 5 checklist
+
+**Status (2026-10-01):** ⬜ 0 of 6 — verified absent at `6d41ce5`; question 7 is answered in the overview.
 
 - [ ] `partner_usage` model + four indexes + 400-day TTL.
 - [ ] `partner_meter` mounted router-level (Phase 2 chain) — every partner route covered.

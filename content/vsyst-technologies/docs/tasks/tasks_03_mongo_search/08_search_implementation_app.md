@@ -1,5 +1,8 @@
 # Search Implementation Plan — App (`dzzlo_oms_app`)
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). None of the plan's files exist (§13: 8 to create; no search code from this plan in the 7 edit targets) and no `/search` endpoint is in the store, but part of the goal was met another way: v2 Customers searches server-side (300 ms debounce, cursor paging, skeleton, "no match" state), and the v1 vehicle lists search server-side, debounced, through `veh_trns/paginated`. Sections: 3 ✅ · 4 🟡 · 8 ⬜ · 2 ❌, and the §1 audit re-checked. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 Scope: wire the new `/search` endpoints from `07_search_implementation_api.md`
 into the React Native app for **Vehicles**, **Orders**, and **Dealers**, with a
 consistent debounced `SearchBar`, a reusable `FilterSheet`, and per-entity
@@ -9,6 +12,8 @@ fallback when the user has no network.
 ---
 
 ## 1. Existing data-fetching pattern (audit)
+
+**Re-checked (2026-10-01):** partly out of date — `Customer/Vehicles/index.js` no longer filters vehicles on the phone: it asks `fetch_veh_trns_paginated` with `search` and `searchFields: 'veh_reg_no'` after a 300 ms debounce (`src/screens/Customer/Vehicles/index.js:144,179-180,201-202`; store `src/store/apis/dzzlooms/veh_trns.js:56-80`; app `41eaa1df`, 2026-05-13), while its driver search stays local (`:243-259`). Still as described: `Dealer/Orders/index.js` filters on the phone (`:223-265`), so does `Customer/Dealers/index.js` (`:56-84`), `components/Search/Search.js` has no debounce (last change `e8627d7a`, 2026-03-20), and there is no lodash or debounce package (`package.json`).
 
 Relevant files read:
 
@@ -52,6 +57,8 @@ Relevant files read:
 ## 2. Reusable components
 
 ### 2.1 `SearchBar` — extend `src/components/Search/Search.js`
+
+**Status (2026-10-01):** ⬜ `components/Search/Search.js` has none of the new props; v2 Customers built a screen-local search row instead (`src/screens/v2/Dealer/Customers/components/SearchRow.js`) with no inline clear button — the header reset clears the search (`__tests__/CustomersChrome.test.js:572-632`).
 
 Instead of creating a new component, extend the existing one so current call
 sites keep working. Add (a) optional debounce, (b) clear button, (c) loading
@@ -192,6 +199,8 @@ new props are no-ops and behaviour is identical to today.
 
 ### 2.2 `FilterSheet` — new reusable bottom sheet
 
+**Status (2026-10-01):** 🟡 no generic `components/Filter/FilterSheet.js`; the reusable part exists as the v2 sheet frame (`src/components/v2/Sheet.js`, `SheetHeader.js`), and Customers has a screen-local filter sheet on it (`src/screens/v2/Dealer/Customers/components/FilterSheet.js`).
+
 File: `dzzlo_oms_app/src/components/Filter/FilterSheet.js` (new)
 
 A generic `@gorhom/bottom-sheet` wrapper that takes a `fields` config and an
@@ -325,6 +334,8 @@ export default FilterSheet;
 
 ### 2.3 `DateRangeFilter` — new component
 
+**Status (2026-10-01):** ❌ superseded for v2 screens by the common Date Filter sheet (`src/components/v2/DateRangeSheet/` — presets plus custom from/to with pickers; used by Daily Summary).
+
 File: `dzzlo_oms_app/src/components/Filter/DateRangeFilter.js` (new)
 
 Wraps `@react-native-community/datetimepicker` (already used in
@@ -395,6 +406,8 @@ export default DateRangeFilter;
 
 ## 3. Hooks
 
+**Status (2026-10-01):** ⬜ `src/hooks/useDebouncedValue.js` and `src/hooks/search/*` are absent; each searching screen debounces inline (`src/screens/v2/Dealer/Customers/useScreenModel.js:92-101`, `src/screens/Customer/Vehicles/index.js:144`, `src/screens/Common/Vehicles/index.js:106`, `src/screens/Customer/NewOrder/BSheets/SelectVehicle.js:75`).
+
 All three hooks live under a new `src/hooks/search/` folder. They wrap RTK
 Query endpoints defined in the store (Section 4), add 300 ms debouncing, and
 cancel stale requests when a newer query arrives.
@@ -456,6 +469,8 @@ Same shape, with `{ q, city, state, verified, page, limit }`.
 ---
 
 ## 4. Store — new RTK Query endpoints
+
+**Status (2026-10-01):** ⬜ no `search_*` endpoint in the store; vehicle search rides the existing `fetch_veh_trns_paginated` (`search`, `searchFields` — `src/store/apis/dzzlooms/veh_trns.js:56-80`), and v2 Customers sends `q` to `POST /api/v4/screens/customers` (`src/store/apis/v4/customers.js:95-98`).
 
 ### 4.1 Edit `src/store/apis/dzzlooms/veh_msts.js`
 
@@ -555,6 +570,8 @@ Export `useLazySearch_dealer_mstsQuery`.
 
 ### 5.1 `src/screens/Customer/Vehicles/index.js`
 
+**Status (2026-10-01):** 🟡 server-side and debounced another way — `veh_trns/paginated` with `search` (`src/screens/Customer/Vehicles/index.js:122-202`; API `api_v3/services/veh_trns.js:463-468`), 15 a page with infinite scroll; not built: the `/veh_msts/search` endpoint, highlighting and the offline fallback; the driver search is still local (`:243-259`).
+
 Currently lines 112-120 maintain a local `search` state driving a client-side
 `useMemo`. Add:
 
@@ -592,6 +609,8 @@ Add the SearchBar above the existing list container:
 ```
 
 ### 5.2 `src/screens/Dealer/Orders/index.js`
+
+**Status (2026-10-01):** ⬜ still filters on the phone over the plate, remarks, user name, order and slip numbers (`src/screens/Dealer/Orders/index.js:223-265`).
 
 This screen already has a rich filter state (`status_order`, `cust_id`,
 `startDateFilter`, `endDateFilter`) and an `isSearchOpen` toggle that swaps
@@ -645,6 +664,8 @@ hook re-fires when any of those change.
 
 ### 5.3 `src/screens/Customer/Dealers/index.js`
 
+**Status (2026-10-01):** ⬜ still filters `dealer_name` on the phone (`src/screens/Customer/Dealers/index.js:56-84`); this is the redesign's next natural v2 screen, which would bring its own server search (T03-N2 in 00_README).
+
 Currently lines 64-93 filter `DC.data` client-side by lowercased `dealer_name`.
 Replace with server search when `search` is non-empty:
 
@@ -677,6 +698,8 @@ navigate to that dealer or `setSearch(dealer.dealer_name)` to commit.
 ## 6. Search results UI
 
 ### 6.1 Highlight matched terms
+
+**Status (2026-10-01):** ⬜ no `src/utils/highlight.js`, and no screen highlights matches.
 
 Add a tiny helper `src/utils/highlight.js`:
 
@@ -715,11 +738,15 @@ Use inside `OneOrder` row, vehicle row, dealer row:
 
 ### 6.2 Empty state
 
+**Status (2026-10-01):** 🟡 v2 Customers shows "No customers match" when a search or filter empties the list (`src/screens/v2/Dealer/Customers/strings.js:49`, `components/CustomerList.js:140-146`, through `src/components/v2/ListStates.js:85`); v1 screens unchanged.
+
 Reuse `src/components/NotFound.js` (already used by Dealers screen).
 Render it when `search && !isSearching && searchHits.length === 0` with a
 context-specific message: "No vehicles match <q>", etc.
 
 ### 6.3 Loading skeleton
+
+**Status (2026-10-01):** ❌ superseded for v2 screens by `SkeletonList` (`src/components/v2/ListStates.js:167`), which both v2 lists use; no `SearchSkeleton.js`.
 
 Add `src/components/Loading/SearchSkeleton.js` — render three shimmering
 `View`s using `react-native-paper`'s `Surface` + `opacity` animation
@@ -728,6 +755,8 @@ Add `src/components/Loading/SearchSkeleton.js` — render three shimmering
 ---
 
 ## 7. Offline / poor network
+
+**Status (2026-10-01):** ⬜ no fallback to on-phone filtering: v2 Customers searches only on the server and re-asks on mount or argument change (`src/screens/v2/Dealer/Customers/useScreenModel.js:37`); offline shows the app-wide `NoNetworkBar` (`src/components/NoNetwork/Undraw.js`, `src/navigation/AppNavigatorContainer.js:189`).
 
 - RTK Query caches responses by arg key, so a repeated search re-renders
   instantly. Keep `refetchOnMountOrArgChange: false` for search endpoints.
@@ -751,6 +780,8 @@ const listSource = offline
 
 ## 8. Pagination — recommendation
 
+**Status (2026-10-01):** ✅ followed where search exists — v2 Customers pages by opaque cursor on scroll (`onEndReached`, `src/screens/v2/Dealer/Customers/components/CustomerList.js:157-158`; a fixed 12 a page), the vehicle lists by page and limit 15 (`src/store/apis/dzzlooms/veh_trns.js:56-80`); v4 uses cursors rather than `pagination.next` page numbers.
+
 **Use infinite scroll** for search results, not numbered pages:
 
 - Vehicle and dealer lists are typically long but results are narrow after a
@@ -770,6 +801,8 @@ an `onEndReached={() => setPage(p => p + 1)}` on the `FlashList`. RTK Query's
 ---
 
 ## 9. State management
+
+**Status (2026-10-01):** ✅ as recommended in v2 Customers — the typed term is local state, results live in the RTK Query cache (`src/store/apis/v4/customers.js`), and sort and filters are saved on the server rather than in AsyncStorage (`PUT /api/v4/users/prefs/dealer_customers`, `src/store/apis/v4/customers.js:169-172`).
 
 - **Search query string + debounce**: local `useState` on each screen.
   No need for Redux — it is ephemeral UI state.
@@ -811,6 +844,8 @@ The API-key header and auth token are already injected by
 
 ## 11. Navigation — inline filter, no dedicated screen
 
+**Status (2026-10-01):** ✅ v2 Customers searches inline on its list screen (search row, filter chips, sort menu — `src/screens/v2/Dealer/Customers/components/SearchRow.js`, `FilterChips.js`, `SortMenu.js`); no search screen was added.
+
 **Recommendation**: filter inline on the existing list screen (like the
 Dealer Orders screen already does via `isSearchOpen`). Reasons:
 
@@ -828,6 +863,8 @@ autocomplete feel without a new screen.
 
 ## 12. Accessibility
 
+**Status (2026-10-01):** 🟡 the v2 search has `returnKeyType="search"` (`SearchRow.js:110`), token colours and a pill floored at the 44 pt target (`src/screens/v2/Dealer/Customers/layout.js:430`); missing: an `accessibilityLabel` on the input (placeholder only, `SearchRow.js:104-110`) and a live region that announces the result count (the only v2 live region is the footer error, `src/components/v2/ListStates.js:132`).
+
 - Every `Pressable` in the new components has `accessibilityLabel` and, for
   toggles, `accessibilityState={{ checked: selected }}`.
 - `TextInput` has `accessibilityLabel={placeholder}`.
@@ -843,6 +880,8 @@ autocomplete feel without a new screen.
 ---
 
 ## 13. Files to create / edit (quick index)
+
+**Status (2026-10-01):** ⬜ none of the 8 files to create exists; of the 7 edit targets only `Customer/Vehicles/index.js` gained search code, for `veh_trns/paginated` rather than this plan's endpoint.
 
 Create:
 - `dzzlo_oms_app/src/components/Filter/FilterSheet.js`

@@ -3,9 +3,14 @@
 > Tiny changes that improve the codebase with zero chance of breaking anything.
 > Each task is independent. Do them in any order. Verify API + App after each.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). All seven quick wins are in code (7 ✅); the one open question is whether QW-6's single `trust proxy` hop matches the ALB + nginx path the API runbook describes — see `X-OPS-1` in [07](./07-resilience-ops.md). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## QW-1: Add `.lean()` to all read queries (API)
+
+**Status (2026-10-01):** ✅ done — `a353b83` (~93 reads); `api_v3/` now has 368 `.lean()` calls and every v4 read is `.lean()` (e.g. `api_v4/readmodels/customers.js:657-663`); `api_v1/` is no longer mounted (`dzzlo_oms.js:23,107`).
 
 **Size:** XS (find-and-replace pattern)
 **Files:** All service files in `api_v3/services/`, `helpers/advancedResults.js`, `helpers/auth.js`
@@ -44,6 +49,8 @@ The project is already deeply committed to MongoDB — Mongoose schemas, pre/pos
 
 ## QW-2: Share `loggedInUser` across middleware (API)
 
+**Status (2026-10-01):** ✅ done — `1495ad2`; `logging()` sets `req.loggedInUser` (`helpers/middlewares.js:212-213`), `check_user_company_status` reuses it (`:66-67`), and v4's `protect` / `tenantOf` read the same object. The one lookup left is uncached — see `X-PERF-1` in [06](./06-caching.md).
+
 **Size:** XS (~5 lines changed)
 **File:** `helpers/middlewares.js`
 
@@ -69,6 +76,8 @@ const loggedInUser = req.loggedInUser || await getUserFromToken(req.headers);
 ---
 
 ## QW-3: Add `keepUnusedDataFor` to RTK Query (App)
+
+**Status (2026-10-01):** ✅ done — `9c880113`; `keepUnusedDataFor: 300` at app `src/store/apis/createApi.js:111`. The v4 next-page queries use 0 (`src/store/apis/v4/nextPage.js:168`) and the v2 lists refetch on every refocus after the first (`src/screens/v2/shared/useRefetchOnRefocus.js:15-29`).
 
 **Size:** XS (1 line)
 **File:** `src/store/apis/createApi.js`
@@ -101,6 +110,8 @@ RTK Query already caches data while a component is mounted. `keepUnusedDataFor` 
 
 ## QW-4: Add response compression middleware (API)
 
+**Status (2026-10-01):** ✅ done — `0c4e56e`; `compression({ threshold: 1024 })` at `dzzlo_oms.js:58`, ahead of every API version including v4.
+
 **Size:** XS (install + 5 lines)
 **Files:** `dzzlo_oms.js`
 
@@ -131,6 +142,8 @@ app.use(compression({ threshold: 1024 }));
 
 ## QW-5: Fix `express.json()` missing size limit (API)
 
+**Status (2026-10-01):** ✅ done — `78214a9`; `express.json({ limit: "1mb" })` at `dzzlo_oms.js:59` (the v3 auth router also mounts a default parser, `api_v3/routes/auth/index.js:47-48`).
+
 **Size:** XS (1 line change)
 **File:** `dzzlo_oms.js`
 
@@ -148,6 +161,8 @@ app.use(compression({ threshold: 1024 }));
 
 ## QW-6: Add `trust proxy` setting (API)
 
+**Status (2026-10-01):** ✅ done in code — `dcd46cc`; `app.set("trust proxy", 1)` at `dzzlo_oms.js:57`. ❔ The API runbook puts an ALB and nginx in front (`docs/runbook.md:4,341`), two hops; whether `req.ip` is the client depends on the nginx config (not in the repo) — `X-OPS-1` in [07](./07-resilience-ops.md).
+
 **Size:** XS (1 line)
 **File:** `dzzlo_oms.js`
 
@@ -164,6 +179,8 @@ app.use(compression({ threshold: 1024 }));
 ---
 
 ## QW-7: Wrap `JSON.parse(req.headers.meta)` in try/catch (API)
+
+**Status (2026-10-01):** ✅ done — `1c021a3`; guarded parses at `helpers/middlewares.js:113-116` (`check_user_version`), `:168-171` (`legacy_credit_presenter`) and `:222-225` (`logging()`).
 
 **Size:** XS (3 lines)
 **File:** `helpers/middlewares.js` (logging middleware)
@@ -198,3 +215,9 @@ try { metaData = req.headers.meta ? JSON.parse(req.headers.meta) : null; } catch
 | QW-5: JSON body size limit | XS | Prevent memory exhaustion | Zero |
 | QW-6: `trust proxy` | XS | Correct client IP detection | Zero |
 | QW-7: Safe meta parse | XS | Prevent crash on bad header | Zero |
+
+---
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+None owned by this doc. Related rows: `X-OPS-1` in [07](./07-resilience-ops.md) (the `trust proxy` hop count behind QW-6) and `X-PERF-1` in [06](./06-caching.md) (the uncached lookup that QW-2 now shares). The full list is in [00-overview](./00-overview.md).

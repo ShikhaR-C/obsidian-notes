@@ -9,6 +9,9 @@
 > 1. **Dogfood existing infra.** We already have RTK Query, BullMQ queues, Mongo, Firebase Analytics, Remote Config, FIAM. Don't introduce Kafka/Redshift/Hasura to rebuild a dashboard.
 > 2. **Ship the MVP of each phase before moving on.** Each phase is independently useful — if business priorities change, we can stop after any phase and still have shipped value.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ⬜ Not started — none of the collections, endpoints or workers exists in the API (no `segments`, `campaigns`, `templates`, `journeys`, `inapp_messages`, no BullMQ), and 0 of Phase 0's 5 prerequisites holds: of the infra rule 1 lists, only RTK Query, Mongo and Firebase Analytics exist (Analytics without default params or user properties beyond `proj_env`), FCM is not the transport, there is no FIAM, and Remote Config is ⏸ (tasks_17). The kill-switches this plan relies on have no home yet — `T09-N1` in tasks_09. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 Scope recap — features to rebuild:
 
 | Feature                     | Source                                                     |
@@ -25,6 +28,8 @@ Scope recap — features to rebuild:
 
 ## Phase 0 — Prerequisites (foundation already in place)
 
+**Status (2026-10-01):** ⬜ none of the five holds: Analytics has no default params or user properties beyond `proj_env` (`src/utils/firebase.js:12-13`; tasks_10 ⬜); FCM is not the transport (OneSignal, `package.json:54`); no BullMQ in the API's `package.json`; no `fcm_tokens` / `notif_logs`; Remote Config is ⏸ (tasks_17).
+
 **Only proceed if these are true** (they are, per the other plans in this folder):
 
 - Firebase Analytics is live (`FIREBASE_ANALYTICS_PLAN.md`) with `role`, `company_id`, `app_version` default params + user properties.
@@ -38,6 +43,8 @@ No new dependencies in Phase 0. Move on.
 ---
 
 ## Phase 1 — Segment Builder (MVP)
+
+**Status (2026-10-01):** ⬜ steps 1.1–1.5 absent — no `segments` collection, no `config/segmentFields.js`, no `lib/segments/`, no segment routes.
 
 **Goal:** Let a non-engineer (ops/support) target a group of users without writing code.
 
@@ -127,6 +134,8 @@ Three dropdowns per clause (field, op, value) + AND/OR toggle + "Preview → N u
 ---
 
 ## Phase 2 — Campaign Composer + Delivery Reporting (MVP)
+
+**Status (2026-10-01):** ⬜ steps 2.1–2.4 absent — no `campaigns` or `notif_logs` collection and no queue.
 
 **Goal:** Ops can compose a one-shot push to a segment, hit Send, and see how many arrived / were tapped.
 
@@ -218,6 +227,8 @@ Power it with a single aggregate endpoint `GET /sadmin/campaigns/:id/metrics` �
 
 ## Phase 3 — Templates + Localization
 
+**Status (2026-10-01):** ⬜ no `templates` collection or renderer; push copy is still inline English in the sender (`headings: { en: … }`, `api_v3/controllers/App/notification.js:32-33`).
+
 **Goal:** Ops reuses messaging copy without copy-pasting; different strings per `user.lang`.
 
 ### Step 3.1 — `templates` collection
@@ -251,6 +262,8 @@ Also expose the renderer to **transactional** senders — e.g. `services/invs.js
 ---
 
 ## Phase 4 — Scheduled Sends + Journeys (Drip Automation)
+
+**Status (2026-10-01):** ⬜ steps 4.1–4.5 absent; the 4.5 kill-switch (`journey_<id>_enabled`, Remote Config) is ⏸ with no home yet — `T09-N1` in tasks_09.
 
 **Goal:** "Send a reminder 48h after order placed if still pending" without hand-rolling cron per campaign.
 
@@ -321,6 +334,8 @@ Every journey gets a global Remote Config flag: `journey_<id>_enabled` default `
 
 ## Phase 5 — Richer In-App Messaging (beyond FIAM limits)
 
+**Status (2026-10-01):** ⬜ absent; the only in-app message today is OneSignal's update prompt (`src/helpers/OneSignal/index.js:43-79`).
+
 **Goal:** FIAM covers modal / banner / card triggered by Analytics events. When we need **user-targeted** in-app messages (not audience-targeted) or **custom layouts**, build on top.
 
 ### Step 5.1 — Native fallback first — use FIAM
@@ -354,6 +369,8 @@ Keep the polling trivial — don't build realtime push for in-app messages yet; 
 ---
 
 ## Phase 6 — Multi-Channel (Email + SMS under the same campaign)
+
+**Status (2026-10-01):** ⬜ absent; the senders it would reuse exist — email `helpers/sendEmail.js`, SMS `api_v3/controllers/auth/SMSOTP/template/index.js` — but neither runs through a queue (no BullMQ).
 
 **Goal:** one campaign, multiple channels, one delivery report.
 
@@ -393,6 +410,8 @@ A "fallback" step pattern: campaign fan-out schedules **two** jobs per user — 
 ---
 
 ## Phase 7 — iOS Rich Media (NSE rebuild)
+
+**Status (2026-10-01):** ⬜ absent; today's NSE is OneSignal's (`ios/OneSignalNotificationServiceExtension/`).
 
 **Goal:** large image in push notification, like OneSignal's NSE gave us for free.
 
@@ -437,6 +456,8 @@ Android: FCM supports `android.notification.imageUrl` natively — no extension 
 
 ## Phase 8 — Polish (only if we grew past OneSignal parity)
 
+**Status (2026-10-01):** ⬜ none.
+
 Each of these is an **independent** improvement — cherry-pick based on pain.
 
 1. **Frequency capping** — `user_id + day` doc in a `send_caps` collection with TTL. Worker refuses to send if cap exceeded. Config per-channel.
@@ -449,6 +470,8 @@ Each of these is an **independent** improvement — cherry-pick based on pain.
 ---
 
 ## Cross-cutting concerns
+
+**Status (2026-10-01):** ⬜ none; the "Safety rails" kill-switches (`push_send_enabled`, `email_send_enabled`, `sms_send_enabled`) are ⏸ with Remote Config — `T09-N1` in tasks_09.
 
 ### Observability
 
@@ -475,6 +498,8 @@ Each of these is an **independent** improvement — cherry-pick based on pain.
 ---
 
 ## Sequencing recap
+
+**Status (2026-10-01):** ⬜ every row; row 0's "Prereqs already satisfied" does not hold (Phase 0 line above).
 
 | Phase | What lands                                         | Effort               | Depends on                       |
 | ----- | -------------------------------------------------- | -------------------- | -------------------------------- |

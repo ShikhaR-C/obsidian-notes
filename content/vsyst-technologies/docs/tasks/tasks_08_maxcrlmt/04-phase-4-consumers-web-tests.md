@@ -3,9 +3,14 @@
 **Repos:** `dzzlo_oms_app`, `dip-web`, `dzzlo_oms_api/test`
 **Goal:** Split every `null`-vs-`0` conflation so **Unlimited (null)**, **Blocked (0)** and **Capped (>0)** render and sort distinctly. This is the part where a single missed truthiness check leaves a blocked customer looking unlimited.
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ For the app and the API: the helper exists (and gained `creditSummary` for the v2 credit sheet), all seven listed app consumers use it, the API suites pin the contract, and the grep gates find one hit — in an unused component. dip-web rows (§4) not assessed; the device and web checks (§7) are ❔ except the server-side one, flipped. 2 new tasks in 00-overview (`T08-N1`, `T08-N2`). dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 1. Shared classifier helper (app) — do this first
+
+**Status (2026-10-01):** ✅ `src/helpers/Credit/index.js` — `creditState`, `isUnlimited` / `isBlocked` / `isCapped`, `creditUtilization` with the deposit counted in the pool (`:33-38`), and `creditSummary` for the v2 credit sheet (`:66`); 24 tests in `src/helpers/Credit/__tests__/index.test.js`.
 
 Create `src/helpers/Credit/index.js`:
 
@@ -42,6 +47,8 @@ export const creditUtilization = ({ maxCrLmt, adv_dep = 0, maxOut = 0 }) => {
 
 ## 2. The standard recipe (apply in each progress component)
 
+**Status (2026-10-01):** ✅ applied — `limitZero = isUnlimited(…)` / `blockedMaxCrLmt = isBlocked(…)` in `RelationCreditBS.js:330-331`, `DealerSettings/index.js:867-868`, `NewOrder/components.js:841-842`, `Balance/Components.js:441`, `Customer/Dealers/components.js:324`.
+
 Each of the components below has locals shaped like `limitZero` / `blockedMaxCrLmt` / `credit_adv` / `progressCent` / `finalProgress`. Replace those definitions with helper-backed ones that **preserve existing JSX** but fix the meaning:
 
 ```js
@@ -69,6 +76,8 @@ const isRed = blockedMaxCrLmt || Number(progressCent) > 0.85; // blocked always 
 
 ## 3. Per-file edits (app)
 
+**Status (2026-10-01):** ✅ all seven files import `helpers/Credit`; `getProgress` uses `creditUtilization` (`src/screens/Dealer/Customers/index.js:37-47`); the text displays read "Unlimited" / "0" / amount (`DealerSettings/index.js:817-822`, `DealerSettings/components.js:290-297`, `RelationCreditBS.js:472` inside the non-unlimited branch) — blocked prints `0`, not the planned "Blocked". On the v2 Customers screen (the default) the ring is `CreditAvatar`: CAPPED arc, BLOCKED full error ring, UNLIMITED dotted (10 tests).
+
 | File                                                    | Anchor                              | Edit                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `screens/Common/RelationList/RelationCreditBS.js`       | `76-77`, `332-333`, **`491`**       | **Stop conflating:** `const maxCrLmt = dealer_cust ? dealer_cust.max_cr_lmt : null;` (was `... ? : 0`). Apply the recipe at `332-333` + colour. **`:491`** `{formatwosign(maxCrLmt)}` is a raw-value text display → show "Unlimited"/"Blocked"/amount (state-aware).                                                                                                                                                                                                                                                                                                                                           |
@@ -87,6 +96,8 @@ const isRed = blockedMaxCrLmt || Number(progressCent) > 0.85; // blocked always 
 
 ## 4. Web admin (`dip-web`)
 
+**Status (2026-10-01):** web — not assessed.
+
 No shared helper with the app — replicate the classifier inline (or add a local util). Replace `?? 0` / truthy conflation so blocked (`0`) ≠ unlimited (null):
 
 dip-web is **read-only** for `max_cr_lmt` (no write/edit path — verified), so no version gate is needed here; these are all display fixes.
@@ -101,6 +112,8 @@ dip-web is **read-only** for `max_cr_lmt` (no write/edit path — verified), so 
 
 ## 5. Tests & seeds (`dzzlo_oms_api/test`)
 
+**Status (2026-10-01):** ✅ `test/api_v3/collections/dealer_custs/index.test.js:90-178` (normalisation + v1.77 gate), `test/api_v3/features/credit/index.test.js` (enforcement incl. `0` + deposit, the inclusive cap, the presenter, `createDC` defaults), `collections/order_msts/credit_window.test.js`; the seed forces unlimited (`test/api_v3/temp/seed/v3/index.js:245`) and suites set capped or blocked per test. v4: `test/api_v4/lib/customersModel.test.js:159-206`, `test/api_v4/screens/customers.test.js:357,1068-1090,1693-1747`.
+
 These assert the **old** "0 = no block" behavior and will now fail — update to the new contract:
 
 - `test/api_v3/collections/dealer_custs/index.test.js`, `test/api_v3/helper/collections/dealer_custs/relations.js`
@@ -109,6 +122,8 @@ These assert the **old** "0 = no block" behavior and will now fail — update to
 - **Add** order-enforcement tests: `0` blocks (no advance); `0` + sufficient advance allows; `null` unlimited; `50000` cap boundary.
 
 ## 6. Cross-cutting grep gate (must be clean before merge)
+
+**Status (2026-10-01):** 🟡 run 2026-10-01 on the app at `ea7e7222` (dip-web not run). Gate A — one code hit, `visible={!!maxCrLmt}` at `src/screens/Customer/Dealers/DealerSettings/components.js:165`, inside an unused `AccountDetails` copy (the screen renders its own, `DealerSettings/index.js:943`) → `T08-N2`; plus two fixture JSON lines. Gate B — four hits, each a deliberate three-state render (`CreditSheet.js:311` shows the limit only when `showLimit`).
 
 Run **two** gates. Gate A catches truthiness conflation; Gate B catches every place the value is _rendered_ (these slip past Gate A — e.g. `formatwosign(maxCrLmt)`).
 
@@ -129,15 +144,19 @@ The implementer should be able to point at a deliberate `creditState`/`isBlocked
 
 ## 7. Verification (simulator + web)
 
-- [ ] Dealer customer list: an unlimited customer shows no/empty credit ring; a blocked customer shows a **full red** ring; a capped customer shows the ratio. (`getProgress` sort by "Credit Limit" orders them sensibly.)
-- [ ] Customer-side `DealerSettings`: limit reads **"Unlimited" / "Blocked" / ₹amount** (not `₹0` for both null and blocked).
-- [ ] `NewOrder` credit indicator: blocked customer shows blocked/full state, not "no limit".
-- [ ] Place an order as a **blocked** customer (no advance) → server rejects "Credit Limit Exceeded"; with advance covering it → succeeds.
-- [ ] `dip-web` superadmin customer/dealer tables show the three states distinctly.
-- [ ] Grep gate (§6) returns no unreviewed hits.
+**Status (2026-10-01):** 1 ✅ (server side, flipped), 3 🟡 / ❔ device checks, 1 web — not assessed, 1 🟡 — marks at the end of each line.
+
+- [ ] Dealer customer list: an unlimited customer shows no/empty credit ring; a blocked customer shows a **full red** ring; a capped customer shows the ratio. (`getProgress` sort by "Credit Limit" orders them sensibly.) — **2026-10-01:** 🟡 on the v2 list (default) the three states are distinct and tested, but UNLIMITED draws a dotted ring rather than none (`CreditAvatar.js:2-3`); the credit sort is pinned in v4 (`customers.test.js:1068-1090`); the look ❔.
+- [ ] Customer-side `DealerSettings`: limit reads **"Unlimited" / "Blocked" / ₹amount** (not `₹0` for both null and blocked). — **2026-10-01:** 🟡 reads "Unlimited" / "0" / amount (`DealerSettings/index.js:817-822`) — blocked shows `0`, not "Blocked".
+- [ ] `NewOrder` credit indicator: blocked customer shows blocked/full state, not "no limit". — **2026-10-01:** ❔ device check; the code splits the states (`NewOrder/components.js:841-842`).
+- [x] Place an order as a **blocked** customer (no advance) → server rejects "Credit Limit Exceeded"; with advance covering it → succeeds. — **2026-10-01:** ✅ flipped (server side): `test/api_v3/features/credit/index.test.js:173-224`.
+- [ ] `dip-web` superadmin customer/dealer tables show the three states distinctly. — **2026-10-01:** web — not assessed.
+- [ ] Grep gate (§6) returns no unreviewed hits. — **2026-10-01:** 🟡 app: one hit in dead code (`T08-N2`); dip-web not run.
 
 ---
 
 ## Done =
+
+**Status (2026-10-01):** 🟡 the phases are merged (API 1.5.4, app 1.78); the migration run ❔; the grep gate clean except one dead-code hit (`T08-N2`).
 
 All four phases merged, migration run in the §Phase-2 order, grep gate clean, and the acceptance checklists in Phases 1–4 green.

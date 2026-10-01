@@ -5,6 +5,9 @@
 
 > **TDD lens:** a mock is a _claim_ about the API. Unverified claims rot. This phase makes every claim mechanically derived from the same seed world the API's own tests run against — one source of truth (✅ Q7 confirmed 2026-07-05; the alternative, front-end suites booting a locally seeded API, is rejected: it couples three repos' test runs and is 10–100× slower; the locally seeded API is reserved for the optional e2e smoke in Phase 6).
 
+> **Status review — 2026-10-01.** Checked against app `main` @ `ea7e7222` (v1.79) and API `master` @ `6d41ce5` (v1.5.5). ✅ Done and extended: the API now exports two contract sets from one script (v3: 8 captures, seed `v3_2026-09-26`; v4: 18 captures, seed `v3_2026-09-15`), each with its own drift detector, and the app pulls both; all 6 checklist items hold. One new task (`X-APP-8`): the v4 set predates five v4 source commits and has no age warning. dip-web and other repos were not re-assessed.
+> Legend: ✅ done · 🟡 partly done · ⬜ to do · 🆕 new · ⏸ deferred · ❌ dropped / superseded · ❔ unverifiable from the repos
+
 ---
 
 ## 5.1 Why raw seed JSON is not enough
@@ -12,6 +15,8 @@
 `test/api_v3/temp/seed/data/v3_*/` holds **collection dumps** (what's _in Mongo_). Clients never see that: they see **response envelopes** — `advancedResults` pagination wrappers, `{ success, ... }` shapes, populated refs, presenter shims (`legacy_credit_presenter` rewrites `max_cr_lmt` on the wire for old clients). Fixtures must therefore be **captured responses**, not copied documents.
 
 ## 5.2 The exporter — `dzzlo_oms_api/test/api_v3/temp/seed/export_fixtures.js` (new)
+
+**Status (2026-10-01):** ✅ one exporter, two sets — `test/api_v3/temp/seed/export_fixtures.js` with `--set v4` driving `test/api_v4/temp/fixtures.captures.js`; scripts `fixtures:export` and `fixtures:export:v4` (`package.json`). The v3 captures grew from 6 to 8 (`vouchers_tds_pending`, `voucher_tds_approved`, `f0c789d`, 2026-09-26).
 
 Runs like a factory: connect memory server → re-hydrate the seeded snapshot via `beforeAllHelper` → replay a curated list of requests through the in-process app (supertest + `db.dheader`, bearer where the real client uses one) → write each response body to `fixtures/api_v3/<name>.json` + a `fixtures/api_v3/fixtures.meta.json` stamp (seed snapshot date, git SHA, generation time).
 
@@ -43,6 +48,8 @@ const CAPTURES = [
 
 ## 5.3 The consumers — `yarn fixtures:pull` in web and app
 
+**Status (2026-10-01):** ✅ app `scripts/pull_fixtures.js` copies `fixtures/api_v3` and, prefixed `v4_`, `fixtures/api_v4` into `src/test/fixtures/generated/` (`:18-134`); both metas there match the API's. The 14-day warning reads only the v3 meta (`:58-73`) — see `X-APP-8`. dip-web — not assessed.
+
 Repos are siblings inside the versioned workspace folder (currently `v1_79/`), so a relative copy is enough — no registry, no submodule:
 
 ```json
@@ -56,6 +63,8 @@ MSW handlers switch from hand-rolled JSON to the generated files; hand-rolled fi
 
 ## 5.4 The drift detector
 
+**Status (2026-10-01):** ✅ v3: `test/api_v3/features/contract/fixtures.test.js`; v4: `test/api_v4/contract/fixtures.test.js` + `scrub.test.js`; both green in CI on 2026-09-30 (run 36788793446). The gate's freshness check compares the v4 set against the app only (`scripts/check_fixtures_fresh.js:38-57`).
+
 Two mechanisms, both cheap:
 
 1. **API side**: a contract spec `test/api_v3/features/contract/fixtures.test.js` that regenerates the captures in-memory and deep-compares against the committed `fixtures/api_v3/*.json` (ignoring volatile fields: `_id` timestamps, dates — normalize via a scrub function). If an endpoint's envelope changes, the API's own suite goes red until `yarn fixtures:export` is rerun and committed — making the contract change _visible and deliberate_.
@@ -63,20 +72,26 @@ Two mechanisms, both cheap:
 
 ## 5.5 Verification — how we know Phase 5 is done
 
+**Status (2026-10-01):** ✅ recorded 2026-07-10; not re-run in this review (repos are read-only here).
+
 - `yarn seed && yarn fixtures:export` produces stable output on repeated runs (after scrubbing volatile fields).
 - Web + app suites pass using only generated fixtures for happy paths.
 - Deliberately change one response field in an API controller → API contract spec goes red; after re-export + pull, the corresponding front-end test sees the new shape (drift demonstrated end-to-end once, recorded in the PR).
 
 ## Phase 5 checklist
 
-- [x] `export_fixtures.js` + `fixtures:export` script + `fixtures/api_v3/` with `fixtures.meta.json` (6 envelopes)
-- [x] `pull_fixtures.js` + `fixtures:pull` in dip-web and dzzlo_oms_app; generated fixtures written to each tree
-- [x] MSW handlers consume generated fixtures — **app** swaps its login mock to the generated `auth_loginrx.json`; error cases stay hand-rolled. **dip-web** wires the plumbing only (see notes)
-- [x] Contract spec (drift detector) in the API suite — `test/api_v3/features/contract/fixtures.test.js`
-- [x] Drift demonstrated once end-to-end (§5.5) — recorded below
-- [x] Q7 confirmed: MSW-from-seed (already recorded in overview)
+**Status (2026-10-01):** 6 ✅ — marks at the end of each line.
+
+- [x] `export_fixtures.js` + `fixtures:export` script + `fixtures/api_v3/` with `fixtures.meta.json` (6 envelopes) — **2026-10-01:** ✅ now 8 v3 + 18 v4 captures.
+- [x] `pull_fixtures.js` + `fixtures:pull` in dip-web and dzzlo_oms_app; generated fixtures written to each tree — **2026-10-01:** ✅ the app pulls both sets; dip-web — not assessed.
+- [x] MSW handlers consume generated fixtures — **app** swaps its login mock to the generated `auth_loginrx.json`; error cases stay hand-rolled. **dip-web** wires the plumbing only (see notes) — **2026-10-01:** ✅ 22 app test files serve the generated `v4_*.json` captures (e.g. `Customers.test.js`, `store/apis/v4/__tests__/customers.msw.test.js`).
+- [x] Contract spec (drift detector) in the API suite — `test/api_v3/features/contract/fixtures.test.js` — **2026-10-01:** ✅ plus the v4 detector.
+- [x] Drift demonstrated once end-to-end (§5.5) — recorded below — **2026-10-01:** ✅ (historical).
+- [x] Q7 confirmed: MSW-from-seed (already recorded in overview) — **2026-10-01:** ✅.
 
 ## Phase 5 — implementation notes (executed 2026-07-10, agent team)
+
+**Status (2026-10-01):** since 1.79 the app also calls five v4 routes (`src/store/apis/v4/*`) and pulls the v4 set, so it participates in both contracts.
 
 **Result — all green, nothing committed:** API `yarn test` **668** (662 + 6 contract), app **337**, web **32**. Each repo's only production touch remains the authorized `makeStore()` (Phases 3–4); Phase 5 added only `test/`, `fixtures/`, `scripts/`, and one `package.json` script line per repo.
 
@@ -94,3 +109,11 @@ Two mechanisms, both cheap:
 **End-to-end drift demo (§5.5), performed & reverted 2026-07-10:** added `driftDemo` to the `sendTokenResponse` envelope (`api_v3/controllers/auth/index.js`) → contract spec `auth_loginrx` went **red** with the exact `+ "driftDemo"` diff (other 5 green) → `yarn fixtures:export` regenerated → contract **green** → `yarn fixtures:pull` in the app → the app's generated `auth_loginrx.json` gained the field and the app login test consumed the new shape (green). Then reverted the controller (`git checkout`), re-exported, re-pulled app **and** web → verified no `driftDemo` residue in any repo; all suites back to baseline. (Lesson recorded: generated fixtures are untracked, so restore them by re-running `fixtures:export`/`:pull`, not `git checkout`; and run each repo's pull from that repo's own dir.)
 
 **`pull_fixtures.js` contract (both repos):** copies `../dzzlo_oms_api/fixtures/api_v3/*.json` → `src/test/fixtures/generated/`; **hard-fails** (exit 1, "run `yarn fixtures:export`" hint) if the source dir / `fixtures.meta.json` is missing; **loud warn** (no fail) if `generatedAt` > 14 days.
+
+## New tasks — from the app v2 / API v4 review (2026-10-01)
+
+| ID      | Task                                                                                                                                          | Why (evidence)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Project   | Size | Depends on |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---- | ---------- |
+| X-APP-8 | 🆕 Re-export the v4 contract fixtures (`yarn fixtures:export:v4`), pull them into the app, and give the v4 set the age warning the v3 set has | `fixtures/api_v4/fixtures.meta.json`: seed `v3_2026-09-15`, stamped `gitSha 9af063a` (a 2026-09-04 commit, so the stamp does not name the code behind the Daily Summary captures), generated 2026-09-15 — before five v4 source commits (`07368e7`, `ff7ea1f`, `5cd314a`, `5d477d2`, `292d64f`); the app's copy is identical, so the gate calls it fresh; the v4 drift detector still passed on 2026-09-30 (run 36788793446), so the shapes likely held; `scripts/pull_fixtures.js:58-73` checks only the v3 meta's age | app + API | S    | —          |
+
+The same row is listed in `00-overview.md`.
