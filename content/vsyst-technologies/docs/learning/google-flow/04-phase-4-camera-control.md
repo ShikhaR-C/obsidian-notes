@@ -1,14 +1,14 @@
 # Phase 4 — Camera Control: Talking to the Robot Camera
 
-> Level: Intermediate | Time: ~1 hr | Outcome: you can name any shot the way a real director does — size, angle, movement, lens — and get the camera to do exactly that instead of wandering.
+> Level: Intermediate | Time: ~1 hr | Outcome: you can name any shot the way a real director does — size, angle, movement, lens — and get the camera to do exactly that instead of wandering. | Status: written & web-verified 2026-07-15; **tool facts re-verified and corrected 2026-10-01**.
 
 ---
 
 ## 1. The One Idea
 
-The camera is a **character in the crew**, and if you don't tell it where to stand and how to move, **it decides for itself** — usually a boring, static, eye-level shot. "If you don't mention movement, Veo defaults to something that might not match what you had in mind." So you *always* tell it.
+The camera is a **character in the crew**, and if you don't tell it where to stand and how to move, **it decides for itself** — often a boring, static, eye-level shot, and rarely the one you had in mind. So you *always* tell it.
 
-Good news: the crew speaks fluent **film**. Real camera words — "low-angle tracking shot," "slow dolly in," "aerial drone shot" — aren't jargon to Veo, they're *commands it was trained on.* You don't invent a special syntax; you talk like a director, and it obeys. This phase is just teaching you the words.
+Good news: the crew speaks fluent **film**. Real camera words — "low-angle tracking shot," "slow dolly in," "aerial drone shot" — aren't jargon to Veo; Google's own Veo prompt guides are written in them. You don't invent a special syntax; you talk like a director, and it usually obeys. This phase is just teaching you the words.
 
 Every camera instruction is a combination of four choices: **how big, from what angle, moving how, through what lens.**
 
@@ -58,7 +58,9 @@ The big one, because it's what people forget and what makes a clip feel *alive* 
 | **Handheld**            | Subtle natural shake                               | "Hold the camera in your hand" | Documentary realism; authenticity; UGC feel  |
 | **FPV / drone**         | Fast, swooping, first-person flight                | "Fly like a bird"              | High-energy openers; dynamic brand films     |
 
-> **The one-move rule.** One 8-second clip gets **one** camera move. "It pushes in, then orbits, then cranes up" is three shots. Ask for one clean move and the crew nails it; ask for three and it fumbles all of them. Save the multi-move sequences for stitching in Scenebuilder/Vids (Phase 8).
+> **The one-move rule.** One 8-second clip gets **one** camera move. "It pushes in, then orbits, then cranes up" is three shots. Ask for one clean move and the crew nails it; ask for three and it fumbles all of them. Save the multi-move sequences for stitching in Scenebuilder/Vids (Phase 8). The exception is a planned *cut*: timestamped beats (`[00:00-00:04] … [00:04-00:08] …`) put two set-ups, one move each, in one Veo 3.1 generation.
+
+> **Changing the camera after the render.** Flow on desktop lists **camera position & motion** edits, but its Help gives no steps (check live), and they can't touch an extended clip. A **Gemini Omni Flash 1.1** edit (⏣40) can re-angle up to 10 seconds of a clip by prompt. Both are rescues; direct the camera in the prompt.
 
 ## 5. Lens & Focus — The Photographer's Touch
 
@@ -74,9 +76,11 @@ The finishing layer that reads as "expensive." You don't always need it, but it'
 | **Rack focus**              | Focus shifts from one thing to another mid-shot            | Directing the eye A→B; reveals          |
 | **35mm film / cinematic**   | Filmic grain, gentle contrast                              | The default "make it look like a movie" |
 
+Google's Veo prompt guides use nearly every word in §2–§5. The main exceptions — "orbit" (Google says "arc shot"), "FPV", focal lengths like "85mm" — are hints, and Google files "shot on 35mm film" under style. Google also warns that some advanced angles and lenses "are not officially supported": test an unusual one on Lite first.
+
 ## 6. Putting It Together: Stacked Camera Language
 
-You combine the four choices into one phrase, front-loaded in the prompt. The crew reads it as a single instruction:
+You combine the four choices into one phrase, front-loaded in the prompt — Google's own Veo formula starts the same way: [Cinematography] + [Subject] + [Action] + [Context] + [Style & Ambiance]. The crew reads it as a single instruction:
 
 ```
 [MOVEMENT] + [SIZE] + [ANGLE] + [LENS/FOCUS]
@@ -101,16 +105,18 @@ You combine the four choices into one phrase, front-loaded in the prompt. The cr
 
 ## 7. Exercises
 
-**7.1 — Feel the shot sizes (cost: ~50 coins).** Same subject and prompt, render on **Lite** at EWS, MS, CU, and ECU. Line them up. *This* is your emotional dial — you'll now reach for it deliberately.
+**7.1 — Feel the shot sizes (cost: ~40 coins, one output each).** Same subject and prompt, render on **Lite** at EWS, MS, CU, and ECU. Line them up. *This* is your emotional dial — you'll now reach for it deliberately.
 
-**7.2 — Prove movement matters.** Render one prompt with **no** camera instruction, then the same prompt with "slow dolly-in, shallow depth of field." Same idea, wildly different feel. Notice how the version with no instruction came out flat and static — that's the default you're overriding.
+**7.2 — Prove movement matters.** Render one prompt with **no** camera instruction, then the same prompt with "slow dolly-in, shallow depth of field." Same idea, wildly different feel. Notice what the version with no instruction chose for you — usually flatter, and never your decision. That's the default you're overriding.
 
 **7.3 — Tell a story with two angles.** Render the DZZLO "problem" beat as a **high-angle** shot, and the "solution" beat as a **low-angle** push-in. Watch the camera do the storytelling for you.
 
-**7.4 — Build the product hero.** Take a product image (Imagen still of a phone showing the DZZLO app), feed it to Flow as Image→Video, and prompt an **orbiting close-up, low angle, shallow DoF, 35mm**. This is the single most reusable ad shot you'll make — save the prompt to your library.
+**7.4 — Build the product hero (~10 coins).** Take a product image (a Nano Banana still of the phone, its screen a plain glow — the real app is composited later, [[01-phase-1-the-big-picture|Phase 1]] §7), feed it to Flow as **Frames→Video** (start frame), and prompt an **orbiting close-up, low angle, shallow DoF, 35mm** on Lite. This is the single most reusable ad shot you'll make — save the prompt to your library.
 
 **7.5 — Add a camera column to your library.** In `flow-content/templates.md`, add the §6 recipe table. Every future shot starts by picking a recipe row.
 
 ---
 
-**Next:** [[05-phase-5-character-consistency]] — the hardest problem in AI video, solved: how to keep the *same* face, product, and style across every clip using Ingredients and reference sheets.
+**Sources (re-verified 2026-10-01):** [Veo video prompt guide — Google Cloud](https://docs.cloud.google.com/gemini-enterprise-agent-platform/models/video/video-gen-prompt-guide) · [Veo 3.1 prompting guide — Google Cloud](https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-veo-3-1) · [Veo — Gemini API](https://ai.google.dev/gemini-api/docs/veo) · Flow Help: [edit & build scenes](https://support.google.com/flow/answer/16935718), [credits](https://support.google.com/flow/answer/16526234). More in [[09-reference]] §9.
+
+**Next:** [[05-phase-5-character-consistency]] — the hardest problem in AI video, solved: how to keep the *same* face, product, and style across every clip using reference stills, start frames and Ingredients.

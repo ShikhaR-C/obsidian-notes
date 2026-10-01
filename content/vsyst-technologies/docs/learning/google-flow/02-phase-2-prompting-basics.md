@@ -1,6 +1,6 @@
 # Phase 2 — Prompting Basics: The 7-Part Note
 
-> Level: Easy | Time: ~45 min | Outcome: you can write a Veo prompt that has every part it needs, in the right length, and you know why vague and over-stuffed prompts both fail.
+> Level: Easy | Time: ~45 min | Outcome: you can write a Veo prompt that has every part it needs, in the right length, and you know why vague and over-stuffed prompts both fail. | Status: written & web-verified 2026-07-15; **tool facts re-verified and corrected 2026-10-01**.
 
 ---
 
@@ -40,7 +40,7 @@ That's four sentences, ~55 words, all seven ingredients. It will render a usable
 
 ## 3. The Word Budget: 3–6 Sentences, 100–150 Words
 
-More words is **not** more control. Past about 150 words the crew starts dropping details on the floor — and worse, it starts *contradicting itself* because you've told it fifteen things and some of them fight.
+This budget is a **course habit**, not a Google rule — Google's only stated limit for Veo 3.1 is **1,024 tokens** of text, several hundred words. The habit exists because more words is **not** more control: past about 150 words the crew starts dropping details on the floor — and worse, it starts *contradicting itself* because you've told it fifteen things and some of them fight.
 
 | Prompt length         | What happens                                                              |
 | --------------------- | ------------------------------------------------------------------------ |
@@ -50,15 +50,17 @@ More words is **not** more control. Past about 150 words the crew starts droppin
 
 The fix for "it ignored my detail" is almost never *more words*. It's **better-chosen** words, or **splitting the idea into two shots.** If you're cramming five actions into eight seconds, the problem isn't the prompt — it's that you're asking for a scene when the crew only shoots shots (see [[03-phase-3-context-and-script-planning]]).
 
-**The 8-second rule of thumb:** one clip = **one subject, one main action, one camera move.** "He walks in, sits, opens the app, frowns, then smiles" is five shots pretending to be one. Pick the single beat that matters.
+**The 8-second rule of thumb** (a Veo clip runs 4, 6 or 8 s; the rule holds at each): one clip = **one subject, one main action, one camera move.** "He walks in, sits, opens the app, frowns, then smiles" is five shots pretending to be one. Pick the single beat that matters.
+
+The one deliberate exception: Veo 3.1 accepts **timestamped beats** — `[00:00-00:04] Wide shot, he walks in and sits. [00:04-00:08] Close-up, he frowns at the app.` — and makes several shots in one generation. You trade per-shot control for one render: keep the rule for anything you'll cut, and save timestamps for a quick sketch ([[14-previs-storyboard-floorplan-animatic]] §10).
 
 ## 4. Say What You *Want*, Not What You Don't
 
 ComfyUI people reach for a "negative prompt" here. Veo mostly doesn't work that way — **you describe the world you want to see**, and the unwanted thing simply isn't in it. Want no clutter? Describe a *clean* desk. Want no crowd? Describe a *quiet* street.
 
-There is one useful exception worth memorising, because Veo's native audio loves to burn subtitles into the picture:
+There is one useful exception worth memorising, because Veo sometimes burns subtitles into the picture when someone speaks:
 
-> To stop on-screen captions appearing, add **`no subtitles`** (and/or `no text, no captions`) to the prompt, **and** format dialogue with the colon trick from [[06-phase-6-voice-lipsync-audio]]. This one is real and you'll use it constantly.
+> To discourage on-screen captions, add **`no subtitles`** (and/or `no text, no captions`) to the prompt, **and** format dialogue with the colon trick from [[06-phase-6-voice-lipsync-audio]]. `no subtitles` is a **course habit**, not a Google rule (Google's own dialogue rule is quotation marks around the speech), but it costs two words, so you'll use it constantly.
 
 Beyond that, resist the urge to list everything you hate. A pile of "no X, no Y, no Z" just teaches the crew to *think about* X, Y, and Z. Positive, concrete, present-tense description wins.
 
@@ -108,12 +110,14 @@ Every one of these is a note problem, and every one is fixable before you spend 
 
 **7.1 — Fill the blank three times (cost: ~30 coins).** Using the §5 template, write three prompts for a DZZLO promo: one spokesperson shot, one product-in-motion shot, one lifestyle shot. Render each once on **Lite**. Grade them: which ingredient was weakest in each? Rewrite that one line.
 
-**7.2 — Prove length isn't power.** Take your best prompt from 7.1. Make a **bloated** 250-word version and a **starved** 12-word version. Render all three on Lite (fixed idea). See for yourself: the 100-word one wins. Keep the three clips side by side — this lesson only sticks once you've *watched* it fail.
+**7.2 — Prove length isn't power.** Take your best prompt from 7.1. Make a **bloated** 250-word version and a **starved** 12-word version. Render all three on Lite (fixed idea; ~20 coins for the two new ones). See for yourself which wins — the habit bets on the 100-word one. Keep the three clips side by side — this lesson only sticks once you've *watched* it fail.
 
-**7.3 — Kill the subtitles.** Render a talking-spokesperson prompt **without** `no subtitles`, then **with** it. Confirm the caption disappears. You'll want this reflex for every dialogue shot.
+**7.3 — Kill the subtitles.** Render a talking-spokesperson prompt **without** `no subtitles`, then **with** it (~20 coins). See whether a caption appears in either — nothing guarantees it either way, which is why the habit goes on every dialogue shot.
 
 **7.4 — Build your template file.** Save the §5 template into `flow-content/templates.md` in Drive, with your three best 7.1 prompts underneath as starting points. This file grows into your prompt library ([[09-reference]]).
 
 ---
+
+**Sources (re-verified 2026-10-01):** [Veo 3.1 prompting guide — Google Cloud](https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-veo-3-1) (timestamps; quotes for speech) · [Veo — Gemini API](https://ai.google.dev/gemini-api/docs/veo) (1,024 tokens) · [Tokens — Gemini API](https://ai.google.dev/gemini-api/docs/tokens) · [Models — Flow Help](https://support.google.com/flow/answer/16352836) (4, 6 or 8 s).
 
 **Next:** [[03-phase-3-context-and-script-planning]] — how to use Gemini to turn one idea into a whole shot list, so you're never staring at a blank prompt box again.

@@ -15,7 +15,7 @@
 | Context blank   | This asset                                                                                                                                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Audience**    | Small-fleet transport owners (5–50 trucks), 30–50, Tier-2/3 India; WhatsApp-native, Hindi-first; burned by parchi disputes and driver fuel fraud; wary of any step that slows a truck down |
-| **Platform**    | WhatsApp forward + Instagram Reels → 9:16 vertical, ≤30 s, hook in first 2 s                                                                                                               |
+| **Platform**    | WhatsApp forward + Instagram Reels → 9:16 vertical, ≤30 s by choice, hook in first 2 s                                                                                                     |
 | **Goal / CTA**  | Kill the "why the OTP step / my driver won't cooperate" objection → "Book a demo on WhatsApp"                                                                                              |
 | **Key message** | The 1-second driver OTP is your proof of delivery — no OTP, no invoice, no fake litres                                                                                                     |
 | **Brand feel**  | Trustworthy, modern, warm; not flashy or corporate                                                                                                                                         |
@@ -35,7 +35,7 @@
 ```
 CONTEXT
 Audience: Small-fleet transport owners (5–50 trucks), 30–50, Tier-2/3 India; WhatsApp-native, Hindi-first; burned by paper-slip (parchi) disputes and driver fuel fraud; wary of any step that slows a truck down.
-Platform: WhatsApp forward + Instagram Reels — 9:16 vertical, max 30 seconds, hook in the first 2 seconds.
+Platform: WhatsApp forward + Instagram Reels — 9:16 vertical, ≤30 s by choice, hook in the first 2 seconds.
 Goal/CTA: Defuse the "why the OTP step / my driver won't cooperate" objection; end on "Book a demo on WhatsApp".
 Key message: The 1-second driver OTP is your proof of delivery — no OTP, no invoice, no fake litres.
 Brand feel: Trustworthy, modern, warm; not flashy or corporate.
@@ -65,5 +65,5 @@ _Pending. Check before accepting: did it keep the brand-feel sentence identical 
 ### Next steps (§5 order of operations)
 
 - [ ] Expand in Gemini (0 coins) and paste the four prompts above
-- [ ] One Imagen still per shot → lay the four stills in a row; approve composition before any motion
-- [ ] Flow: shot 1 as Image→Video from its approved still, **Lite** draft (~10 coins)
+- [ ] One Nano Banana still per shot (made inside Flow) → lay the four stills in a row; approve composition before any motion
+- [ ] Flow: shot 1 as Frames→Video from its approved still (the still is the start frame), **Lite** draft (~10 coins)

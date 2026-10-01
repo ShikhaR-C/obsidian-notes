@@ -1,6 +1,6 @@
 # Phase 1 — The Big Picture: How a Shot Is Born, and What Every Coin Buys
 
-> Level: Easy | Time: ~30 min | Outcome: you understand the whole pipeline, you've made your first talking clip on the *cheap* tier, and you can budget a promo in credits before you spend one.
+> Level: Easy | Time: ~30 min | Outcome: you understand the whole pipeline, you've made your first talking clip on the *cheap* tier, and you can budget a promo in credits before you spend one. | Status: written & web-verified 2026-07-15; **tool facts re-verified and corrected 2026-10-01**.
 
 ---
 
@@ -14,16 +14,16 @@ That's the mindset shift. Everything hard about Flow is hard because people keep
 
 ## 2. The Four Surfaces You'll Actually Touch
 
-The stack in the [[00_README]] has a dozen tools, but on a normal day your hands are on **four browser tabs**. Know which tab does which job so you stop reaching for the wrong one:
+The stack in the [[00_README]] has a dozen tools, but on a normal day your hands are on **four surfaces** (two of them share the Flow tab). Know which one does which job so you stop reaching for the wrong one:
 
 | Tab                 | You go here to…                                                    | 5-year-old name        |
 | ------------------- | ------------------------------------------------------------------ | ---------------------- |
 | **Gemini**          | Think, write the script, and turn ideas into Veo prompts           | The "help me plan" desk |
-| **Imagen / Whisk**  | Make still pictures — ad images, and reference photos for the crew | The drawing table       |
-| **Flow**            | Turn those pictures and prompts into actual video with sound       | The film set           |
-| **Vids / Drive**    | Glue clips together, add captions, and file the finished work      | The editing bench       |
+| **Nano Banana** (in Flow) | Make still pictures — ad images, reference photos, and the first frames the crew starts from | The drawing table |
+| **Flow** (video)    | Turn those pictures and prompts into actual video with sound       | The film set           |
+| **Vids / Resolve / Drive** | Glue clips together, add captions, and file the finished work | The editing bench  |
 
-The mistake beginners make is living **only** in the Flow tab — typing prompts straight into the film set and hoping. Pros spend most of their time at the **planning desk** and the **drawing table**, and arrive at the film set already knowing exactly what they want. Cheaper, faster, better. (Why it's cheaper is §4.)
+The mistake beginners make is living **only** on the film set — typing video prompts straight in and hoping. Pros spend most of their time at the **planning desk** and the **drawing table**, and arrive at the film set already knowing exactly what they want. Cheaper, faster, better. (Why it's cheaper is §4.)
 
 ## 3. The Life of One Shot
 
@@ -40,16 +40,17 @@ Here is how a single good 8-second clip is actually born. Memorise this loop —
 ④  Iterate ⏣20     Happy with the idea → render on FAST. Tune camera, timing, voice.
         │            └─ Not quite?  Nudge the note, iterate again.
         │
-⑤  Lock   ⏣100     Only now, when it's *right*, render once on QUALITY.
+⑤  Lock   ⏣100     Only now, when it's *right*, render once on QUALITY (or keep the Fast take).
+        │            Upscale the keeper to 1080p: ⏣0.
         │
-⑥  Extend / Stitch  Add seconds (Scene Extension) or join shots (Scenebuilder/Vids)
+⑥  Stitch          Cut it in with its neighbours (Vids or Resolve). Extend (Lite only) is for the rare long take.
         │
 ⑦  File            Save to Drive with its prompt. (Future-you will thank you.)
 ```
 
-⏣ = credits. Read steps ③–⑤ again: **you climb the price ladder only as your confidence climbs.** You never pay 100 coins to find out whether an idea works — you pay 10. This one habit is worth more than every prompt trick in this course combined.
+⏣ = credits. Read steps ③–⑤ again: **you climb the price ladder only as your confidence climbs.** You never pay 100 coins to find out whether an idea works — you pay 10. This one habit is worth more than every prompt trick in this course combined. If the shot needs a known face, run ③–⑤ from the same approved **still** (Frames→Video): Quality takes no Ingredients, and one start frame keeps the draft predicting the lock ([[05-phase-5-character-consistency|Phase 5]]).
 
-> **Why "save the clip *with* its prompt" (step ⑦)?** Because in three weeks the client will say "make three more like that one." If you saved the prompt, that's a five-minute job. If you didn't, you're reverse-engineering your own footage. Flow TV exists precisely because prompts are that valuable — see [[09-reference]].
+> **Why "save the clip *with* its prompt" (step ⑦)?** Because in three weeks the client will say "make three more like that one." If you saved the prompt, that's a five-minute job. If you didn't, you're reverse-engineering your own footage. Flow TV exists precisely because prompts are that valuable: it shows the prompt behind its clips.
 
 ## 4. The Credit Economy (the part that pays your salary)
 
@@ -65,7 +66,7 @@ Let's make the Prime Directive concrete with a real job: **a 30-second Instagram
 | Try shot 4 (3 attempts)   | 3       | Quality | 300     |
 | **Total**                 | **12**  |         | **1,200** ❌ |
 
-That's **over our entire monthly jar** — for *one* promo. The amateur is now locked out until next month.
+That's **over our entire monthly jar** of 1,000 — for *one* promo. The amateur is now down to the daily 50 (five Lite drafts) until the month turns.
 
 **The pro way — draft cheap, commit expensive:**
 
@@ -76,12 +77,12 @@ That's **over our entire monthly jar** — for *one* promo. The amateur is now l
 | Lock the 4 finals                 | 4       | Quality | 400    |
 | **Total**                         | **18**  |         | **600** ✅ |
 
-Same 4 finished shots, **more** iterations, **half** the jar. The pro made the promo *and* has 400 coins left for the next one. The only difference is *which tier they were on when they were still guessing.*
+Same 4 finished shots, **more** iterations, **half** the coins. The pro made the promo *and* has 400 coins left for the next one — plus 50 more every day. The only difference is *which tier they were on when they were still guessing.*
 
 **Rules of thumb that fall out of this:**
 
 - **Never render an unproven idea at Quality.** If you're not sure it'll work, you're drafting → Lite.
-- **Batch your Lite drafts.** Explore 3–4 variations at once (30–40 coins) instead of one-at-a-time perfectionism.
+- **Batch your Lite drafts.** Explore 3–4 variations at once (30–40 coins) instead of one-at-a-time perfectionism. Flow charges **per output** — four takes cost four times — and a failed generation costs nothing.
 - **A Quality render is a *commitment ceremony*, not an experiment.** If you find yourself rendering the same shot at Quality twice, your process broke upstream — go back to Fast.
 - **Vertical (9:16) and horizontal (16:9) cost the same.** Frame for the platform from the start; don't render both "to be safe."
 
@@ -92,15 +93,15 @@ The crew can begin from four different kinds of note. Picking the right starting
 | Start from…          | What you give                                   | Best for                                                      | 5-year-old version                          |
 | -------------------- | ----------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------- |
 | **Text → Video**     | Just words                                      | Brand-new scenes, quick concepts, "what if"                   | "Draw me a dog." (You get *some* dog.)      |
-| **Frames → Video**   | A first image (± a last image) + words          | Precise starts/ends; animating a still you already love       | "Start from *this* picture and move."       |
-| **Image → Video**    | One image to animate + words                    | Bringing an Imagen ad-still or product photo to life          | "Make *this photo* move."                   |
-| **Ingredients → Video** | Up to **3 reference images** + words         | **Keeping the same character / product / style** across clips | "Use *this exact actor* and *this logo*."   |
+| **Frames → Video**   | A first image (± a last image) + words          | Precise starts/ends; animating a still you already love; **every tier, Quality included** | "Start from *this* picture and move." |
+| **Image → Video**    | One image as the first frame + words (Frames → Video with no last frame) | Bringing a Nano Banana ad-still or product photo to life | "Make *this photo* move." |
+| **Ingredients → Video** | **Reference images** + words — Lite or Fast (8 s) or Omni Flash, **not Quality** | **Keeping the same character / product / style** across clips | "Use *this exact actor* and *this logo*." |
 
-Text-to-video is where everyone starts and where consistency goes to die — every clip invents a new face. The moment your content needs the *same* spokesperson or the *same* product twice, you graduate to **Frames** and **Ingredients** (Phase 5). Most professional marketing work starts from an image, not from text, for exactly this reason: a picture pins down what words leave to chance.
+Text-to-video is where everyone starts and where consistency goes to die — every clip invents a new face. The moment your content needs the *same* spokesperson or the *same* product twice, you graduate to **Frames** and **Ingredients** (Phase 5). Most professional marketing work starts from an image, not from text, for exactly this reason: a picture pins down what words leave to chance. Changed in 2026: Quality takes no Ingredients, so a shot you'll lock at Quality starts from a still with the face already in it. Flow's **Characters** (`@Name`) also bundle a face with a voice for reuse; which models honour them, check live.
 
 ## 6. Exercises
 
-**6.1 — Make your first talking clip (cost: ~10 coins).** In Flow, Text→Video, **Veo 3.1 Lite**, paste exactly this:
+**6.1 — Make your first talking clip (cost: ~10 coins).** In Flow, Text→Video, **Veo 3.1 Lite**, Number of outputs 1, paste exactly this:
 
 ```
 Medium shot of a friendly young Indian shopkeeper standing at a small
@@ -109,11 +110,11 @@ roadside chai stall, holding a phone. He looks at the camera and says:
 a kettle steaming in the background. Handheld, natural, documentary style.
 ```
 
-Watch what you get for 10 coins: a person, a voice, moving lips, ambient sound, and a camera feel — all from four sentences. *This* is the crew.
+Watch what you get for 10 coins: a person, a voice, moving lips, ambient sound, and a camera feel — all from four sentences. *This* is the crew. (Every Flow output carries an invisible SynthID mark, and for people living in India Flow also adds a visible watermark automatically. It stays on.)
 
-**6.2 — Prove the Prime Directive costs nothing to obey.** Render 6.1 twice more on **Lite**, changing only one word each time (`chai` → `coffee`, `morning` → `evening`). Three explorations for ~30 coins. Notice you now *know* which one to commit — before spending a single Quality coin.
+**6.2 — Prove the Prime Directive costs nothing to obey.** Render 6.1 twice more on **Lite**, changing only one word each time (`chai` → `coffee`, `morning` → `evening`). Three explorations for ~30 coins — less than one day's 50. Notice you now *know* which one to commit — before spending a single Quality coin.
 
-**6.3 — Budget a real job.** Open a Sheet in Drive. Plan a **DZZLO 30-second promo** as 4 shots. Write, for each shot, the tier you'd draft on and the tier you'd lock on, and total the coins. Aim to come in under **600**. This sheet is the skeleton you'll fill with real prompts by the end of Phase 8.
+**6.3 — Budget a real job.** Open a Sheet in Drive. Plan a **DZZLO 30-second promo** as 4 shots. Write, for each shot, the tier you'd draft on, the tier you'd lock on, and how it starts (text, a still, or Ingredients — §5), and total the coins. Aim to come in under **600**. This sheet is the skeleton you'll fill with real prompts by the end of Phase 8.
 
 **6.4 — Start the archive habit.** Make a Drive folder `flow-content/`. Every clip you keep from now on gets saved there *with its prompt in the filename or a sidecar note*. Miss this and you'll re-earn the lesson the expensive way.
 
@@ -134,7 +135,7 @@ Four 8-second shots ≈ 32 seconds, and the classic arc that fits it is **Proble
 - **Shot 3 — Solution.** The product enters and visibly kills the pain. The latest it can appear is here.
 - **Shot 4 — Payoff + CTA.** The "after" feeling, then logo + one instruction.
 
-Alternatives exist (before/after split, day-in-the-life, testimonial), but problem-agitate-solve is the strongest default because it's a *story* — the weakest promos are feature parades with no story. Two platform rules regardless of structure: frame **9:16 vertical from the first draft** (§4's rule — don't render both), and assume **sound off** — captions get burned in at the Vids stage, not rendered by Veo.
+Alternatives exist (before/after split, day-in-the-life, testimonial), but problem-agitate-solve is the strongest default because it's a *story* — the weakest promos are feature parades with no story. Two rules regardless of structure: frame **9:16 vertical from the first draft** (§4's rule — don't render both), and **mix for sound-on, caption for sound-off** — Reels default to sound on, but the promo must still read muted, so captions get burned in at the edit (Vids or Resolve), not rendered by Veo. Safe zones, loudness and AI disclosure for the finished file: [[20-colour-finishing-and-delivery]] §9–§12 and [[19-sound-edit-design-and-mix]] §10.
 
 ### The DZZLO promo, shot by shot
 
@@ -147,7 +148,7 @@ Alternatives exist (before/after split, day-in-the-life, testimonial), but probl
 
 Two planning notes that come straight from §5:
 
-- **Same dealer in shots 1, 2, and 4** means text-to-video will betray you — it invents a new face per clip. Plan to make one Imagen reference portrait of "the dealer" (plus a pump-office still) first, and start those shots from **Ingredients → Video** (Phase 5 skill — but the *budget* must assume it now).
+- **Same dealer in shots 1, 2, and 4** means text-to-video will betray you — it invents a new face per clip. Plan to make one Nano Banana reference portrait of "the dealer" (plus a pump-office still) first, then a **start-frame still** with him in it for each Quality shot, animated with **Frames → Video** on every tier, so the still carries his face into Quality (Phase 5 skill — but the *budget* must assume it now). Shot 4 locks at Fast, so **Ingredients → Video** (8 s) with the portrait works there too.
 - **Shot 3 is the hardest and cheapest to get wrong**: AI renders of app screens produce garbled text. Draft it extra times on Lite, keep the screen glow/gesture in the video, and composite the *real* DZZLO screenshot in editing. Never pay Quality coins hoping Veo draws your UI.
 
 ### The budget sheet
@@ -160,10 +161,14 @@ Two planning notes that come straight from §5:
 | 4 — Morning Chai    | 1   | 2   | **lock at Fast** | 50      |
 | **Total**           | **8** | **7** | **3**          | **520** ✅ |
 
-That's 18 renders for 520 coins — under the 600 target with ~480 left in the monthly jar. The trick that gets you there: **shot 4 never needs a Quality render.** It's a simple, slow shot whose logo, tagline, and CTA are overlaid in Vids anyway — paying 100 coins for base footage that gets covered in graphics is amateur math. Shots 1–3 carry the story and the actor's face, so they each earn one Quality commitment ceremony.
+That's 18 renders for 520 coins — under the 600 target with ~480 left in the monthly jar. The trick that gets you there: **shot 4 never needs a Quality render.** It's a simple, slow shot whose logo, tagline, and CTA are overlaid in the edit anyway — paying 100 coins for base footage that gets covered in graphics is amateur math. Shots 1–3 carry the story and the actor's face, so they each earn one Quality commitment ceremony.
+
+Off the video bill: the 1080p upscale of the four keepers is free on AI Pro. The stills are their own line — the portrait and office still can come free from Nano Banana 2 Lite; the three start frames combine both, a job for Nano Banana Pro or 2, so check the cost Flow shows.
 
 Copy the table into the Drive Sheet as-is — it's the skeleton you'll fill with real 7-part prompts by the end of Phase 8.
 
 ---
+
+**Sources (re-verified 2026-10-01):** Flow Help — [Credits](https://support.google.com/flow/answer/16526234), [Models & supported features](https://support.google.com/flow/answer/16352836), [Create videos](https://support.google.com/flow/answer/16353334), [Get started](https://support.google.com/flow/answer/16353333) · Meta — [Reels ads](https://www.facebook.com/business/ads/facebook-instagram-reels-ads) ("Reels default to Sound On").
 
 **Next:** [[02-phase-2-prompting-basics]] — the 7 parts every good note has, and the word budget that keeps the crew from getting confused.
